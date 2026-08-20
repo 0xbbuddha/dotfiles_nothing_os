@@ -29,9 +29,7 @@ local function startup()
     end
 
     if exists("cliphist") and exists("wl-paste") then
-        hl.exec_cmd("pkill -x wl-paste || true")
-        hl.exec_cmd("wl-paste --type text --watch " .. ROOT .. "/scripts/cliphist-watch.sh text")
-        hl.exec_cmd("wl-paste --type image --watch " .. ROOT .. "/scripts/cliphist-watch.sh image")
+        hl.exec_cmd(ROOT .. "/scripts/ensure-cliphist.sh")
     end
 
     hl.exec_cmd("sleep 2 && " .. ROOT .. "/scripts/setup-portals.sh")

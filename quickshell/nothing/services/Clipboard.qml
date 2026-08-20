@@ -10,6 +10,9 @@ Singleton {
 
     property var items: []          // { id, preview, isImage }
     property bool loading: false
+    // Search.results is a binding: it only re-runs if it reads a
+    // property that changed. stamp is that property.
+    property int stamp: 0
 
     readonly property bool available: probe.found
 
@@ -23,9 +26,10 @@ Singleton {
         }
     }
 
-    // cliphist list returns "<id>\t<preview>" per line.
+    // cliphist list returns "<id>\t<preview>" per line, newest first.
     Process {
         id: lister
+        command: ["cliphist", "list"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const out = [];
@@ -43,14 +47,37 @@ Singleton {
                 }
                 root.items = out;
                 root.loading = false;
+                root.stamp++;
+            }
+        }
+        onExited: (code) => {
+            if (code !== 0) {
+                root.loading = false;
+                root.stamp++;
             }
         }
     }
 
     Process { id: runner }
 
-    Component.onCompleted: refresh()
+    Component.onCompleted: {
+        root.refresh();
+        Quickshell.execDetached([Quickshell.shellPath("../../scripts/ensure-cliphist.sh")]);
+    }
     onAvailableChanged: if (available) refresh()
+
+    // Text copies (images do not change clipboardText: the wl-paste
+    // watcher notifies via ipc call clipboard update).
+    Connections {
+        target: Quickshell
+        function onClipboardTextChanged(): void { debounce.restart(); }
+    }
+
+    Timer {
+        id: debounce
+        interval: 80
+        onTriggered: root.refresh()
+    }
 
     function refresh(): void {
         if (!root.available) {
@@ -58,7 +85,8 @@ Singleton {
             return;
         }
         root.loading = true;
-        lister.command = ["sh", "-c", "cliphist list"];
+        // Reusing a finished Process requires a false→true edge.
+        lister.running = false;
         lister.running = true;
     }
 
@@ -66,23 +94,25 @@ Singleton {
     function copy(id: string): void {
         runner.command = ["sh", "-c",
             `cliphist decode ${JSON.stringify(id)} | wl-copy`];
+        runner.running = false;
         runner.running = true;
     }
 
     function remove(id: string): void {
         runner.command = ["sh", "-c",
-            `cliphist decode ${JSON.stringify(id)} | cliphist delete`];
+            `printf '%s\\t' ${JSON.stringify(id)} | cliphist delete`];
+        runner.running = false;
         runner.running = true;
         removeTimer.restart();
     }
 
     function wipe(): void {
-        runner.command = ["sh", "-c", "cliphist wipe"];
+        runner.command = ["cliphist", "wipe"];
+        runner.running = false;
         runner.running = true;
         removeTimer.restart();
     }
 
-    // cliphist writes asynchronously: re-read right after.
     Timer { id: removeTimer; interval: 180; onTriggered: root.refresh() }
 
     function search(query: string): var {

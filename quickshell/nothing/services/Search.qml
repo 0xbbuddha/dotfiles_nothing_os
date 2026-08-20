@@ -118,6 +118,7 @@ Singleton {
         const out = [];
 
         if (mode === "clip") {
+            const _ = Clipboard.stamp;
             for (const it of Clipboard.search(text).slice(0, 30)) {
                 out.push({
                     kind: "clip", title: it.preview,
