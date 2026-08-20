@@ -1,0 +1,29 @@
+Third-party notices
+===================
+
+This rice is inspired by Nothing OS. It is unofficial and is not
+affiliated with, endorsed by, or connected to Nothing Technology Limited.
+
+Lawnicons
+  Apache License 2.0
+  https://github.com/LawnchairLauncher/lawnicons
+  Outline glyphs used when building the Nothing icon theme
+  (`~/.cache/nothing/lawnicons`, cloned at install time).
+
+Nothing fonts (Ndot77, Inter)
+  Installed from the AUR package `ttf-nothing-font-git`.
+  Not bundled in this repository. See that package for its license.
+
+Quickshell
+  https://quickshell.outfoxxed.me/
+
+Hyprland
+  https://hypr.land/
+
+kitty-kitten-search (`config/kitty/search.py`)
+  GPLv3
+  https://github.com/trygveaa/kitty-kitten-search
+
+The install flow and many shortcuts follow
+[illogical-impulse](https://github.com/end-4/dots-hyprland)
+(end-4). The shell itself is a separate Quickshell config.

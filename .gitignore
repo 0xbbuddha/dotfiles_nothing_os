@@ -1,0 +1,25 @@
+hypr/local.lua
+hypr/custom.lua
+*.bak-*
+*.bak
+*~
+
+# generated / local
+.cache/
+__pycache__/
+*.pyc
+*.qmlc
+*.jsc
+
+# shader binary (rebuilt by ./install)
+*.qsb
+
+# editor / agent
+.cursor/
+.vscode/
+*.swp
+.DS_Store
+
+# screenshots you drop in while writing the README
+/exemple*.png
+/tmp/

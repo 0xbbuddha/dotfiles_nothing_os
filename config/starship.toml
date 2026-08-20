@@ -1,0 +1,33 @@
+# Nothing prompt: duration, path, git, then a red disc.
+add_newline = false
+
+format = """
+$cmd_duration$directory$git_branch
+  $character"""
+
+[character]
+success_symbol = "[●](bold #d71921)"
+error_symbol = "[×](bold #d71921)"
+
+[directory]
+truncation_length = 2
+truncation_symbol = ".../"
+style = "bold #c4c4c4"
+format = "[$path]($style)"
+
+[git_branch]
+symbol = " "
+style = "#8a8a8a"
+truncation_length = 24
+format = " [$symbol$branch]($style)"
+
+[cmd_duration]
+min_time = 2000
+style = "#8a8a8a"
+format = "[$duration]($style) "
+
+[package]
+disabled = true
+
+[time]
+disabled = true

@@ -1,0 +1,123 @@
+#!/usr/bin/env bash
+# Nothing - installer.
+#
+#   ./install              packages, ~/.config links, SDDM session
+#   ./install --deps       packages only
+#   ./install --files      ~/.config + theme, skip pacman
+#   ./install --uninstall  restore ~/.config backups (not packages)
+#   ./install --noconfirm  no prompts
+#
+# Does not run as root. sudo is asked only where it is needed.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
+# shellcheck source=scripts/lib.sh
+source "$ROOT/scripts/lib.sh"
+NOTHING_ROOT="$ROOT"
+
+DO_DEPS=true
+DO_FILES=true
+DO_SESSION=true
+UNINSTALL=false
+
+usage() {
+    cat <<'EOF'
+Nothing - installer.
+
+  ./install              packages, ~/.config links, SDDM session
+  ./install --deps       packages only
+  ./install --files      ~/.config + theme, skip pacman
+  ./install --uninstall  restore ~/.config backups (not packages)
+  ./install --noconfirm  no prompts
+
+Puts Hyprland, Quickshell, hypridle and hyprlock into ~/.config
+as real copies (rsync/cp, no symlinks). What was already there is backed up.
+Does not run as root. sudo is asked only where it is needed.
+EOF
+    exit "${1:-0}"
+}
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -h|--help) usage 0 ;;
+        --deps) DO_FILES=false; DO_SESSION=false ;;
+        --files) DO_DEPS=false ;;
+        --replace|--replace-config) ;; # default: always write ~/.config
+        --uninstall) UNINSTALL=true; DO_DEPS=false; DO_FILES=false; DO_SESSION=false ;;
+        --noconfirm|-y) NOCONFIRM=true ;;
+        *) die "unknown option: $1" ;;
+    esac
+    shift
+done
+
+need_root_denied
+
+install_files() {
+    log "Shaders"
+    run bash "$ROOT/scripts/compile-shaders.sh" || warn "shader compile failed (settings dots fall back to Canvas)"
+
+    log "App theme (Dolphin, GTK, icons, file pickers)"
+    run bash "$ROOT/scripts/apply-app-theme.sh"
+
+    log "~/.config/hypr, quickshell, scripts, theme"
+    run bash "$ROOT/scripts/install-config.sh"
+}
+
+install_session() {
+    log "SDDM session \"Nothing\""
+    printf '%s\n' \
+        "  This writes /usr/share/wayland-sessions/nothing.desktop and" \
+        "  /usr/local/bin/nothing-session, plus the astronaut greeter." \
+        "  After the ~/.config copies, the normal Hyprland entry loads" \
+        "  this rice too."
+    if ask_yn "Add the Nothing session and SDDM theme?" y; then
+        run sudo bash "$ROOT/scripts/install-session.sh"
+    else
+        warn "Skipped. You can still start from a TTY:"
+        echo "    $ROOT/scripts/nothing-session.sh"
+    fi
+}
+
+if [[ "$UNINSTALL" == true ]]; then
+    log "Uninstall"
+    bash "$ROOT/scripts/uninstall.sh"
+    if [[ -f /usr/share/wayland-sessions/nothing.desktop ]]; then
+        if ask_yn "Remove the SDDM session too?" y; then
+            run sudo bash "$ROOT/scripts/install-session.sh" --remove
+        fi
+    fi
+    ok "Done."
+    exit 0
+fi
+
+cat <<MSG
+${BLD}Nothing${RST} - Hyprland + Quickshell, inspired by Nothing OS.
+
+Repo:  $ROOT
+This installer:
+  1. installs packages (Arch / EndeavourOS)
+  2. copies into ~/.config/hypr, quickshell, scripts, theme
+  3. registers a Nothing session in SDDM
+
+Existing files in those paths are backed up as *.bak-<date>.
+
+MSG
+pause
+
+[[ "$DO_DEPS" == true ]] && bash "$ROOT/scripts/install-deps.sh"
+[[ "$DO_FILES" == true ]] && install_files
+[[ "$DO_SESSION" == true ]] && install_session
+
+cat <<MSG
+
+${BLD}Next${RST}
+  Log out and choose ${BLD}Nothing${RST} in the session picker.
+  Or from a TTY:  $ROOT/scripts/nothing-session.sh
+
+  SUPER tap     launcher + workspaces
+  SUPER+I       settings
+  SUPER+G       game bar
+
+  Personal binds: ~/.config/hypr/custom.lua
+  Uninstall:      ./install --uninstall
+MSG

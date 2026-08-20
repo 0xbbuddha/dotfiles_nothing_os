@@ -1,0 +1,115 @@
+/* Nothing theme for GTK 3 - matte black, red accent, rounded corners. */
+
+@define-color nothing_bg        #0b0b0b;
+@define-color nothing_bg_alt    #161616;
+@define-color nothing_bg_hover  #212121;
+@define-color nothing_fg        #ffffff;
+@define-color nothing_fg_dim    #8a8a8a;
+@define-color nothing_red       #d71921;
+@define-color nothing_outline   #2a2a2a;
+
+@define-color theme_bg_color          @nothing_bg;
+@define-color theme_base_color        @nothing_bg;
+@define-color theme_fg_color          @nothing_fg;
+@define-color theme_text_color        @nothing_fg;
+@define-color theme_selected_bg_color @nothing_red;
+@define-color theme_selected_fg_color @nothing_fg;
+@define-color insensitive_fg_color    @nothing_fg_dim;
+@define-color borders                 @nothing_outline;
+@define-color accent_color            @nothing_red;
+@define-color accent_bg_color         @nothing_red;
+@define-color accent_fg_color         @nothing_fg;
+
+window, .background, dialog, popover, popover.background {
+    background-color: @nothing_bg;
+    color: @nothing_fg;
+}
+
+headerbar, .titlebar {
+    background: @nothing_bg;
+    color: @nothing_fg;
+    border-bottom: 1px solid @nothing_outline;
+    box-shadow: none;
+    min-height: 38px;
+}
+
+button {
+    background: @nothing_bg_alt;
+    color: @nothing_fg;
+    border: none;
+    border-radius: 10px;
+    box-shadow: none;
+    padding: 5px 12px;
+}
+button:hover  { background: @nothing_bg_hover; }
+button:active,
+button:checked { background: @nothing_red; color: @nothing_fg; }
+button.flat   { background: transparent; }
+
+entry, spinbutton, textview {
+    background: @nothing_bg_alt;
+    color: @nothing_fg;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 5px 9px;
+}
+entry:focus { border-color: @nothing_red; }
+
+list, treeview, .view {
+    background-color: @nothing_bg;
+    color: @nothing_fg;
+}
+row:selected, :selected, treeview.view:selected {
+    background-color: @nothing_red;
+    color: @nothing_fg;
+}
+row:hover { background-color: @nothing_bg_hover; }
+
+.sidebar, placessidebar, stacksidebar {
+    background-color: @nothing_bg;
+    border-right: 1px solid @nothing_outline;
+}
+
+scrollbar { background: transparent; border: none; }
+scrollbar slider {
+    background: @nothing_outline;
+    border-radius: 999px;
+    min-width: 5px;
+    min-height: 5px;
+    border: 3px solid transparent;
+    background-clip: padding-box;
+}
+scrollbar slider:hover { background: @nothing_fg_dim; }
+
+menu, .menu, .context-menu, popover contents {
+    background-color: @nothing_bg_alt;
+    border: 1px solid @nothing_outline;
+    border-radius: 12px;
+    padding: 4px;
+}
+menuitem { border-radius: 8px; padding: 5px 10px; }
+menuitem:hover { background-color: @nothing_red; }
+
+notebook > header      { background: @nothing_bg; border-color: @nothing_outline; }
+notebook > header tab  { color: @nothing_fg_dim; border: none; }
+notebook > header tab:checked {
+    color: @nothing_fg;
+    box-shadow: inset 0 -2px @nothing_red;
+}
+
+switch        { background: @nothing_bg_hover; border-radius: 999px; border: none; }
+switch:checked{ background: @nothing_red; }
+switch slider { background: @nothing_fg; border-radius: 999px; border: none; }
+
+progressbar progress, scale highlight { background: @nothing_red; border-radius: 999px; }
+scale trough  { background: @nothing_bg_hover; border-radius: 999px; }
+scale slider  { background: @nothing_fg; border-radius: 999px; }
+
+tooltip, tooltip.background {
+    background-color: @nothing_bg_alt;
+    color: @nothing_fg;
+    border: 1px solid @nothing_outline;
+    border-radius: 8px;
+}
+
+selection { background-color: @nothing_red; color: @nothing_fg; }

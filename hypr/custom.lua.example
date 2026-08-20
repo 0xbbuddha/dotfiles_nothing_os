@@ -1,0 +1,33 @@
+-- Personal Hyprland binds for the Nothing session.
+-- Copied to hypr/custom.lua on first install (that file is gitignored).
+-- Loaded after hypr/hyprland/*.lua. Add personal binds here.
+
+-- Example: pin a chat client and a browser.
+-- hl.bind("SUPER + D",        hl.dsp.exec_cmd("vesktop"))
+-- hl.bind("CTRL + SUPER + F", hl.dsp.exec_cmd("firefox"))
+
+-- Cheat sheet (SUPER+colon on many layouts).
+hl.bind("SUPER + Colon", ipc("cheatsheet", "toggle"))
+
+-- Touchpad: 3 fingers move / pinch fullscreen, 4 fingers workspaces
+-- and the launcher (same idea as an overview).
+hl.gesture({ fingers = 3, direction = "swipe",      action = "move" })
+hl.gesture({ fingers = 3, direction = "pinch",      action = "fullscreen" })
+hl.gesture({ fingers = 4, direction = "horizontal", action = "workspace" })
+hl.gesture({ fingers = 4, direction = "up",   action = function()
+    hl.dispatch(ipc("launcher", "toggle"))
+end })
+hl.gesture({ fingers = 4, direction = "down", action = function()
+    hl.dispatch(ipc("launcher", "toggle"))
+end })
+
+hl.config({
+    gestures = {
+        workspace_swipe_distance = 700,
+        workspace_swipe_cancel_ratio = 0.2,
+        workspace_swipe_min_speed_to_force = 5,
+        workspace_swipe_direction_lock = true,
+        workspace_swipe_direction_lock_threshold = 10,
+        workspace_swipe_create_new = true,
+    },
+})
