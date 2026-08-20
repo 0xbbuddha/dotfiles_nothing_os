@@ -77,6 +77,8 @@ ShellRoot {
     Variants { model: Quickshell.screens; GameBar {} }
     Variants { model: Quickshell.screens; RegionPicker {} }
     Variants { model: Quickshell.screens; Cheatsheet {} }
+    Variants { model: Quickshell.screens; Essential {} }
+    Variants { model: Quickshell.screens; EssentialFly {} }
     Variants { model: Quickshell.screens; PolkitDialog {} }
 
     // The crosshair lives on every screen, unmasked: never clickable.
@@ -185,6 +187,27 @@ ShellRoot {
         function toggle(): void { GlobalState.cheatsheetOpen = !GlobalState.cheatsheetOpen; }
         function open(): void { GlobalState.cheatsheetOpen = true; }
         function hide(): void { GlobalState.cheatsheetOpen = false; }
+    }
+
+    IpcHandler {
+        target: "essential"
+        function toggle(): void {
+            if (!Config.essentialEnabled)
+                return;
+            if (GlobalState.essentialOpen) {
+                GlobalState.essentialOpen = false;
+                return;
+            }
+            GlobalState.closeAll();
+            GlobalState.essentialOpen = true;
+        }
+        function open(): void {
+            if (!Config.essentialEnabled)
+                return;
+            GlobalState.closeAll();
+            GlobalState.essentialOpen = true;
+        }
+        function hide(): void { GlobalState.essentialOpen = false; }
     }
 
     IpcHandler {

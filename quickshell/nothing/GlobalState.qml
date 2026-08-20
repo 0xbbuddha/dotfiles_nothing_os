@@ -35,6 +35,11 @@ Singleton {
     property bool gameBarOpen: false
     property string gameSelected: ""
     property bool cheatsheetOpen: false
+    property bool essentialOpen: false
+    property bool essentialPulse: false
+    property string essentialFlyPath: ""
+    property string essentialFlyScreen: ""
+    property bool essentialCatching: false
     property bool polkitOpen: false
     property string netPanel: ""
     property bool audioPanel: false
@@ -75,6 +80,7 @@ Singleton {
         screenshotOpen = false;
         gameSelected = "";
         cheatsheetOpen = false;
+        essentialOpen = false;
         netPanel = "";
         audioPanel = false;
         lightPanel = false;

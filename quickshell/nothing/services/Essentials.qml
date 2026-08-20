@@ -1,0 +1,367 @@
+pragma Singleton
+
+import QtQuick
+import Quickshell
+import Quickshell.Io
+import Quickshell.Hyprland
+import ".."
+
+// Essential Space vault. Files live under ~/.local/share/nothing/essentials;
+// this singleton is only the list and the commands.
+Singleton {
+    id: root
+
+    property var items: []
+    property int stamp: 0
+    property bool busy: false
+    property string status: ""
+    property bool catchRecord: false
+    property bool catchSong: false
+    property bool catchShot: false
+    property string catchShotKind: "snip"
+    property bool reopen: false
+    property bool hasGeminiKey: false
+
+    readonly property string script: Quickshell.shellPath("../../scripts/essential.py")
+    readonly property string dataHome: {
+        const x = Quickshell.env("XDG_DATA_HOME") ?? "";
+        return x.length > 0 ? x : `${Quickshell.env("HOME")}/.local/share`;
+    }
+    readonly property string dir: `${root.dataHome}/nothing/essentials`
+    readonly property bool empty: root.items.length === 0
+
+    function envBackend(): var {
+        return ["env", `NOTHING_MIND_BACKEND=${Config.mindBackend}`];
+    }
+
+    function run(args: var): void {
+        root.busy = true;
+        worker.running = false;
+        worker.command = root.envBackend().concat(["python3", root.script]).concat(args);
+        worker.running = true;
+    }
+
+    function refresh(): void {
+        lister.running = false;
+        lister.command = ["python3", root.script, "list"];
+        lister.running = true;
+    }
+
+    function addNote(text: string): void {
+        captureWait.stop();
+        root.reopen = false;
+        const t = text.trim();
+        if (t === "")
+            return;
+        if (t.startsWith("=")) {
+            calc.expr = t.slice(1).trim();
+            calc.running = false;
+            calc.command = ["qalc", "-t", calc.expr];
+            calc.running = true;
+            return;
+        }
+        root.run(["add", "note", t]);
+    }
+
+    function addClip(): void {
+        captureWait.stop();
+        root.reopen = false;
+        root.run(["clip"]);
+    }
+    function remove(id: string): void { root.run(["remove", id]); }
+    function mind(id: string): void { root.run(["mind", id, Config.mindBackend]); }
+    function wipe(): void { root.run(["wipe"]); }
+
+    function probeKey(): void {
+        keyProbe.running = false;
+        keyProbe.command = ["python3", root.script, "has-key"];
+        keyProbe.running = true;
+    }
+
+    function setBackend(name: string): void {
+        backendWriter.running = false;
+        backendWriter.command = ["python3", root.script, "set-backend", name];
+        backendWriter.running = true;
+    }
+
+    function setGeminiKey(key: string): void {
+        keyWriter.payload = key;
+        keyWriter.running = false;
+        keyWriter.stdinEnabled = true;
+        keyWriter.running = true;
+    }
+
+    function snip(): void {
+        root.catchShot = true;
+        root.catchShotKind = "snip";
+        root.reopen = true;
+        GlobalState.essentialOpen = false;
+        captureWait.restart();
+    }
+
+    function ocr(): void {
+        root.catchShot = true;
+        root.catchShotKind = "ocr";
+        root.reopen = true;
+        GlobalState.essentialOpen = false;
+        captureWait.restart();
+    }
+
+    function keyShot(): void {
+        captureWait.stop();
+        root.catchShot = false;
+        const mon = Hyprland.focusedMonitor?.name ?? "";
+        if (mon === "")
+            return;
+        if (GlobalState.essentialOpen) {
+            GlobalState.essentialOpen = false;
+            keyWait.mon = mon;
+            keyWait.restart();
+            return;
+        }
+        root.grimKey(mon);
+    }
+
+    function grimKey(mon: string): void {
+        keyGrim.mon = mon;
+        keyGrim.running = false;
+        keyGrim.command = ["sh", "-c",
+            "mkdir -p /tmp/nothing-snip && grim -o \"$1\" /tmp/nothing-snip/key.png && printf '%s\\n' /tmp/nothing-snip/key.png > /tmp/nothing-snip/last",
+            "grim", mon];
+        keyGrim.running = true;
+    }
+
+    function finishFly(): void {
+        GlobalState.essentialFlyPath = "";
+        GlobalState.essentialPulse = false;
+        GlobalState.essentialCatching = false;
+    }
+
+    function record(): void {
+        captureWait.stop();
+        root.catchShot = false;
+        root.catchRecord = true;
+        if (Recorder.recording) {
+            root.reopen = true;
+            Recorder.stop();
+            return;
+        }
+        GlobalState.essentialOpen = false;
+        Recorder.start("screen", false);
+    }
+
+    function song(): void {
+        if (!Songrec.available)
+            return;
+        root.catchSong = true;
+        Songrec.clear();
+        Songrec.toggle();
+    }
+
+    function ingestRecord(): void {
+        root.catchRecord = false;
+        root.run(["ingest-record"]);
+    }
+
+    function ingestSong(): void {
+        root.catchSong = false;
+        if (!Songrec.hasResult)
+            return;
+        root.run(["ingest-song", Songrec.title, Songrec.artist]);
+    }
+
+    function copyItem(it: var): void {
+        if (!it)
+            return;
+        if (it.path && it.path.length > 0)
+            Quickshell.execDetached(["sh", "-c",
+                `wl-copy < ${JSON.stringify(it.path)}`]);
+        else if (it.text)
+            Quickshell.execDetached(["sh", "-c",
+                `printf '%s' ${JSON.stringify(it.text)} | wl-copy`]);
+    }
+
+    function openItem(it: var): void {
+        if (it?.path)
+            Quickshell.execDetached(["xdg-open", it.path]);
+        else if (it?.kind === "song")
+            Songrec.openTrack();
+    }
+
+    Process {
+        id: keyProbe
+        stdout: StdioCollector {
+            onStreamFinished: root.hasGeminiKey = text.trim() === "yes"
+        }
+    }
+
+    Process {
+        id: backendWriter
+    }
+
+    Process {
+        id: keyWriter
+        property string payload: ""
+        command: ["python3", root.script, "set-key"]
+        onRunningChanged: {
+            if (running) {
+                write(payload);
+                stdinEnabled = false;
+            }
+        }
+        stdout: StdioCollector {
+            onStreamFinished: root.probeKey()
+        }
+    }
+
+    Process {
+        id: lister
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const data = JSON.parse(text);
+                    root.items = Array.isArray(data) ? data : [];
+                } catch (e) {
+                    root.items = [];
+                }
+                root.stamp++;
+            }
+        }
+    }
+
+    Process {
+        id: worker
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.busy = false;
+                root.status = text.trim();
+                root.refresh();
+                if (root.reopen && (root.status.startsWith("Saved")
+                        || root.status === "Mind")) {
+                    root.reopen = false;
+                    GlobalState.essentialOpen = true;
+                } else {
+                    root.reopen = false;
+                }
+            }
+        }
+        onExited: (code) => {
+            if (code !== 0)
+                root.busy = false;
+        }
+    }
+
+    Process {
+        id: calc
+        property string expr: ""
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const r = text.trim();
+                const line = r !== ""
+                    ? `${calc.expr} = ${r}`
+                    : calc.expr;
+                root.run(["add", "calc", line]);
+            }
+        }
+    }
+
+    Timer {
+        id: captureWait
+        interval: 380
+        onTriggered: Shot.capture("region", "save")
+    }
+
+    Timer {
+        id: keyWait
+        property string mon: ""
+        interval: 380
+        onTriggered: root.grimKey(keyWait.mon)
+    }
+
+    Process {
+        id: keyGrim
+        property string mon: ""
+        onExited: (code) => {
+            if (code !== 0)
+                return;
+            GlobalState.essentialFlyPath = "";
+            flyKick.restart();
+        }
+    }
+
+    Timer {
+        id: flyKick
+        interval: 20
+        onTriggered: {
+            GlobalState.essentialFlyScreen = keyGrim.mon;
+            GlobalState.essentialFlyPath = "/tmp/nothing-snip/key.png";
+            GlobalState.essentialPulse = true;
+            root.run(["ingest-last", "snip"]);
+        }
+    }
+
+    FileView {
+        path: `${root.dir}/index.json`
+        watchChanges: true
+        printErrors: false
+        onFileChanged: debounce.restart()
+    }
+
+    Timer {
+        id: debounce
+        interval: 120
+        onTriggered: root.refresh()
+    }
+
+    Connections {
+        target: Shot
+        function onFinished(message): void {
+            if (!root.catchShot)
+                return;
+            const kind = root.catchShotKind;
+            root.catchShot = false;
+            if ((message ?? "").indexOf("Cancelled") === 0
+                    || (message ?? "").indexOf("No text") === 0) {
+                root.reopen = false;
+                return;
+            }
+            root.run(["ingest-last", kind]);
+        }
+        function onCancelled(): void {
+            if (!root.catchShot)
+                return;
+            root.catchShot = false;
+            root.reopen = false;
+        }
+    }
+
+    Connections {
+        target: Recorder
+        function onFinished(message): void {
+            if (root.catchRecord)
+                root.ingestRecord();
+        }
+    }
+
+    Connections {
+        target: Songrec
+        function onHasResultChanged(): void {
+            if (root.catchSong && Songrec.hasResult)
+                root.ingestSong();
+        }
+        function onErrorChanged(): void {
+            if (root.catchSong && Songrec.error !== "")
+                root.catchSong = false;
+        }
+        function onListeningChanged(): void {
+            if (!Songrec.listening && root.catchSong && !Songrec.hasResult
+                    && Songrec.error !== "")
+                root.catchSong = false;
+        }
+    }
+
+    Component.onCompleted: {
+        root.refresh();
+        root.probeKey();
+    }
+}

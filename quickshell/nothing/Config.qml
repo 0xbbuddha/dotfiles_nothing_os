@@ -38,6 +38,9 @@ Singleton {
     property alias notificationsEnabled: a.notificationsEnabled
     property alias notificationTimeout: a.notificationTimeout
     property alias osdEnabled: a.osdEnabled
+    property alias essentialEnabled: a.essentialEnabled
+    property alias essentialSide: a.essentialSide
+    property alias mindBackend: a.mindBackend
 
     // ── Weather ───────────────────────────────────────────────────────
     property alias weatherEnabled: a.weatherEnabled
@@ -260,6 +263,9 @@ Singleton {
         a.notificationsEnabled = true;
         a.notificationTimeout = 5;
         a.osdEnabled = true;
+        a.essentialEnabled = true;
+        a.essentialSide = "right";
+        a.mindBackend = "stub";
 
         a.weatherEnabled = true;
         a.weatherCity = "";
@@ -408,6 +414,9 @@ Singleton {
             property bool notificationsEnabled: true
             property int  notificationTimeout: 5
             property bool osdEnabled: true
+            property bool   essentialEnabled: true
+            property string essentialSide: "right"   // right | left
+            property string mindBackend: "stub"      // stub | ollama | gemini
 
             property bool   weatherEnabled: true
             property string weatherCity: ""

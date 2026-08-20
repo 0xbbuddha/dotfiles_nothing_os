@@ -61,6 +61,7 @@ PanelWindow {
     property bool recapKeep: false
     property bool battKeep: false
     property bool mediaKeep: false
+    property int essentialClicks: 0
     Timer {
         id: recapHide
         interval: 220
@@ -493,6 +494,85 @@ PanelWindow {
                 anchors.margins: -Theme.px(4)
                 cursorShape: Qt.PointingHandCursor
                 onClicked: Recorder.stop()
+            }
+        }
+
+        Item {
+            Layout.alignment: Qt.AlignVCenter
+            visible: Config.essentialEnabled
+            implicitWidth: visible ? Theme.px(14) : 0
+            implicitHeight: Theme.px(18)
+
+            // Essential Key: click captures, double-click opens.
+            Rectangle {
+                id: essentialKey
+                anchors.centerIn: parent
+                width: Theme.px(7)
+                height: Theme.px(16)
+                radius: width / 2
+                color: "transparent"
+                border.width: Theme.px(1.5)
+                border.color: {
+                    if (GlobalState.essentialPulse || GlobalState.essentialOpen
+                            || essentialMa.containsMouse)
+                        return Theme.c.red;
+                    return Theme.c.onDim;
+                }
+                Behavior on border.color { ColorAnimation { duration: Theme.fast } }
+                scale: GlobalState.essentialPulse ? 1.35 : 1
+                Behavior on scale {
+                    NumberAnimation { duration: Theme.med; easing.type: Theme.ease }
+                }
+
+                Rectangle {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                    anchors.topMargin: Theme.px(3)
+                    width: Theme.px(2)
+                    height: Theme.px(2)
+                    radius: width / 2
+                    color: parent.border.color
+                }
+            }
+
+            Timer {
+                id: essentialClickWait
+                interval: 280
+                onTriggered: {
+                    bar.essentialClicks = 0;
+                    Essentials.keyShot();
+                }
+            }
+
+            MouseArea {
+                id: essentialMa
+                anchors.fill: parent
+                anchors.margins: -Theme.px(3)
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    bar.essentialClicks += 1;
+                    if (bar.essentialClicks >= 2) {
+                        essentialClickWait.stop();
+                        bar.essentialClicks = 0;
+                        if (GlobalState.essentialOpen)
+                            GlobalState.essentialOpen = false;
+                        else {
+                            GlobalState.closeAll();
+                            GlobalState.essentialOpen = true;
+                        }
+                    } else {
+                        essentialClickWait.restart();
+                    }
+                }
+            }
+
+            Tooltip {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: parent.bottom
+                anchors.topMargin: Theme.px(8)
+                text: "Click to capture · double-click to open"
+                shown: essentialMa.containsMouse
             }
         }
 

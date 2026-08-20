@@ -63,6 +63,9 @@ capture() {
 
 capture || { echo "Cancelled"; exit 1; }
 
+mkdir -p "$SNIP_DIR"
+printf '%s\n' "$FILE" > "$SNIP_DIR/last"
+
 case "$ACTION" in
     copy)
         wl-copy < "$FILE"

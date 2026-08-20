@@ -21,6 +21,7 @@ Singleton {
     property string pendingAction: "copy"
 
     signal finished(string message)
+    signal cancelled()
 
     Process {
         id: runner
@@ -77,5 +78,6 @@ Singleton {
         root.grabPending = false;
         pregrab.running = false;
         root.picking = false;
+        root.cancelled();
     }
 }

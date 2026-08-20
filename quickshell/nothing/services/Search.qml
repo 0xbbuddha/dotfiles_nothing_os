@@ -69,6 +69,8 @@ Singleton {
           run: () => GlobalState.settingsOpen = true },
         { name: "shortcuts", label: "Keyboard shortcuts", icon: "󰌌",
           run: () => GlobalState.cheatsheetOpen = true },
+        { name: "essential", label: "Essential Space", icon: "󰠮",
+          run: () => { GlobalState.closeAll(); GlobalState.essentialOpen = true; } },
         { name: "game",        label: "Toggle game mode",        icon: "󰊴",
           run: () => Game.toggle() },
         { name: "crosshair",     label: "Toggle crosshair",        icon: "󰆤",

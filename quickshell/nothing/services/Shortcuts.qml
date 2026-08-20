@@ -22,6 +22,7 @@ Singleton {
                 { keys: ["SUPER", "B"],     label: "Notifications" },
                 { keys: ["SUPER", "G"],     label: "Game bar" },
                 { keys: ["SUPER", "I"],     label: "Settings" },
+                { keys: ["SUPER", "A"],     label: "Essential Space" },
                 { keys: ["SUPER", "/"],     label: "This cheatsheet" },
                 { keys: ["CTRL", "ALT", "Del"], label: "Session menu" }
             ]

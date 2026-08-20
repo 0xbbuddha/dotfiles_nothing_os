@@ -6,11 +6,14 @@ Rectangle {
     id: root
     property alias text: input.text
     property alias placeholder: ph.text
+    property alias focused: input.activeFocus
+    property bool secret: false
     signal committed(string value)
 
     // Emitted only on Enter. committed also fires on focus loss,
     // which is not suitable to trigger an action.
     signal submitted(string value)
+    signal escaped()
 
     function clear(): void { input.text = ""; }
     function takeFocus(): void { input.forceActiveFocus(); }
@@ -33,6 +36,7 @@ Rectangle {
         color: Theme.c.on
         font.family: Theme.f.sans
         font.pixelSize: Theme.f.body
+        echoMode: root.secret ? TextInput.Password : TextInput.Normal
         selectByMouse: true
         selectionColor: Theme.c.red
         clip: true
@@ -41,6 +45,7 @@ Rectangle {
             root.committed(text);
             root.submitted(text);
         }
+        Keys.onEscapePressed: root.escaped()
     }
 
     Text {
