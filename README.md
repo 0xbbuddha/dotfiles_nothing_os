@@ -17,7 +17,7 @@ Written for **Arch / EndeavourOS**, **Hyprland ≥ 0.56** (Lua config) and
 | ![Control centre](assets/cc.png) | ![Settings](assets/settings.png) |
 | **Game bar** | **Dolphin** |
 | ![Game bar](assets/game-bar.png) | ![File explorer](assets/file-explorer.png) |
-| **Essential Space + Key |
+| **Essential Space + Key** |
 | ![Essential Space + Key](assets/essential-space-key.png) |
 
 ## Install
