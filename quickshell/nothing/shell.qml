@@ -34,6 +34,11 @@ ShellRoot {
         Osd {}
     }
 
+    Variants {
+        model: (Config.osdEnabled && Config.glyphEnabled) ? Quickshell.screens : []
+        GlyphOsd {}
+    }
+
     // One widget set per screen, like the Glyph Matrix.
     Variants {
         model: Config.showDesktopWidgets ? Quickshell.screens : []

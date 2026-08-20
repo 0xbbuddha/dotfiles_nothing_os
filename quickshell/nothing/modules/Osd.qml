@@ -2,19 +2,19 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Services.Pipewire
 import ".."
 import "../components"
 import "../services"
 
-// Volume / brightness overlay: a pill at the bottom that fades on its own.
+// Fallback pill when the Glyph Matrix is off. The pulse itself lives
+// in OsdPulse so the matrix overlay can share it.
 PanelWindow {
     id: win
     required property var modelData
 
     screen: modelData
     color: "transparent"
-    visible: Config.osdEnabled && shown
+    visible: Config.osdEnabled && !Config.glyphEnabled && OsdPulse.shown
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "nothing-osd"
 
@@ -23,20 +23,9 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     mask: Region {}   // purely decorative, captures nothing
 
-    property bool shown: false
-    property string mode: "volume"     // volume | brightness | keyboard
-    property bool armed: false         // skip showing at startup
-
-    PwObjectTracker { objects: [Pipewire.defaultAudioSink] }
-    readonly property var sink: Pipewire.defaultAudioSink
-    readonly property real volume: sink?.audio?.volume ?? 0
-    readonly property bool muted: sink?.audio?.muted ?? false
-
-    readonly property real value: {
-        if (mode === "volume") return volume;
-        if (mode === "keyboard") return Brightness.kbdValue;
-        return Brightness.combined;
-    }
+    readonly property string mode: OsdPulse.mode
+    readonly property real value: OsdPulse.level
+    readonly property bool muted: OsdPulse.muted
 
     readonly property string glyph: {
         if (mode === "keyboard") return Brightness.kbdValue > 0 ? "󰌌" : "󰌐";
@@ -44,38 +33,12 @@ PanelWindow {
             if (Brightness.extraDim) return "󰖔";
             return Brightness.value > 0.5 ? "󰃠" : "󰃞";
         }
+        if (mode === "charge") return "󰂄";
         if (muted) return "󰝟";
-        if (volume > 0.5) return "󰕾";
-        if (volume > 0) return "󰖀";
+        if (value > 0.5) return "󰕾";
+        if (value > 0) return "󰖀";
         return "󰕿";
     }
-
-    function flash(which: string): void {
-        if (!win.armed || !Config.osdEnabled) return;
-        win.mode = which;
-        win.shown = true;
-        Cava.osdHold = which === "volume" && Config.glyphEnabled;
-        hideTimer.restart();
-    }
-
-    onVolumeChanged: flash("volume")
-    onMutedChanged: flash("volume")
-
-    Connections {
-        target: Brightness
-        function onChangedExternally(kind): void {
-            win.flash(kind === "keyboard" ? "keyboard" : "brightness");
-        }
-    }
-
-    Connections {
-        target: NightLight
-        function onGammaAdjusted(): void { win.flash("brightness"); }
-    }
-
-    // Arm the OSD only after services have settled.
-    Timer { interval: 1500; running: true; onTriggered: win.armed = true }
-    Timer { id: hideTimer; interval: 1600; onTriggered: { win.shown = false; Cava.osdHold = false; } }
 
     NCard {
         id: pill
@@ -87,8 +50,8 @@ PanelWindow {
         implicitWidth: content.implicitWidth + Theme.px(26)
         implicitHeight: Theme.px(38)
 
-        opacity: win.shown ? 1 : 0
-        y: win.shown ? 0 : Theme.px(10)
+        opacity: win.visible ? 1 : 0
+        y: win.visible ? 0 : Theme.px(10)
         Behavior on opacity { NumberAnimation { duration: Theme.med; easing.type: Easing.OutQuad } }
         Behavior on y { NumberAnimation { duration: Theme.med; easing.type: Theme.ease } }
 

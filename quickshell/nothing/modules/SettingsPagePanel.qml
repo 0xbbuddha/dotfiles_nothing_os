@@ -247,7 +247,7 @@ SettingsPage {
         SettingRow {
             key: "osd"
             label: "Volume and brightness overlays"
-            hint: "The bubble shown on change"
+            hint: "On the Glyph Matrix when it is on, otherwise a bubble"
             DotSwitch {
                 checked: Config.osdEnabled
                 onToggled: (v) => { Config.osdEnabled = v; Config.save(); }

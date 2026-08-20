@@ -53,9 +53,7 @@ PanelWindow {
         }
     }
 
-    readonly property var current: (Cava.osdHold && Config.glyphEnabled)
-        ? toyVisualizer
-        : win.toyById(Config.glyphToy)
+    readonly property var current: win.toyById(Config.glyphToy)
 
     Component.onCompleted: win.place()
 

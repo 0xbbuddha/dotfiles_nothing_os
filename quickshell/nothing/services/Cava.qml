@@ -16,15 +16,13 @@ Singleton {
 
     property bool available: false
     property bool listening: false
-    property bool osdHold: false
     property var values: root._zeros()
 
     readonly property int bars: 25
     readonly property string confPath: `${Config.dir}/cava.conf`
 
     function sync(): void {
-        root.listening = Config.glyphEnabled
-            && (Config.glyphToy === "visualizer" || root.osdHold);
+        root.listening = Config.glyphEnabled && Config.glyphToy === "visualizer";
     }
 
     Component.onCompleted: root.sync()
@@ -34,8 +32,6 @@ Singleton {
         function onGlyphToyChanged(): void { root.sync(); }
         function onGlyphEnabledChanged(): void { root.sync(); }
     }
-
-    onOsdHoldChanged: root.sync()
 
     function _zeros(): var {
         const a = [];

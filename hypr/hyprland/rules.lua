@@ -39,7 +39,7 @@ hl.window_rule({
 
 hl.layer_rule({
     name  = "nothing-no-anim",
-    match = { namespace = "^nothing-(wallpaper|widgets)$" },
+    match = { namespace = "^nothing-(wallpaper|widgets|glyph-osd)$" },
     no_anim = true,
 })
 

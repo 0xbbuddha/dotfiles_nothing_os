@@ -198,6 +198,32 @@ function circle(f, radius, thickness, v, accent) {
     ring(f, 1, radius, thickness, v, accent);
 }
 
+// Concentric rings from the centre, like the Phone Glyph filling.
+// Inner radius is left dark so a digit still fits.
+function waves(f, progress, v, accent) {
+    var rings = 5;
+    var minR = 6;
+    var maxR = f.size / 2 - 1;
+    var p = Math.max(0, Math.min(1, progress));
+    for (var i = 1; i <= rings; i++) {
+        var lo = (i - 1) / rings;
+        var hi = i / rings;
+        if (p <= lo)
+            continue;
+        var lv = p >= hi ? v : v * (p - lo) * rings;
+        circle(f, minR + (i / rings) * (maxR - minR), 1.35, lv, accent);
+    }
+}
+
+function cross(f, v, accent) {
+    var c = center(f);
+    var r = f.size * 0.28;
+    line(f, c - r, c - r, c + r, c + r, v, accent);
+    line(f, c + r, c - r, c - r, c + r, v, accent);
+    line(f, c - r + 1, c - r, c + r, c + r - 1, v, accent);
+    line(f, c + r - 1, c - r, c - r, c + r - 1, v, accent);
+}
+
 function disc(f, cx, cy, radius, v, accent) {
     for (var y = Math.floor(cy - radius); y <= Math.ceil(cy + radius); y++) {
         for (var x = Math.floor(cx - radius); x <= Math.ceil(cx + radius); x++) {

@@ -42,7 +42,7 @@ QtObject {
         { key: "barTemp",         label: "Temperature in bar", page: 1, words: "temp temperature cpu bar" },
         { key: "notifications",   label: "Notifications",      page: 1, words: "notify popup alert" },
         { key: "notificationTimeout", label: "Notification duration", page: 1, words: "notify timeout seconds dismiss" },
-        { key: "osd",             label: "Volume and brightness overlays", page: 1, words: "osd bubble volume brightness" },
+        { key: "osd",             label: "Volume and brightness overlays", page: 1, words: "osd bubble volume brightness mute charge glyph" },
         { key: "night",           label: "Night light schedule", page: 1, words: "night blue light warm hyprsunset evening" },
         { key: "nightTemp",       label: "Colour temperature", page: 1, words: "kelvin warm night light" },
         { key: "weather",         label: "Weather",            page: 1, words: "weather wttr forecast" },
