@@ -35,7 +35,6 @@ PanelWindow {
     readonly property bool rightSide: Config.essentialSide !== "left"
     readonly property int paneW: Theme.px(372)
 
-    property bool held: false
     property bool grabKeys: false
     property bool searching: false
     property string tab: "lib"
@@ -60,11 +59,17 @@ PanelWindow {
         return null;
     }
 
-    visible: want || held || catching || reveal > 0.02
+    // Never keep an invisible fullscreen overlay mapped: it sits above
+    // the notification centre and eats its open animation.
+    visible: want || catching || reveal > 0.02
+
+    // While the shelf is open the catcher is the input region so a click
+    // outside closes it. While peeking, only the shelf is live — the rest
+    // of the screen (and the bar above this window) stays clickable.
+    mask: Region { item: (win.want && !win.catching) ? catcher : shelf }
 
     onWantChanged: {
         if (want) {
-            held = true;
             grabKeys = true;
             reveal = 1;
             Essentials.refresh();
@@ -74,19 +79,13 @@ PanelWindow {
                 Qt.callLater(() => find.takeFocus());
         } else {
             grabKeys = false;
-            if (Essentials.reopen || Essentials.catchShot || Essentials.catchRecord) {
-                held = false;
+            if (!win.catching)
                 reveal = 0;
-            } else if (!win.catching) {
-                reveal = 0;
-                hideHold.restart();
-            }
         }
     }
 
     onCatchingChanged: {
         if (catching) {
-            held = true;
             tab = "lib";
             openedId = "";
             reveal = 0;
@@ -96,14 +95,7 @@ PanelWindow {
             });
         } else if (!want) {
             reveal = 0;
-            hideHold.restart();
         }
-    }
-
-    Timer {
-        id: hideHold
-        interval: Theme.slow
-        onTriggered: if (!win.want && !win.catching) win.held = false
     }
 
     // Clicking a window blurs the dump field: drop the keyboard grab so
@@ -127,6 +119,7 @@ PanelWindow {
         case "ocr": return "󰈚";
         case "clip": return "󰅌";
         case "record": return "󰑊";
+        case "voice": return "󰍬";
         case "song": return "󰎈";
         case "calc": return "󰃬";
         default: return "󰠮";
@@ -146,11 +139,19 @@ PanelWindow {
     }
 
     function forYou(it: var): bool {
+        if (it.forYou === true || it.forYou === "true")
+            return true;
         const w = (it.when ?? "").trim();
         if (w !== "" && w.toLowerCase() !== "null")
             return true;
         const rem = it.reminders ?? [];
-        return rem.length > 0;
+        if (rem.length > 0)
+            return true;
+        const acts = it.actions ?? [];
+        const kind = it.kind ?? "";
+        if ((kind === "voice" || kind === "note") && acts.length > 0)
+            return true;
+        return false;
     }
 
     function whenPretty(iso: string): string {
@@ -211,6 +212,7 @@ PanelWindow {
     }
 
     MouseArea {
+        id: catcher
         anchors.fill: parent
         enabled: win.want && !win.catching
         onPressed: GlobalState.essentialOpen = false
@@ -292,10 +294,12 @@ PanelWindow {
                     Item { Layout.fillWidth: true }
 
                     NLabel {
-                        visible: Essentials.busy || Songrec.listening || Recorder.recording
-                        text: Recorder.recording ? Recorder.timecode()
+                        visible: Essentials.busy || Songrec.listening
+                            || Recorder.recording || Voice.recording
+                        text: Voice.recording ? ("VOICE  " + Voice.timecode())
+                            : (Recorder.recording ? Recorder.timecode()
                             : (Songrec.listening ? "LISTENING"
-                            : (Essentials.busy ? "MIND" : ""))
+                            : (Essentials.busy ? "MIND" : "")))
                         dim: false
                     }
                 }
@@ -376,6 +380,22 @@ PanelWindow {
                                     fillMode: Image.PreserveAspectCrop
                                     asynchronous: true
                                     sourceSize.height: Theme.px(64)
+                                }
+
+                                Rectangle {
+                                    Layout.preferredWidth: Theme.px(36)
+                                    Layout.preferredHeight: Theme.px(36)
+                                    visible: !card.hasImage && ["voice", "record", "song"]
+                                        .indexOf(card.it.kind ?? "") >= 0
+                                    radius: Theme.r.tiny
+                                    color: Theme.c.surface
+
+                                    NIcon {
+                                        anchors.centerIn: parent
+                                        text: win.kindIcon(card.it.kind ?? "note")
+                                        size: Theme.px(16)
+                                        color: Theme.c.onDim
+                                    }
                                 }
 
                                 ColumnLayout {

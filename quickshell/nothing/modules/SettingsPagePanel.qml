@@ -261,7 +261,7 @@ SettingsPage {
         SettingRow {
             key: "essential"
             label: "Essential Space"
-            hint: "Click the key to capture, double-click to open. SUPER+A still opens."
+            hint: "Click the key to capture, double-click to open, hold to record a voice note. SUPER+A still opens."
             DotSwitch {
                 checked: Config.essentialEnabled
                 onToggled: (v) => { Config.essentialEnabled = v; Config.save(); }

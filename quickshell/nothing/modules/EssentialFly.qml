@@ -32,6 +32,7 @@ PanelWindow {
     readonly property int paneW: Theme.px(372)
 
     visible: path !== "" && onThisScreen
+    mask: Region { item: card }
 
     property real fold: 0
     property real dock: 0
@@ -73,8 +74,6 @@ PanelWindow {
             flash.opacity = 0;
         }
     }
-
-    MouseArea { anchors.fill: parent }
 
     Item {
         id: card

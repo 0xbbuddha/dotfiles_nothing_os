@@ -10,8 +10,8 @@ import ".."
 import "../components"
 import "../services"
 
-// Three independent islands: the clock stays at the centre of the screen,
-// whatever workspaces or indicators do.
+// Four independent islands. The clock and Essential Key sit together at
+// the centre of the screen; workspaces and the CC stay on the edges.
 //
 // The CC and flyouts live on a separate layer. Growing the bar window
 // reconfigures the Hyprland layer and the navbar blinks as if it were
@@ -37,6 +37,7 @@ PanelWindow {
         regions: [
             Region { item: leftIsland },
             Region { item: clockIsland },
+            Region { item: keyIsland.visible ? keyIsland : null },
             Region { item: rightIsland }
         ]
     }
@@ -49,10 +50,10 @@ PanelWindow {
 
     readonly property int edge: Theme.px(10)
     readonly property int islandGap: Theme.px(12)
-    readonly property real clockX: (width - clockIsland.width) / 2
-    readonly property real leftMax: Math.max(Theme.px(72), clockX - edge - islandGap)
+    readonly property real midX: (width - midCluster.width) / 2
+    readonly property real leftMax: Math.max(Theme.px(72), midX - edge - islandGap)
     readonly property real rightMax: Math.max(Theme.px(72),
-        width - edge - clockX - clockIsland.width - islandGap)
+        width - edge - midX - midCluster.width - islandGap)
 
     function openCc(): void {
         GlobalState.controlCenterOpen = !GlobalState.controlCenterOpen;
@@ -62,6 +63,7 @@ PanelWindow {
     property bool battKeep: false
     property bool mediaKeep: false
     property int essentialClicks: 0
+    property bool essentialHeld: false
     Timer {
         id: recapHide
         interval: 220
@@ -156,15 +158,23 @@ PanelWindow {
         }
     }
 
-    // ── Centre: the clock no longer moves ─────────────────────────────
-    NCard {
-        id: clockIsland
+    // ── Centre: clock + Essential Key, centred as a pair ──────────────
+    Item {
+        id: midCluster
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
         anchors.topMargin: Theme.px(5)
-        radius: Theme.r.pill
         height: Theme.z.bar
-        width: clockText.implicitWidth + Theme.px(28)
+        width: clockIsland.width
+            + (keyIsland.visible ? bar.islandGap + keyIsland.width : 0)
+
+        NCard {
+            id: clockIsland
+            anchors.left: parent.left
+            anchors.top: parent.top
+            radius: Theme.r.pill
+            height: Theme.z.bar
+            width: clockText.implicitWidth + Theme.px(28)
 
         DisplayText {
             id: clockText
@@ -196,6 +206,123 @@ PanelWindow {
             radius: height / 2
             color: Theme.c.red
             Behavior on width { NumberAnimation { duration: Theme.med; easing.type: Theme.ease } }
+        }
+        }
+
+        NCard {
+            id: keyIsland
+            visible: Config.essentialEnabled
+            anchors.left: clockIsland.right
+            anchors.leftMargin: bar.islandGap
+            anchors.top: parent.top
+            radius: Theme.r.pill
+            height: Theme.z.bar
+            width: Theme.z.bar
+
+        Rectangle {
+            id: essentialKey
+            anchors.centerIn: parent
+            width: Theme.px(7)
+            height: Theme.px(16)
+            radius: width / 2
+            color: Voice.recording ? Theme.c.red : "transparent"
+            border.width: Theme.px(1.5)
+            border.color: {
+                if (Voice.recording || GlobalState.essentialPulse
+                        || GlobalState.essentialOpen
+                        || essentialMa.containsMouse)
+                    return Theme.c.red;
+                return Theme.c.onDim;
+            }
+            Behavior on border.color { ColorAnimation { duration: Theme.fast } }
+            Behavior on color { ColorAnimation { duration: Theme.fast } }
+            scale: Voice.recording ? 1.2
+                 : (GlobalState.essentialPulse ? 1.35 : 1)
+            Behavior on scale {
+                NumberAnimation { duration: Theme.med; easing.type: Theme.ease }
+            }
+
+            Rectangle {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: parent.top
+                anchors.topMargin: Theme.px(3)
+                width: Theme.px(2)
+                height: Theme.px(2)
+                radius: width / 2
+                color: parent.border.color
+                visible: !Voice.recording
+            }
+
+            SequentialAnimation on opacity {
+                running: Voice.recording
+                loops: Animation.Infinite
+                NumberAnimation { to: 0.35; duration: 520 }
+                NumberAnimation { to: 1.0; duration: 520 }
+                onRunningChanged: if (!running) essentialKey.opacity = 1
+            }
+        }
+
+        Timer {
+            id: essentialClickWait
+            interval: 280
+            onTriggered: {
+                bar.essentialClicks = 0;
+                Essentials.keyShot();
+            }
+        }
+
+        MouseArea {
+            id: essentialMa
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            pressAndHoldInterval: 500
+            onPressed: {
+                bar.essentialHeld = false;
+                essentialClickWait.stop();
+            }
+            onPressAndHold: {
+                bar.essentialHeld = true;
+                essentialClickWait.stop();
+                bar.essentialClicks = 0;
+                if (Voice.recording)
+                    Essentials.stopVoice();
+                else
+                    Essentials.startVoice();
+            }
+            onClicked: {
+                if (bar.essentialHeld)
+                    return;
+                if (Voice.recording) {
+                    Essentials.stopVoice();
+                    return;
+                }
+                bar.essentialClicks += 1;
+                if (bar.essentialClicks >= 2) {
+                    essentialClickWait.stop();
+                    bar.essentialClicks = 0;
+                    if (GlobalState.essentialOpen)
+                        GlobalState.essentialOpen = false;
+                    else {
+                        GlobalState.closeAll();
+                        GlobalState.essentialOpen = true;
+                    }
+                } else {
+                    essentialClickWait.restart();
+                }
+            }
+        }
+
+        Tooltip {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: parent.bottom
+            anchors.topMargin: Theme.px(8)
+            text: Voice.recording
+                ? ("Recording " + Voice.timecode() + " · click to save")
+                : "Click to capture · double-click to open · hold to talk"
+            shown: essentialMa.containsMouse
+            enabled: false
+        }
         }
     }
 
@@ -499,87 +626,9 @@ PanelWindow {
 
         Item {
             Layout.alignment: Qt.AlignVCenter
-            visible: Config.essentialEnabled
-            implicitWidth: visible ? Theme.px(14) : 0
-            implicitHeight: Theme.px(18)
-
-            // Essential Key: click captures, double-click opens.
-            Rectangle {
-                id: essentialKey
-                anchors.centerIn: parent
-                width: Theme.px(7)
-                height: Theme.px(16)
-                radius: width / 2
-                color: "transparent"
-                border.width: Theme.px(1.5)
-                border.color: {
-                    if (GlobalState.essentialPulse || GlobalState.essentialOpen
-                            || essentialMa.containsMouse)
-                        return Theme.c.red;
-                    return Theme.c.onDim;
-                }
-                Behavior on border.color { ColorAnimation { duration: Theme.fast } }
-                scale: GlobalState.essentialPulse ? 1.35 : 1
-                Behavior on scale {
-                    NumberAnimation { duration: Theme.med; easing.type: Theme.ease }
-                }
-
-                Rectangle {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.top: parent.top
-                    anchors.topMargin: Theme.px(3)
-                    width: Theme.px(2)
-                    height: Theme.px(2)
-                    radius: width / 2
-                    color: parent.border.color
-                }
-            }
-
-            Timer {
-                id: essentialClickWait
-                interval: 280
-                onTriggered: {
-                    bar.essentialClicks = 0;
-                    Essentials.keyShot();
-                }
-            }
-
-            MouseArea {
-                id: essentialMa
-                anchors.fill: parent
-                anchors.margins: -Theme.px(3)
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                    bar.essentialClicks += 1;
-                    if (bar.essentialClicks >= 2) {
-                        essentialClickWait.stop();
-                        bar.essentialClicks = 0;
-                        if (GlobalState.essentialOpen)
-                            GlobalState.essentialOpen = false;
-                        else {
-                            GlobalState.closeAll();
-                            GlobalState.essentialOpen = true;
-                        }
-                    } else {
-                        essentialClickWait.restart();
-                    }
-                }
-            }
-
-            Tooltip {
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.top: parent.bottom
-                anchors.topMargin: Theme.px(8)
-                text: "Click to capture · double-click to open"
-                shown: essentialMa.containsMouse
-            }
-        }
-
-        Item {
-            Layout.alignment: Qt.AlignVCenter
             Layout.preferredWidth: Theme.px(22)
             Layout.preferredHeight: Theme.px(14)
+            z: 1
 
             NIcon {
                 anchors.centerIn: parent
@@ -617,8 +666,16 @@ PanelWindow {
                 cursorShape: Qt.PointingHandCursor
                 acceptedButtons: Qt.LeftButton | Qt.RightButton
                 onClicked: (m) => {
-                    if (m.button === Qt.RightButton) Notifs.doNotDisturb = !Notifs.doNotDisturb;
-                    else GlobalState.notifCenterOpen = true;
+                    if (m.button === Qt.RightButton) {
+                        Notifs.doNotDisturb = !Notifs.doNotDisturb;
+                        return;
+                    }
+                    if (GlobalState.notifCenterOpen) {
+                        GlobalState.notifCenterOpen = false;
+                        return;
+                    }
+                    GlobalState.closeAll();
+                    GlobalState.notifCenterOpen = true;
                 }
             }
         }

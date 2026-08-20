@@ -18,6 +18,7 @@ Singleton {
     property bool catchRecord: false
     property bool catchSong: false
     property bool catchShot: false
+    property bool catchVoice: false
     property string catchShotKind: "snip"
     property bool reopen: false
     property bool hasGeminiKey: false
@@ -133,6 +134,7 @@ Singleton {
 
     function finishFly(): void {
         GlobalState.essentialFlyPath = "";
+        GlobalState.essentialFlyScreen = "";
         GlobalState.essentialPulse = false;
         GlobalState.essentialCatching = false;
     }
@@ -163,6 +165,32 @@ Singleton {
         root.run(["ingest-record"]);
     }
 
+    function startVoice(): void {
+        if (Voice.recording)
+            return;
+        root.catchVoice = true;
+        GlobalState.essentialPulse = true;
+        Voice.start();
+    }
+
+    function stopVoice(): void {
+        if (!Voice.recording)
+            return;
+        Voice.stop();
+    }
+
+    function ingestVoice(): void {
+        root.catchVoice = false;
+        GlobalState.essentialPulse = false;
+        root.run(["ingest-voice"]);
+        if (GlobalState.essentialOpen)
+            return;
+        const mon = Hyprland.focusedMonitor?.name ?? "";
+        GlobalState.essentialFlyScreen = mon;
+        GlobalState.essentialCatching = true;
+        voicePeek.restart();
+    }
+
     function ingestSong(): void {
         root.catchSong = false;
         if (!Songrec.hasResult)
@@ -173,6 +201,11 @@ Singleton {
     function copyItem(it: var): void {
         if (!it)
             return;
+        if (it.kind === "voice" && it.text) {
+            Quickshell.execDetached(["sh", "-c",
+                `printf '%s' ${JSON.stringify(it.text)} | wl-copy`]);
+            return;
+        }
         if (it.path && it.path.length > 0)
             Quickshell.execDetached(["sh", "-c",
                 `wl-copy < ${JSON.stringify(it.path)}`]);
@@ -300,6 +333,15 @@ Singleton {
         }
     }
 
+    Timer {
+        id: voicePeek
+        interval: 1600
+        onTriggered: {
+            if (!GlobalState.essentialOpen)
+                GlobalState.essentialCatching = false;
+        }
+    }
+
     FileView {
         path: `${root.dir}/index.json`
         watchChanges: true
@@ -340,6 +382,20 @@ Singleton {
         function onFinished(message): void {
             if (root.catchRecord)
                 root.ingestRecord();
+        }
+    }
+
+    Connections {
+        target: Voice
+        function onFinished(message): void {
+            GlobalState.essentialPulse = false;
+            if (!root.catchVoice)
+                return;
+            if (message !== "ok") {
+                root.catchVoice = false;
+                return;
+            }
+            root.ingestVoice();
         }
     }
 

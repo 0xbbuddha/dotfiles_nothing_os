@@ -43,7 +43,7 @@ QtObject {
         { key: "notifications",   label: "Notifications",      page: 1, words: "notify popup alert" },
         { key: "notificationTimeout", label: "Notification duration", page: 1, words: "notify timeout seconds dismiss" },
         { key: "osd",             label: "Volume and brightness overlays", page: 1, words: "osd bubble volume brightness mute charge glyph" },
-        { key: "essential",       label: "Essential Space", page: 1, words: "essential space note clip snip ocr record song mind ollama gemini key" },
+        { key: "essential",       label: "Essential Space", page: 1, words: "essential space note clip snip ocr record song voice mic mind ollama gemini key" },
         { key: "essentialSide",   label: "Essential shelf", page: 1, words: "essential side left right shelf pane panel" },
         { key: "mind",            label: "Mind",            page: 1, words: "mind ollama gemini ai stub essential" },
         { key: "geminiKey",       label: "Gemini API key",  page: 1, words: "gemini api key google ai studio mind" },

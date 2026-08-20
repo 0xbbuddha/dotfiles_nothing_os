@@ -72,13 +72,13 @@ ShellRoot {
     Variants { model: Quickshell.screens; Settings {} }
     Variants { model: Quickshell.screens; Launcher {} }
     Variants { model: Quickshell.screens; Session {} }
-    Variants { model: Quickshell.screens; NotificationCenter {} }
     Variants { model: Quickshell.screens; Screenshot {} }
     Variants { model: Quickshell.screens; GameBar {} }
     Variants { model: Quickshell.screens; RegionPicker {} }
     Variants { model: Quickshell.screens; Cheatsheet {} }
     Variants { model: Quickshell.screens; Essential {} }
     Variants { model: Quickshell.screens; EssentialFly {} }
+    Variants { model: Quickshell.screens; NotificationCenter {} }
     Variants { model: Quickshell.screens; PolkitDialog {} }
 
     // The crosshair lives on every screen, unmasked: never clickable.

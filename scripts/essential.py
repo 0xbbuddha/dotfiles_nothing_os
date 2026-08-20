@@ -9,6 +9,7 @@ Commands:
   ocr
   ingest KIND PATH [TEXT...]
   ingest-record
+  ingest-voice
   ingest-song TITLE [ARTIST...]
   remove ID
   mind ID [backend]
@@ -23,6 +24,7 @@ from __future__ import annotations
 import base64
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -30,6 +32,7 @@ import time
 import urllib.error
 import urllib.request
 import uuid
+from datetime import datetime, timedelta
 from pathlib import Path
 
 DATA = Path(os.environ.get("XDG_DATA_HOME") or (Path.home() / ".local/share"))
@@ -37,6 +40,7 @@ DIR = DATA / "nothing" / "essentials"
 INDEX = DIR / "index.json"
 FILES = DIR / "files"
 LAST_RECORD = Path(os.environ.get("XDG_RUNTIME_DIR") or "/tmp") / "nothing-record.last"
+LAST_VOICE = Path(os.environ.get("XDG_RUNTIME_DIR") or "/tmp") / "nothing-voice.last"
 MIND_ENV = Path.home() / ".config" / "nothing" / "mind.env"
 CAP = 80
 
@@ -152,6 +156,7 @@ def stub_mind(entry: dict) -> dict:
             "snip": "Screenshot",
             "ocr": "Text from a capture",
             "record": "Recording",
+            "voice": "Voice note",
             "song": "Track",
             "clip": "Clipboard",
             "calc": "Result",
@@ -161,9 +166,139 @@ def stub_mind(entry: dict) -> dict:
         entry["summary"] = ""
     entry.setdefault("tags", [])
     entry.setdefault("actions", [])
-    entry.setdefault("when", "")
+    entry.setdefault("reminders", [])
+    if not entry.get("when"):
+        entry["when"] = infer_when(text)
+    if not entry.get("when") and task_intent(text):
+        entry["when"] = iso_when(clock())
+    entry["forYou"] = bool(entry.get("when")) or task_intent(text)
     entry["mind"] = "stub"
     return entry
+
+
+def clock() -> datetime:
+    return datetime.now().replace(microsecond=0)
+
+
+def iso_when(dt: datetime) -> str:
+    return dt.strftime("%Y-%m-%dT%H:%M:%S")
+
+
+def mind_clock_line() -> str:
+    now = clock()
+    return (
+        f"Current local datetime: {iso_when(now)} "
+        f"({now.strftime('%A')}). Resolve relative dates against this."
+    )
+
+
+def mind_rules() -> str:
+    return (
+        "Return JSON only, keys: title (short), summary (one or two sentences), "
+        "transcript (full text, voice notes only, else empty), "
+        "tags (array of 1-4 lowercase words), "
+        "actions (array of short next steps, empty if none), "
+        "when (ISO 8601 local datetime YYYY-MM-DDTHH:MM:SS if this is a task, "
+        "to-do, reminder, deadline, event, appointment, or mentions any date "
+        "or time; date-only tasks use 09:00; else empty string), "
+        "forYou (true if Essential For You should surface it: any task, "
+        "reminder, deadline, date, rendez-vous or thing to follow up; "
+        "false for a plain memo). "
+        "Library stores every capture. For You only gets forYou true or a when. "
+        "No markdown.\n"
+        f"{mind_clock_line()}\n"
+    )
+
+
+def normalise_when(value) -> str:
+    if isinstance(value, dict):
+        value = value.get("datetime") or value.get("date") or value.get("iso") or ""
+    raw = str(value or "").strip()
+    if raw.lower() in ("", "none", "null", "n/a", "undefined"):
+        return ""
+    raw = raw.replace(" ", "T", 1) if "T" not in raw and " " in raw else raw
+    if re.match(r"^\d{4}-\d{2}-\d{2}$", raw):
+        raw = raw + "T09:00:00"
+    try:
+        dt = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        if dt.tzinfo is not None:
+            dt = dt.astimezone().replace(tzinfo=None)
+        return iso_when(dt)
+    except ValueError:
+        return ""
+
+
+def task_intent(blob: str) -> bool:
+    t = (blob or "").lower()
+    keys = (
+        "rappel", "rappelle", "n'oublie", "n oublie", "oublie pas",
+        "il faut", "faut que", "à faire", "a faire", "tache", "tâche",
+        "todo", "to-do", "to do", "remind", "reminder", "deadline",
+        "rdv", "rendez-vous", "rendez vous", "appointment", "meeting",
+        "réunion", "reunion", "échéance", "echeance", "follow up",
+        "n'oubliez", "pense à", "pense a",
+    )
+    return any(k in t for k in keys)
+
+
+def infer_when(blob: str) -> str:
+    t = (blob or "").lower()
+    if not t:
+        return ""
+    now = clock()
+    day = now
+    found_day = False
+    if re.search(r"\b(apr[eè]s[-\s]?demain|day after tomorrow)\b", t):
+        day = now + timedelta(days=2)
+        found_day = True
+    elif re.search(r"\b(demain|tomorrow)\b", t):
+        day = now + timedelta(days=1)
+        found_day = True
+    elif re.search(r"\b(aujourd['’]?hui|today)\b", t):
+        found_day = True
+    else:
+        week = {
+            "lundi": 0, "monday": 0, "mardi": 1, "tuesday": 1,
+            "mercredi": 2, "wednesday": 2, "jeudi": 3, "thursday": 3,
+            "vendredi": 4, "friday": 4, "samedi": 5, "saturday": 5,
+            "dimanche": 6, "sunday": 6,
+        }
+        for name, idx in week.items():
+            if re.search(rf"\b{name}\b", t):
+                delta = (idx - now.weekday()) % 7
+                day = now + timedelta(days=delta)
+                found_day = True
+                break
+
+    hour, minute = 9, 0
+    found_time = False
+    m = re.search(r"\b(\d{1,2})\s*h\s*(\d{2})?\b", t)
+    if not m:
+        m = re.search(r"\b(\d{1,2}):(\d{2})\b", t)
+    if m:
+        hour = int(m.group(1))
+        minute = int(m.group(2) or 0)
+        found_time = 0 <= hour <= 23 and 0 <= minute <= 59
+    else:
+        ampm = re.search(r"\b(\d{1,2})\s*(am|pm)\b", t)
+        if ampm:
+            hour = int(ampm.group(1)) % 12
+            if ampm.group(2) == "pm":
+                hour += 12
+            found_time = True
+    if re.search(r"\b(ce soir|tonight|this evening)\b", t) and not found_time:
+        hour, minute, found_time = 20, 0, True
+    if re.search(r"\b(ce matin|this morning)\b", t) and not found_time:
+        hour, minute, found_time = 9, 0, True
+
+    if not found_day and not found_time:
+        return ""
+    if not found_time:
+        hour, minute = 9, 0
+    try:
+        return iso_when(day.replace(hour=hour, minute=minute, second=0))
+    except ValueError:
+        return ""
 
 
 def ollama_mind(entry: dict, model: str) -> dict:
@@ -171,10 +306,9 @@ def ollama_mind(entry: dict, model: str) -> dict:
     if not text or not have("ollama"):
         return stub_mind(entry)
     prompt = (
-        "Return JSON only, keys: title (short), summary (one or two sentences), "
-        "tags (array of 1-4 lowercase words). No markdown.\n"
-        f"Kind: {entry.get('kind')}\n"
-        f"Text:\n{text[:4000]}\n"
+        mind_rules()
+        + f"Kind: {entry.get('kind')}\n"
+        + f"Text:\n{text[:4000]}\n"
     )
     try:
         raw = subprocess.check_output(
@@ -202,41 +336,74 @@ def paint_mind(entry: dict, data: dict, source: str) -> None:
     entry["tags"] = [str(t)[:24] for t in tags][:4]
     actions = data.get("actions") if isinstance(data.get("actions"), list) else []
     entry["actions"] = [str(a)[:80] for a in actions if str(a).strip()][:4]
-    when = str(data.get("when") or "").strip()
-    if when.lower() in ("", "none", "null", "n/a"):
-        when = ""
-    entry["when"] = when[:32]
+    rems = data.get("reminders") if isinstance(data.get("reminders"), list) else []
+    entry["reminders"] = [str(r)[:80] for r in rems if str(r).strip()][:4]
+    transcript = str(data.get("transcript") or "").strip()
+    if transcript:
+        entry["text"] = transcript[:4000]
+        if not str(entry.get("summary") or "").strip():
+            entry["summary"] = transcript[:400]
+    blob = " ".join([
+        str(entry.get("text") or ""),
+        str(entry.get("summary") or ""),
+        str(entry.get("title") or ""),
+        " ".join(entry.get("actions") or []),
+        " ".join(entry.get("reminders") or []),
+    ])
+    when = normalise_when(data.get("when"))
+    if not when:
+        when = infer_when(blob)
+    fy = data.get("forYou")
+    if isinstance(fy, str):
+        fy = fy.strip().lower() in ("1", "true", "yes")
+    else:
+        fy = bool(fy)
+    if not when and (fy or task_intent(blob) or entry.get("reminders")):
+        when = iso_when(clock())
+    entry["when"] = when[:40]
+    entry["forYou"] = bool(when) or fy or bool(entry.get("reminders"))
     entry["mind"] = source
 
 
 def gemini_parts(entry: dict) -> list:
     kind = entry.get("kind") or "note"
     text = (entry.get("text") or "").strip()
-    prompt = (
-        "You organise a capture for Nothing Essential Space. "
-        "Return JSON only, keys: title (short), summary (one or two sentences), "
-        "tags (array of 1-4 lowercase words), actions (array of short next steps, "
-        "empty if none), when (ISO 8601 datetime if this is a reminder, deadline, "
-        "event or appointment to remember, else empty string). "
-        "Library stores every capture with its summary. For You only gets items "
-        "with a real when datetime. No markdown.\n"
-        f"Kind: {kind}\n"
-        f"Text:\n{text[:4000]}\n"
-    )
+    if kind == "voice":
+        prompt = (
+            "This is a spoken voice note. Transcribe it fully, then organise it. "
+            "Spoken dates are often relative (demain, lundi, 15h, tomorrow, "
+            "next week) or tasks (il faut, n'oublie pas, remind me). Those "
+            "must set when and forYou true so they appear in For You.\n"
+            + mind_rules()
+            + f"Kind: {kind}\n"
+        )
+    else:
+        prompt = (
+            "You organise a capture for Nothing Essential Space. "
+            + mind_rules()
+            + f"Kind: {kind}\n"
+            + f"Text:\n{text[:4000]}\n"
+        )
     parts: list = [{"text": prompt}]
     path = Path(entry.get("path") or "")
     if not path.is_file():
         return parts
     suffix = path.suffix.lower()
-    mime = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
-            ".webp": "image/webp"}.get(suffix)
+    mime = {
+        ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+        ".webp": "image/webp",
+        ".wav": "audio/wav", ".oga": "audio/ogg", ".ogg": "audio/ogg",
+        ".opus": "audio/ogg", ".mp3": "audio/mpeg", ".m4a": "audio/mp4",
+        ".flac": "audio/flac",
+    }.get(suffix)
     if not mime:
         return parts
     try:
         raw = path.read_bytes()
     except OSError:
         return parts
-    if not raw or len(raw) > 4_000_000:
+    limit = 12_000_000 if mime.startswith("audio/") else 4_000_000
+    if not raw or len(raw) > limit:
         return parts
     parts.append({
         "inline_data": {
@@ -290,7 +457,7 @@ def gemini_once(entry: dict, key: str, model: str) -> tuple[bool, str]:
         headers={"Content-Type": "application/json"},
     )
     try:
-        with urllib.request.urlopen(req, timeout=45) as resp:
+        with urllib.request.urlopen(req, timeout=75 if entry.get("kind") == "voice" else 45) as resp:
             payload = json.loads(resp.read().decode("utf-8", "replace"))
         text = (
             payload.get("candidates", [{}])[0]
@@ -514,6 +681,16 @@ def cmd_ingest_record(backend: str) -> None:
     cmd_ingest("record", path, Path(path).name, backend)
 
 
+def cmd_ingest_voice(backend: str) -> None:
+    if not LAST_VOICE.exists():
+        fail("No voice note")
+    path = LAST_VOICE.read_text(encoding="utf-8").strip()
+    src = Path(path)
+    if not path or not src.is_file() or src.stat().st_size < 800:
+        fail("No voice note")
+    cmd_ingest("voice", path, "", backend)
+
+
 def cmd_ingest_last(kind: str, backend: str) -> None:
     last = Path("/tmp/nothing-snip/last")
     if not last.exists():
@@ -624,6 +801,8 @@ def main() -> None:
         cmd_ingest(kind, path, text, backend)
     elif cmd == "ingest-record":
         cmd_ingest_record(backend)
+    elif cmd == "ingest-voice":
+        cmd_ingest_voice(backend)
     elif cmd == "ingest-last":
         cmd_ingest_last(args[1] if len(args) > 1 else "snip", backend)
     elif cmd == "ingest-song":

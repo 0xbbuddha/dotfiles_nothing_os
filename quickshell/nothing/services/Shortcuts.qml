@@ -93,6 +93,9 @@ Singleton {
                 { keys: ["CTRL", "Print"],      label: "Capture to a file" },
                 { keys: ["SUPER", "SHIFT", "X"],  label: "OCR a selection" },
                 { keys: ["SUPER", "SHIFT", "C"],  label: "Colour picker" },
+                { keys: ["key"],                label: "Essential Key · capture" },
+                { keys: ["key", "×2"],          label: "Essential Key · open" },
+                { keys: ["hold key"],           label: "Essential Key · voice note" },
                 { keys: ["SUPER", "SHIFT", "R"],  label: "Record a region" },
                 { keys: ["CTRL", "ALT", "R"],   label: "Record the screen" },
                 { keys: ["SUPER", "SHIFT", "ALT", "R"], label: "Record with audio" }
