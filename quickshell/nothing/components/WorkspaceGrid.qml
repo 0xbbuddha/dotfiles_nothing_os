@@ -22,7 +22,12 @@ Item {
     readonly property int cols: Config.workspaceCols
     readonly property int count: rows * cols
 
-    readonly property var monitor: Hyprland.monitorFor(screenInfo)
+    // Re-resolved when the monitor list changes: monitorFor() alone is a
+    // one-shot call and would keep a dead HyprlandMonitor after a hotplug.
+    readonly property var monitor: {
+        Hyprland.monitors.values;
+        return Hyprland.monitorFor(screenInfo);
+    }
     readonly property real monW: monitor?.width ?? 1920
     readonly property real monH: monitor?.height ?? 1080
     readonly property real monX: monitor?.x ?? 0

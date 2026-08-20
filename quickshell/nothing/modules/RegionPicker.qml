@@ -13,7 +13,10 @@ PanelWindow {
     id: win
     required property var modelData
 
-    readonly property var mon: Hyprland.monitorFor(modelData)
+    readonly property var mon: {
+        Hyprland.monitors.values;
+        return Hyprland.monitorFor(modelData);
+    }
     readonly property real offX: mon?.x ?? (modelData?.x ?? 0)
     readonly property real offY: mon?.y ?? (modelData?.y ?? 0)
     readonly property bool onFocusedMonitor:

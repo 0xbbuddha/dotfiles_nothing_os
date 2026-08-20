@@ -27,7 +27,15 @@ PanelWindow {
 
     readonly property bool autoHide: Config.dockAutoHide
 
-    readonly property var monitor: Hyprland.monitorFor(modelData)
+    // monitorFor() is a plain call: without a reactive dependency the
+    // binding runs once and keeps a pointer to the HyprlandMonitor that
+    // existed at startup. After a hotplug, a DPMS cycle or a hyprctl
+    // reload that object is gone, activeWsId freezes on whatever
+    // workspace was active then, and the dock never comes back out.
+    readonly property var monitor: {
+        Hyprland.monitors.values;
+        return Hyprland.monitorFor(modelData);
+    }
 
     // Active workspace of THIS screen (not global focus, which may be
     // on the other monitor).
@@ -50,11 +58,15 @@ PanelWindow {
         const list = Hyprland.toplevels?.values ?? [];
         for (let i = 0; i < list.length; i++) {
             const t = list[i];
-            const ipc = t.lastIpcObject ?? {};
-            if (ipc.hidden)
+            // Closed windows linger in the model with a stale
+            // lastIpcObject but no workspace object: trusting the IPC
+            // copy would keep the workspace looking occupied forever.
+            const w = t.workspace;
+            if (!w)
                 continue;
-            const id = t.workspace?.id ?? ipc.workspace?.id ?? -1;
-            if (id === ws)
+            if (t.lastIpcObject?.hidden)
+                continue;
+            if (w.id === ws)
                 return true;
         }
         return false;
@@ -86,15 +98,43 @@ PanelWindow {
         target: Hyprland
         function onRawEvent(event: var): void {
             const n = event.name;
+            // A monitor's lastIpcObject is only rewritten by an
+            // explicit refresh, and that is where specialWorkspace
+            // lives. Without this, opening the scratchpad once pins
+            // activeWsId to -98 and the dock never comes back out.
+            if (n === "activespecial" || n === "activespecialv2"
+                || n === "focusedmon" || n === "focusedmonv2"
+                || n === "monitoradded" || n === "monitoraddedv2"
+                || n === "monitorremoved")
+                Hyprland.refreshMonitors();
+
             if (n === "openwindow" || n === "closewindow"
                 || n === "movewindow" || n === "movewindowv2"
                 || n === "workspace" || n === "workspacev2"
-                || n === "focusedmon" || n === "focusedmonv2")
+                || n === "focusedmon" || n === "focusedmonv2"
+                || n === "activespecial" || n === "activespecialv2"
+                || n === "monitoradded" || n === "monitoraddedv2"
+                || n === "monitorremoved")
                 toplevelRefresh.restart();
         }
     }
 
-    Component.onCompleted: Hyprland.refreshToplevels()
+    Component.onCompleted: {
+        Hyprland.refreshMonitors();
+        Hyprland.refreshToplevels();
+    }
+
+    // Safety net: a dropped event would otherwise leave the dock stuck
+    // off-screen until the next reload. Only runs while it is hidden.
+    Timer {
+        running: win.autoHide && !win.revealed
+        interval: 5000
+        repeat: true
+        onTriggered: {
+            Hyprland.refreshMonitors();
+            Hyprland.refreshToplevels();
+        }
+    }
 
     onHoveredChanged: {
         if (hotzone.containsMouse && !dockArea.containsMouse && !win.armed)
