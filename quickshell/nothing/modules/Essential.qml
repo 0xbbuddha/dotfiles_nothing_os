@@ -74,14 +74,31 @@ PanelWindow {
             reveal = 1;
             Essentials.refresh();
             dump.clear();
-            Qt.callLater(() => dump.takeFocus());
-            if (win.searching)
-                Qt.callLater(() => find.takeFocus());
+            const fid = GlobalState.essentialFocus;
+            if (fid !== "") {
+                win.openFromSearch(fid);
+                GlobalState.essentialFocus = "";
+            } else {
+                Qt.callLater(() => dump.takeFocus());
+                if (win.searching)
+                    Qt.callLater(() => find.takeFocus());
+            }
             Essentials.endPeek();
         } else {
             grabKeys = false;
             if (!win.catching)
                 reveal = 0;
+        }
+    }
+
+    Connections {
+        target: GlobalState
+        function onEssentialFocusChanged(): void {
+            const fid = GlobalState.essentialFocus;
+            if (fid === "" || !win.want)
+                return;
+            win.openFromSearch(fid);
+            GlobalState.essentialFocus = "";
         }
     }
 
@@ -112,6 +129,19 @@ PanelWindow {
         Essentials.addNote(dump.text);
         dump.clear();
         dump.takeFocus();
+    }
+
+    function openFromSearch(id: string): void {
+        win.openedId = id;
+        win.searching = false;
+        const src = Essentials.items;
+        for (let i = 0; i < src.length; i++) {
+            if (src[i].id === id) {
+                win.tab = win.forYou(src[i]) ? "you" : "lib";
+                return;
+            }
+        }
+        win.tab = "lib";
     }
 
     function kindIcon(kind: string): string {
@@ -254,8 +284,9 @@ PanelWindow {
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         anchors.bottomMargin: Theme.px(8)
-        anchors.left: win.rightSide ? undefined : parent.left
-        anchors.right: win.rightSide ? parent.right : undefined
+        // x, never left+right anchors: flipping the side left both
+        // edges pinned and the pane ate the whole screen.
+        x: win.rightSide ? parent.width - width : 0
         color: Theme.c.surface
         radius: Theme.px(4)
         clip: true

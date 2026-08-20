@@ -5,9 +5,9 @@ import Quickshell
 import Quickshell.Io
 import ".."
 
-// Launcher search engine, modelled on ii's LauncherSearch:
-// prefixes switch the mode; with no prefix, apps and actions are searched,
-// with calculator, command and web search as fallback.
+// Essential Search: prefixes switch the mode; with no prefix, apps,
+// actions, Essential Space captures and settings are mixed. Ask sends
+// the query to Gemini without leaving the overlay.
 Singleton {
     id: root
 
@@ -24,6 +24,9 @@ Singleton {
     property string query: ""
     property string mathResult: ""
     property var emojis: []
+    property string askAnswer: ""
+    property string askFor: ""
+    property bool askBusy: false
 
     readonly property string engine: "https://duckduckgo.com/?q="
 
@@ -61,6 +64,126 @@ Singleton {
     function run(cmd: string): void {
         runner.command = ["sh", "-c", cmd];
         runner.running = true;
+    }
+
+    Process {
+        id: asker
+        property string payload: ""
+        onRunningChanged: {
+            if (running) {
+                write(payload);
+                stdinEnabled = false;
+            }
+        }
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.askBusy = false;
+                if (root.body(root.query).trim() !== root.askFor)
+                    return;
+                try {
+                    const data = JSON.parse(text);
+                    root.askAnswer = (data.answer || "").trim() || "No answer";
+                } catch (e) {
+                    root.askAnswer = text.trim() || "Ask failed";
+                }
+            }
+        }
+        onExited: (code) => {
+            if (!root.askBusy)
+                return;
+            root.askBusy = false;
+            if (code !== 0 && root.askAnswer === "")
+                root.askAnswer = "Ask failed";
+        }
+    }
+
+    function askReady(q: string): bool {
+        return root.prefixOf(q) === "" && root.body(q).trim() !== "";
+    }
+
+    function askNow(q: string): void {
+        const text = root.body(q).trim();
+        if (text === "")
+            return;
+        root.askBusy = true;
+        root.askAnswer = "";
+        root.askFor = text;
+        asker.payload = text;
+        asker.running = false;
+        asker.command = ["python3", Essentials.script, "ask"];
+        asker.stdinEnabled = true;
+        asker.running = true;
+    }
+
+    function clearAsk(): void {
+        asker.running = false;
+        root.askBusy = false;
+        root.askAnswer = "";
+        root.askFor = "";
+    }
+
+    function openCapture(id: string): void {
+        if ((id ?? "") === "")
+            return;
+        GlobalState.closeAll();
+        GlobalState.essentialFocus = id;
+        GlobalState.essentialOpen = true;
+    }
+
+    function openSetting(page: int, key: string): void {
+        GlobalState.closeAll();
+        GlobalState.settingsPage = page;
+        GlobalState.settingsFocus = key;
+        GlobalState.settingsOpen = true;
+    }
+
+    function captureIcon(kind: string): string {
+        switch (kind) {
+        case "snip": return "󰄀";
+        case "ocr": return "󰈚";
+        case "clip": return "󰅌";
+        case "record": return "󰑊";
+        case "voice": return "󰍬";
+        case "song": return "󰎈";
+        case "calc": return "󰃬";
+        default: return "󰠮";
+        }
+    }
+
+    function captureHay(it: var): string {
+        const tags = it.tags ?? [];
+        return [
+            it.kind ?? "", it.title ?? "", it.summary ?? "",
+            it.text ?? "", tags.join(" "), it.when ?? ""
+        ].join(" ").toLowerCase();
+    }
+
+    function matchCaptures(needle: string): var {
+        const parts = needle.trim().toLowerCase().split(/\s+/).filter(p => p !== "");
+        if (parts.length === 0)
+            return [];
+        const src = Essentials.items;
+        const hits = [];
+        for (let i = 0; i < src.length; i++) {
+            const it = src[i];
+            const hay = root.captureHay(it);
+            let ok = true;
+            for (let j = 0; j < parts.length; j++) {
+                if (!hay.includes(parts[j])) {
+                    ok = false;
+                    break;
+                }
+            }
+            if (ok)
+                hits.push(it);
+        }
+        const q = needle.toLowerCase();
+        hits.sort((a, b) => {
+            const at = (a.title || "").toLowerCase().includes(q) ? 0 : 1;
+            const bt = (b.title || "").toLowerCase().includes(q) ? 0 : 1;
+            return at - bt;
+        });
+        return hits;
     }
 
     // ── Shell actions ─────────────────────────────────────────────────
@@ -148,6 +271,39 @@ Singleton {
             return out;
         }
 
+        // Captures and settings sit above apps: Essential Search is
+        // meant to find a note or a toggle before launching Firefox.
+        if (mode === "" && text !== "") {
+            const _ = Essentials.stamp;
+            const caps = root.matchCaptures(text).slice(0, 6);
+            for (const it of caps) {
+                const title = (it.title || it.summary || (it.text || "").slice(0, 60)
+                    || "Capture").toString();
+                const tags = (it.tags || []).join(" · ");
+                const sub = tags !== ""
+                    ? `${it.kind || "note"} · ${tags}`
+                    : (it.kind || "note");
+                const capId = it.id || "";
+                out.push({
+                    kind: "capture", title: title,
+                    subtitle: sub,
+                    icon: root.captureIcon(it.kind || "note"),
+                    run: () => root.openCapture(capId)
+                });
+            }
+            const sets = SettingsIndex.search(text).slice(0, 5);
+            for (const e of sets) {
+                const page = e.page;
+                const key = e.key;
+                out.push({
+                    kind: "setting", title: e.label,
+                    subtitle: "Settings",
+                    icon: "󰒓",
+                    run: () => root.openSetting(page, key)
+                });
+            }
+        }
+
         if (mode === "action" || text !== "") {
             const needle = (mode === "action" ? text : q).toLowerCase();
             for (const a of root.actions) {
@@ -229,6 +385,8 @@ Singleton {
             root.compute(text);
         else
             root.mathResult = "";
+        if (text !== root.askFor)
+            root.askAnswer = "";
     }
 
     readonly property var hints: [

@@ -54,6 +54,14 @@ PanelWindow {
             "1000001",
             "1000001",
             "1111111"] },
+        { key: "essential", label: "Essential", glyph: [
+            "0011100",
+            "0110110",
+            "1100011",
+            "1100011",
+            "1100011",
+            "0110110",
+            "0011100"] },
         { key: "widgets", label: "Widgets", glyph: [
             "1110111",
             "1110111",
@@ -96,11 +104,9 @@ PanelWindow {
             "0011100"] }
     ]
 
-    SettingsIndex { id: catalog }
-
     readonly property string query: search.text.trim()
     readonly property bool searching: win.query !== ""
-    readonly property var results: catalog.search(win.query)
+    readonly property var results: SettingsIndex.search(win.query)
 
     // Jump to the setting designated by search and leave it circled for a
     // few seconds, long enough for the eye to find it on the page.
@@ -129,8 +135,14 @@ PanelWindow {
     onOpenChanged: {
         if (win.open) {
             search.clear();
-            GlobalState.settingsFocus = "";
-            search.takeFocus();
+            if (GlobalState.settingsPage >= 0) {
+                stack.currentIndex = GlobalState.settingsPage;
+                GlobalState.settingsPage = -1;
+                forget.restart();
+            } else {
+                GlobalState.settingsFocus = "";
+                search.takeFocus();
+            }
             stack.playEnter();
         }
     }
@@ -366,6 +378,7 @@ PanelWindow {
 
                             SettingsPageLook {}
                             SettingsPagePanel {}
+                            SettingsPageEssential {}
                             SettingsPageWidgets {}
                             SettingsPageDock {}
                             SettingsPageNet {}

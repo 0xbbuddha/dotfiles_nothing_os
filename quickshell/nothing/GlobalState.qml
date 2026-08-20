@@ -12,6 +12,11 @@ Singleton {
     // cannot be targeted otherwise: pages are logical windows distinct
     // from the search field.
     property string settingsFocus: ""
+    // Page index paired with settingsFocus when Essential Search jumps
+    // straight into a row. -1 means the panel opened on its own.
+    property int settingsPage: -1
+    // Capture id to open in Essential Space from Essential Search.
+    property string essentialFocus: ""
 
     property bool controlCenterOpen: false
     property bool launcherOpen: false

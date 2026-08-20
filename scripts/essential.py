@@ -19,6 +19,7 @@ Commands:
   has-key
   set-key          (API key on stdin)
   set-backend NAME
+  ask              (question on stdin or argv)
 """
 from __future__ import annotations
 
@@ -489,6 +490,122 @@ def gemini_once(entry: dict, key: str, model: str) -> tuple[bool, str]:
         return False, "Gemini returned junk"
 
 
+def gemini_text(prompt: str, env: dict, timeout: int = 30) -> tuple[str, str]:
+    key = env.get("GEMINI_API_KEY") or os.environ.get("GEMINI_API_KEY") or ""
+    if not key:
+        return "", "Add a Gemini key in settings"
+    models: list[str] = []
+    for name in (env.get("MODEL"), "gemini-3.6-flash", "gemini-3.5-flash"):
+        if name and name not in models:
+            models.append(name)
+    last_err = "Gemini failed"
+    for model in models:
+        text, err = gemini_text_once(prompt, key, model, timeout)
+        if text:
+            return text, ""
+        last_err = err
+        if "no longer available" in err.lower() or "not found" in err.lower():
+            continue
+        break
+    return "", last_err
+
+
+def gemini_text_once(prompt: str, key: str, model: str, timeout: int) -> tuple[str, str]:
+    body = json.dumps({
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {
+            "temperature": 0.3,
+            "responseMimeType": "application/json",
+        },
+    }).encode("utf-8")
+    url = (
+        "https://generativelanguage.googleapis.com/v1beta/models/"
+        f"{model}:generateContent?key={key}"
+    )
+    req = urllib.request.Request(
+        url, data=body, method="POST",
+        headers={"Content-Type": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            payload = json.loads(resp.read().decode("utf-8", "replace"))
+        text = (
+            payload.get("candidates", [{}])[0]
+            .get("content", {})
+            .get("parts", [{}])[0]
+            .get("text", "")
+        )
+        return (text or "").strip(), ""
+    except urllib.error.HTTPError as exc:
+        raw = exc.read().decode("utf-8", "replace")
+        msg = ""
+        try:
+            msg = str(json.loads(raw).get("error", {}).get("message") or "")
+        except json.JSONDecodeError:
+            msg = raw[:180]
+        if exc.code in (401, 403):
+            return "", "Bad Gemini API key"
+        if exc.code in (429, 503):
+            return "", "Gemini is busy — tap Ask again"
+        return "", (msg or f"Gemini HTTP {exc.code}")[:180]
+    except (urllib.error.URLError, TimeoutError):
+        return "", "No network to Gemini"
+    except (json.JSONDecodeError, OSError, IndexError, KeyError, TypeError):
+        return "", "Gemini returned junk"
+
+
+def cmd_ask(question: str) -> None:
+    q = (question or "").strip()
+    if not q:
+        out({"answer": "Type a question first", "ids": []})
+        return
+    items = load()
+    words = [w for w in re.split(r"\s+", q.lower()) if len(w) > 2]
+    ranked: list[tuple[int, dict]] = []
+    for it in items:
+        hay = " ".join([
+            str(it.get("kind") or ""),
+            str(it.get("title") or ""),
+            str(it.get("summary") or ""),
+            str(it.get("text") or "")[:1200],
+            " ".join(it.get("tags") or []),
+        ]).lower()
+        hits = sum(1 for w in words if w in hay) if words else 0
+        if hits:
+            ranked.append((hits, it))
+    ranked.sort(key=lambda pair: -pair[0])
+    picked = [it for _, it in ranked[:8]] or items[:8]
+    lines = []
+    for it in picked:
+        body = (it.get("summary") or it.get("text") or "")[:220]
+        lines.append(
+            f"id={it.get('id') or ''} kind={it.get('kind') or ''} "
+            f"title={it.get('title') or ''}: {body}"
+        )
+    vault = "\n".join(lines) if lines else "(empty)"
+    prompt = (
+        "You are Essential Search on a Nothing OS desktop. "
+        "Answer in 2 or 3 short sentences. Prefer the vault if it answers. "
+        "If you use a capture, mention its title. No markdown, no bullets, "
+        "no follow-up question.\n"
+        'Return JSON: {"answer": string, "ids": [id strings you used]}\n'
+        f"Vault:\n{vault}\n"
+        f"Question: {q}\n"
+    )
+    raw, err = gemini_text(prompt, read_env(), 30)
+    if err:
+        out({"answer": err, "ids": []})
+        return
+    data = parse_json_obj(raw) or {}
+    answer = str(data.get("answer") or "").strip()
+    if not answer:
+        answer = re.sub(r"\s+", " ", raw).strip()[:800]
+    ids = data.get("ids") if isinstance(data.get("ids"), list) else []
+    known = {str(it.get("id") or "") for it in items}
+    clean = [str(i) for i in ids if str(i) in known][:4]
+    out({"answer": answer[:800], "ids": clean})
+
+
 def apply_mind(entry: dict, backend: str) -> dict:
     env = read_env()
     backend = (backend or env.get("BACKEND") or "stub").strip().lower()
@@ -862,6 +979,11 @@ def main() -> None:
         cmd_set_key()
     elif cmd == "set-backend":
         cmd_set_backend(args[1] if len(args) > 1 else "stub")
+    elif cmd == "ask":
+        q = " ".join(args[1:]).strip()
+        if not q:
+            q = sys.stdin.read()
+        cmd_ask(q)
     else:
         fail("unknown command: " + cmd, 2)
 

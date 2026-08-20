@@ -35,9 +35,13 @@ PanelWindow {
     onVisibleChanged: {
         if (visible) {
             Hyprland.refreshToplevels();
+            Essentials.refresh();
+            Essentials.probeKey();
             // A query may be imposed by the shortcut that opened the panel
             // (SUPER+V for the clipboard, for example).
             win.applyQuery();
+        } else {
+            Search.clearAsk();
         }
     }
 
@@ -101,7 +105,7 @@ PanelWindow {
             : Theme.px(460)
         height: win.browsing
             ? (Theme.px(74) + grid.implicitHeight + Theme.px(24))
-            : Math.min(Theme.px(420), parent.height * 0.6)
+            : Math.min(Theme.px(480), parent.height * 0.62)
         clip: true
 
         Behavior on width { NumberAnimation { duration: Theme.med; easing.type: Theme.ease } }
@@ -137,14 +141,28 @@ PanelWindow {
                     Keys.onEscapePressed: GlobalState.launcherOpen = false
                     Keys.onDownPressed: win.move(1)
                     Keys.onUpPressed: win.move(-1)
-                    Keys.onReturnPressed: win.launch(win.selected)
-                    Keys.onEnterPressed: win.launch(win.selected)
+                    Keys.onReturnPressed: (event) => {
+                        if (event.modifiers & Qt.ControlModifier) {
+                            Search.askNow(search.text);
+                            event.accepted = true;
+                            return;
+                        }
+                        win.launch(win.selected);
+                    }
+                    Keys.onEnterPressed: (event) => {
+                        if (event.modifiers & Qt.ControlModifier) {
+                            Search.askNow(search.text);
+                            event.accepted = true;
+                            return;
+                        }
+                        win.launch(win.selected);
+                    }
                     Keys.onTabPressed: win.move(1)
 
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         visible: search.text === ""
-                        text: "Search, calculate, run…"
+                        text: "Essential Search"
                         color: Theme.c.onFaint
                         font: search.font
                     }
@@ -167,6 +185,47 @@ PanelWindow {
                         font.pixelSize: Theme.f.micro
                         font.letterSpacing: Theme.f.track
                         font.capitalization: Font.AllUppercase
+                    }
+                }
+
+                // Ask — Gemini, in place. Red, not yellow: the accent
+                // is already the Nothing red of this shell.
+                Rectangle {
+                    visible: Search.askReady(search.text)
+                    implicitWidth: askLab.implicitWidth + Theme.px(16)
+                    implicitHeight: Theme.px(20)
+                    radius: height / 2
+                    color: Theme.c.red
+                    opacity: Search.askBusy ? 0.55 : 1
+                    Behavior on opacity { NumberAnimation { duration: Theme.fast } }
+
+                    Text {
+                        id: askLab
+                        anchors.centerIn: parent
+                        text: Search.askBusy ? "…" : "Ask"
+                        color: Theme.c.on
+                        font.family: Theme.f.mono
+                        font.pixelSize: Theme.f.micro
+                        font.letterSpacing: Theme.f.track
+                        font.capitalization: Font.AllUppercase
+                    }
+
+                    MouseArea {
+                        id: askMa
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        enabled: !Search.askBusy
+                        onClicked: Search.askNow(search.text)
+                    }
+
+                    Tooltip {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.top: parent.bottom
+                        anchors.topMargin: Theme.px(6)
+                        text: "Ask Gemini · Ctrl+Enter"
+                        shown: askMa.containsMouse
+                        z: 50
                     }
                 }
 
@@ -277,6 +336,68 @@ PanelWindow {
             }
 
             Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Theme.c.outline }
+
+            // ── Ask answer ────────────────────────────────────────────
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.leftMargin: Theme.pad
+                Layout.rightMargin: Theme.pad
+                Layout.topMargin: Theme.px(8)
+                implicitHeight: askCol.implicitHeight + Theme.px(18)
+                radius: Theme.r.tiny
+                color: Theme.c.surface2
+                visible: Search.askBusy || Search.askAnswer !== ""
+
+                ColumnLayout {
+                    id: askCol
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.leftMargin: Theme.px(14)
+                    anchors.rightMargin: Theme.px(10)
+                    spacing: Theme.px(6)
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: Theme.px(8)
+
+                        NIcon {
+                            text: "󰚩"
+                            size: Theme.z.iconM
+                            color: Theme.c.red
+                        }
+
+                        Text {
+                            text: "Ask"
+                            color: Theme.c.red
+                            font.family: Theme.f.mono
+                            font.pixelSize: Theme.f.micro
+                            font.letterSpacing: Theme.f.track
+                            font.capitalization: Font.AllUppercase
+                        }
+
+                        Item { Layout.fillWidth: true }
+
+                        NPillButton {
+                            text: "Copy"
+                            visible: Search.askAnswer !== "" && !Search.askBusy
+                            onActivated: Search.run(
+                                `printf '%s' ${JSON.stringify(Search.askAnswer)} | wl-copy`)
+                        }
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: Search.askBusy ? "Asking…" : Search.askAnswer
+                        color: Theme.c.on
+                        font.family: Theme.f.sans
+                        font.pixelSize: Theme.f.body
+                        wrapMode: Text.WordWrap
+                        maximumLineCount: 6
+                        elide: Text.ElideRight
+                    }
+                }
+            }
 
             // ── Results ───────────────────────────────────────────────
             // ── Music recognition feedback ────────────────────────────
@@ -535,8 +656,9 @@ PanelWindow {
             Text {
                 Layout.fillWidth: true
                 Layout.margins: Theme.pad
-                visible: win.results.length === 0
-                text: "No matching application."
+                visible: win.results.length === 0 && !win.browsing
+                    && !Search.askBusy && Search.askAnswer === ""
+                text: "No matching results."
                 color: Theme.c.onDim
                 font.family: Theme.f.sans
                 font.pixelSize: Theme.f.small

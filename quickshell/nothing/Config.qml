@@ -40,6 +40,7 @@ Singleton {
     property alias osdEnabled: a.osdEnabled
     property alias essentialEnabled: a.essentialEnabled
     property alias essentialSide: a.essentialSide
+    property alias essentialSearch: a.essentialSearch
     property alias mindBackend: a.mindBackend
 
     // ── Weather ───────────────────────────────────────────────────────
@@ -265,6 +266,7 @@ Singleton {
         a.osdEnabled = true;
         a.essentialEnabled = true;
         a.essentialSide = "right";
+        a.essentialSearch = true;
         a.mindBackend = "stub";
 
         a.weatherEnabled = true;
@@ -416,6 +418,7 @@ Singleton {
             property bool osdEnabled: true
             property bool   essentialEnabled: true
             property string essentialSide: "right"   // right | left
+            property bool   essentialSearch: true    // mix captures + Ask in SUPER
             property string mindBackend: "stub"      // stub | ollama | gemini
 
             property bool   weatherEnabled: true

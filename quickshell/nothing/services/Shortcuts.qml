@@ -14,9 +14,9 @@ Singleton {
             title: "Panels",
             icon: "󰕰",
             items: [
-                { keys: ["SUPER"],          label: "Launcher and workspace overview" },
-                { keys: ["SUPER", "R"],     label: "Launcher and workspace overview" },
-                { keys: ["SUPER", "Tab"],   label: "Launcher and workspace overview" },
+                { keys: ["SUPER"],          label: "Essential Search" },
+                { keys: ["SUPER", "R"],     label: "Essential Search" },
+                { keys: ["SUPER", "Tab"],   label: "Essential Search" },
                 { keys: ["SUPER", "V"],     label: "Clipboard" },
                 { keys: ["SUPER", "N"],     label: "Control centre" },
                 { keys: ["SUPER", "B"],     label: "Notifications" },
@@ -37,7 +37,8 @@ Singleton {
                 { keys: ["="], label: "Calculator (qalc)" },
                 { keys: ["$"], label: "Run a command" },
                 { keys: ["?"], label: "Search the web" },
-                { keys: ["/"], label: "Shell actions" }
+                { keys: ["/"], label: "Shell actions" },
+                { keys: ["CTRL", "Enter"], label: "Ask Gemini" }
             ]
         },
         {
