@@ -134,9 +134,46 @@ Singleton {
 
     function finishFly(): void {
         GlobalState.essentialFlyPath = "";
-        GlobalState.essentialFlyScreen = "";
         GlobalState.essentialPulse = false;
+        root.startPeek(GlobalState.essentialFlyScreen);
+    }
+
+    function startPeek(screen: string): void {
+        if (GlobalState.essentialOpen) {
+            GlobalState.essentialCatching = false;
+            return;
+        }
+        if ((screen ?? "") !== "")
+            GlobalState.essentialFlyScreen = screen;
+        GlobalState.essentialCatching = true;
+        peekMin.restart();
+        peekMax.restart();
+    }
+
+    function endPeek(): void {
+        peekMin.stop();
+        peekMax.stop();
         GlobalState.essentialCatching = false;
+        if (GlobalState.essentialFlyPath === "")
+            GlobalState.essentialFlyScreen = "";
+    }
+
+    function patch(id: string, fields: var): void {
+        if ((id ?? "") === "" || !fields)
+            return;
+        patcher.payload = JSON.stringify(fields);
+        patcher.running = false;
+        patcher.command = ["python3", root.script, "patch", id];
+        patcher.stdinEnabled = true;
+        patcher.running = true;
+    }
+
+    function setWhen(id: string, iso: string): void {
+        root.patch(id, { when: iso, forYou: iso !== "" });
+    }
+
+    function hideFromYou(id: string): void {
+        root.patch(id, { when: "", forYou: false });
     }
 
     function record(): void {
@@ -183,12 +220,8 @@ Singleton {
         root.catchVoice = false;
         GlobalState.essentialPulse = false;
         root.run(["ingest-voice"]);
-        if (GlobalState.essentialOpen)
-            return;
         const mon = Hyprland.focusedMonitor?.name ?? "";
-        GlobalState.essentialFlyScreen = mon;
-        GlobalState.essentialCatching = true;
-        voicePeek.restart();
+        root.startPeek(mon);
     }
 
     function ingestSong(): void {
@@ -285,6 +318,20 @@ Singleton {
     }
 
     Process {
+        id: patcher
+        property string payload: ""
+        onRunningChanged: {
+            if (running) {
+                write(payload);
+                stdinEnabled = false;
+            }
+        }
+        stdout: StdioCollector {
+            onStreamFinished: root.refresh()
+        }
+    }
+
+    Process {
         id: calc
         property string expr: ""
         stdout: StdioCollector {
@@ -296,6 +343,26 @@ Singleton {
                 root.run(["add", "calc", line]);
             }
         }
+    }
+
+    Timer {
+        id: peekMin
+        interval: 4800
+        onTriggered: {
+            if (!root.busy)
+                root.endPeek();
+        }
+    }
+
+    Timer {
+        id: peekMax
+        interval: 14000
+        onTriggered: root.endPeek()
+    }
+
+    onBusyChanged: {
+        if (!root.busy && GlobalState.essentialCatching && !peekMin.running)
+            root.endPeek();
     }
 
     Timer {
@@ -330,15 +397,6 @@ Singleton {
             GlobalState.essentialFlyPath = "/tmp/nothing-snip/key.png";
             GlobalState.essentialPulse = true;
             root.run(["ingest-last", "snip"]);
-        }
-    }
-
-    Timer {
-        id: voicePeek
-        interval: 1600
-        onTriggered: {
-            if (!GlobalState.essentialOpen)
-                GlobalState.essentialCatching = false;
         }
     }
 

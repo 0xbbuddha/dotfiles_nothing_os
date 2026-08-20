@@ -13,6 +13,7 @@ Commands:
   ingest-song TITLE [ARTIST...]
   remove ID
   mind ID [backend]
+  patch ID             (JSON on stdin: when, forYou)
   wipe
   dir
   has-key
@@ -725,6 +726,37 @@ def cmd_remove(ident: str) -> None:
     print("Removed")
 
 
+def cmd_patch(ident: str) -> None:
+    raw = sys.stdin.read()
+    try:
+        payload = json.loads(raw) if raw.strip() else {}
+    except json.JSONDecodeError:
+        fail("Bad patch")
+    if not isinstance(payload, dict):
+        fail("Bad patch")
+    items = load()
+    found = None
+    for it in items:
+        if it.get("id") == ident:
+            found = it
+            break
+    if found is None:
+        fail("Not found")
+    if "when" in payload:
+        found["when"] = normalise_when(payload.get("when"))
+    if "forYou" in payload:
+        fy = payload.get("forYou")
+        if isinstance(fy, str):
+            fy = fy.strip().lower() in ("1", "true", "yes", "on")
+        found["forYou"] = bool(fy)
+        if not found["forYou"]:
+            found["when"] = ""
+    elif "when" in payload:
+        found["forYou"] = bool(found.get("when"))
+    save(items)
+    print("Patched")
+
+
 def cmd_mind(ident: str, backend: str) -> None:
     items = load()
     found = None
@@ -814,6 +846,10 @@ def main() -> None:
         if len(args) < 2:
             fail("id required")
         cmd_remove(args[1])
+    elif cmd == "patch":
+        if len(args) < 2:
+            fail("id required")
+        cmd_patch(args[1])
     elif cmd == "mind":
         if len(args) < 2:
             fail("id required")

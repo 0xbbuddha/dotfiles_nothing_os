@@ -77,6 +77,7 @@ PanelWindow {
             Qt.callLater(() => dump.takeFocus());
             if (win.searching)
                 Qt.callLater(() => find.takeFocus());
+            Essentials.endPeek();
         } else {
             grabKeys = false;
             if (!win.catching)
@@ -91,7 +92,7 @@ PanelWindow {
             reveal = 0;
             Qt.callLater(() => {
                 if (win.catching)
-                    win.reveal = 0.74;
+                    win.reveal = 0.8;
             });
         } else if (!want) {
             reveal = 0;
@@ -139,6 +140,10 @@ PanelWindow {
     }
 
     function forYou(it: var): bool {
+        // An explicit hide always wins: actions/reminders must not pull
+        // the card back into For You after "Not For You".
+        if (it.forYou === false || it.forYou === "false")
+            return false;
         if (it.forYou === true || it.forYou === "true")
             return true;
         const w = (it.when ?? "").trim();
@@ -191,6 +196,31 @@ PanelWindow {
             + "  ·  " + h + ":" + m + ":" + s;
     }
 
+    function pad2(n: int): string {
+        return n < 10 ? "0" + n : "" + n;
+    }
+
+    function isoLocal(d: var): string {
+        return d.getFullYear() + "-" + win.pad2(d.getMonth() + 1)
+            + "-" + win.pad2(d.getDate()) + "T" + win.pad2(d.getHours())
+            + ":" + win.pad2(d.getMinutes()) + ":" + win.pad2(d.getSeconds());
+    }
+
+    function tomorrowNine(): string {
+        const d = new Date();
+        d.setDate(d.getDate() + 1);
+        d.setHours(9, 0, 0, 0);
+        return win.isoLocal(d);
+    }
+
+    function plusHour(): string {
+        return win.isoLocal(new Date(Date.now() + 3600 * 1000));
+    }
+
+    function isAudio(p: string): bool {
+        return /\.(oga|ogg|opus|wav|mp3|m4a|flac)$/i.test(p ?? "");
+    }
+
     readonly property var shownItems: {
         Essentials.stamp;
         find.text;
@@ -218,7 +248,7 @@ PanelWindow {
         onPressed: GlobalState.essentialOpen = false
     }
 
-    Item {
+    Rectangle {
         id: shelf
         width: win.paneW
         anchors.top: parent.top
@@ -226,6 +256,9 @@ PanelWindow {
         anchors.bottomMargin: Theme.px(8)
         anchors.left: win.rightSide ? undefined : parent.left
         anchors.right: win.rightSide ? parent.right : undefined
+        color: Theme.c.surface
+        radius: Theme.px(4)
+        clip: true
         transform: Translate {
             x: win.rightSide
                 ? shelf.width * (1 - win.reveal)
@@ -246,20 +279,6 @@ PanelWindow {
                 win.grabKeys = true;
                 m.accepted = true;
             }
-        }
-
-        Rectangle {
-            anchors.fill: parent
-            color: Theme.c.surface
-        }
-
-        Rectangle {
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-            anchors.left: win.rightSide ? parent.left : undefined
-            anchors.right: win.rightSide ? undefined : parent.right
-            width: 1
-            color: Theme.c.outline
         }
 
         FocusScope {
@@ -413,22 +432,32 @@ PanelWindow {
 
                                     Text {
                                         Layout.fillWidth: true
-                                        text: (card.it.title ?? "") !== ""
-                                            ? card.it.title
-                                            : (card.it.kind ?? "note")
+                                        text: card.pending
+                                            ? "Mind…"
+                                            : ((card.it.title ?? "") !== ""
+                                                ? card.it.title
+                                                : (card.it.kind ?? "note"))
                                         color: Theme.c.on
                                         font.family: Theme.f.sans
                                         font.pixelSize: Theme.f.body
                                         elide: Text.ElideRight
                                         maximumLineCount: 1
+                                        opacity: card.pending ? 0.4 : 1
+                                        Behavior on opacity {
+                                            NumberAnimation {
+                                                duration: 520
+                                                easing.type: Easing.OutCubic
+                                            }
+                                        }
                                     }
 
                                     Text {
                                         Layout.fillWidth: true
                                         visible: win.tab !== "you"
+                                            && !card.pending
                                             && (card.it.summary ?? "") !== ""
                                             && card.it.summary !== card.it.title
-                                        text: card.pending ? "Mind…" : card.it.summary
+                                        text: card.it.summary
                                         color: card.it.mind === "error" || card.it.mind === "nokey"
                                             ? Theme.c.red : Theme.c.onDim
                                         font.family: Theme.f.sans
@@ -511,24 +540,77 @@ PanelWindow {
                                 sourceSize.height: Theme.px(180)
                             }
 
-                            Text {
+                            VoiceBar {
                                 Layout.fillWidth: true
-                                visible: (win.detailItem?.when ?? "") !== ""
-                                text: win.whenPretty(win.detailItem?.when ?? "")
-                                color: Theme.c.on
-                                font.family: Theme.f.display
-                                font.pixelSize: Theme.px(18)
+                                visible: win.isAudio(win.detailItem?.path ?? "")
+                                path: win.isAudio(win.detailItem?.path ?? "")
+                                    ? (win.detailItem.path ?? "") : ""
+                            }
+
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: Theme.px(6)
+
+                                NLabel { text: "For You"; dim: true }
+
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: (win.detailItem?.when ?? "") !== ""
+                                        ? win.whenPretty(win.detailItem.when)
+                                        : (win.detailItem?.forYou
+                                            ? "Listed, no time"
+                                            : "Not listed")
+                                    color: (win.detailItem?.when ?? "") !== ""
+                                        ? Theme.c.on : Theme.c.onFaint
+                                    font.family: Theme.f.display
+                                    font.pixelSize: Theme.px(16)
+                                }
+
+                                Flow {
+                                    Layout.fillWidth: true
+                                    spacing: Theme.px(6)
+
+                                    NPillButton {
+                                        text: "Tomorrow 9:00"
+                                        onActivated: {
+                                            if (win.detailItem)
+                                                Essentials.setWhen(win.detailItem.id, win.tomorrowNine());
+                                        }
+                                    }
+                                    NPillButton {
+                                        text: "+1 h"
+                                        onActivated: {
+                                            if (win.detailItem)
+                                                Essentials.setWhen(win.detailItem.id, win.plusHour());
+                                        }
+                                    }
+                                    NPillButton {
+                                        text: "Not For You"
+                                        danger: (win.detailItem?.when ?? "") !== ""
+                                            || win.detailItem?.forYou === true
+                                        onActivated: {
+                                            if (win.detailItem)
+                                                Essentials.hideFromYou(win.detailItem.id);
+                                        }
+                                    }
+                                }
                             }
 
                             Text {
                                 Layout.fillWidth: true
-                                text: (win.detailItem?.title ?? "") !== ""
-                                    ? win.detailItem.title
-                                    : (win.detailItem?.kind ?? "")
+                                text: (win.detailItem?.mind === "pending")
+                                    ? "Mind…"
+                                    : ((win.detailItem?.title ?? "") !== ""
+                                        ? win.detailItem.title
+                                        : (win.detailItem?.kind ?? ""))
                                 color: Theme.c.on
                                 font.family: Theme.f.sans
                                 font.pixelSize: Theme.f.big
                                 wrapMode: Text.Wrap
+                                opacity: (win.detailItem?.mind === "pending") ? 0.4 : 1
+                                Behavior on opacity {
+                                    NumberAnimation { duration: 520; easing.type: Easing.OutCubic }
+                                }
                             }
 
                             ColumnLayout {
@@ -627,6 +709,7 @@ PanelWindow {
 
                                 NPillButton {
                                     visible: (win.detailItem?.path ?? "") !== ""
+                                        && !win.isAudio(win.detailItem?.path ?? "")
                                     text: "Open"
                                     onActivated: if (win.detailItem) Essentials.openItem(win.detailItem)
                                 }
