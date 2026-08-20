@@ -153,8 +153,9 @@ Packages are left installed. App theme revert:
 ## Credits
 
 - [Nothing OS](https://nothing.tech) for the language (again: unofficial)
-- [end-4 / illogical-impulse](https://github.com/end-4/dots-hyprland) for
-  the install shape, shortcut map, and a lot of prior art
+- [end-4 / illogical-impulse](https://github.com/end-4/dots-hyprland) -
+  that was my daily rice. I got used to a handful of its behaviours, and
+  those habits steered the direction Nothing took.
 - [Quickshell](https://quickshell.outfoxxed.me/)
 - [Lawnicons](https://github.com/LawnchairLauncher/lawnicons) (Apache-2.0)
 
