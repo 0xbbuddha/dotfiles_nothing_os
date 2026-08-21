@@ -58,6 +58,9 @@ Singleton {
         { key: "essentialSearch", label: "Essential Search", page: 2, words: "essential search launcher ask gemini captures settings super" },
         { key: "mind",            label: "Mind",            page: 2, words: "mind ollama gemini ai stub essential" },
         { key: "geminiKey",       label: "Gemini API key",  page: 2, words: "gemini api key google ai studio mind" },
+        { key: "appsKey",         label: "Essential Apps button in the bar", page: 2, words: "essential apps bar button clock key icon" },
+        { key: "deskApps",        label: "Apps on the desktop", page: 2, words: "essential apps widget desktop generated pin right column playground" },
+        { key: "appsLibrary",     label: "Essential Apps library", page: 2, words: "essential apps library mini app create prompt generate widget" },
 
         // ── Widgets ───────────────────────────────────────────────────
         { key: "widgets",       label: "Desktop widgets",    page: 3, words: "widget clock date media calendar" },

@@ -1,0 +1,21 @@
+{
+  "name": "Water",
+  "icon": "󰆫",
+  "size": "s",
+  "prompt": "track how many cups of water I drink against a daily goal",
+  "sources": [],
+  "state": { "cups": 0, "goal": 8 },
+  "body": [
+    { "t": "row", "kids": [
+      { "t": "stat", "value": "state.cups", "unit": "'/ ' + state.goal", "caption": "'CUPS TODAY'" },
+      { "t": "button", "label": "'-'", "on": "sub", "style": "square" },
+      { "t": "button", "label": "'+'", "on": "add", "style": "square" }
+    ] },
+    { "t": "dots", "value": "state.goal > 0 ? state.cups / state.goal : 0", "count": 8, "label": "'HYDRATION'" }
+  ],
+  "actions": {
+    "add": [ { "inc": "cups", "by": "1" } ],
+    "sub": [ { "if": "state.cups > 0", "do": [ { "inc": "cups", "by": "-1" } ] } ]
+  },
+  "tick": []
+}

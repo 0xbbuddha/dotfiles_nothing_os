@@ -339,7 +339,7 @@ PanelWindow {
                     Layout.bottomMargin: Theme.px(6)
                     spacing: Theme.px(10)
 
-                    DisplayText { text: "ESSENTIAL"; size: Theme.px(18) }
+                    DisplayText { text: "ESSENTIAL SPACE"; size: Theme.px(18) }
 
                     Item { Layout.fillWidth: true }
 

@@ -41,6 +41,9 @@ Singleton {
     property string gameSelected: ""
     property bool cheatsheetOpen: false
     property bool essentialOpen: false
+    // Essential Apps panel, and the app it should land on.
+    property bool appsOpen: false
+    property string appsFocus: ""
     property bool essentialPulse: false
     property string essentialFlyPath: ""
     property string essentialFlyScreen: ""
@@ -86,6 +89,7 @@ Singleton {
         gameSelected = "";
         cheatsheetOpen = false;
         essentialOpen = false;
+        appsOpen = false;
         netPanel = "";
         audioPanel = false;
         lightPanel = false;

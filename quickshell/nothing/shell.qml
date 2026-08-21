@@ -45,6 +45,14 @@ ShellRoot {
         Desktop {}
     }
 
+    // Essential Apps live in their own column on the right, so the
+    // rice's widgets on the left keep a layout nothing generated can
+    // reach into.
+    Variants {
+        model: (Config.showDeskApps && !root.shellHidden) ? Quickshell.screens : []
+        AppsColumn {}
+    }
+
     // One Glyph Matrix per screen: otherwise it only appears on screens[0],
     // often the laptop, while we work on the external display.
     // Two models: hot-swapping the layer is unreliable, so the window is
@@ -77,6 +85,7 @@ ShellRoot {
     Variants { model: Quickshell.screens; RegionPicker {} }
     Variants { model: Quickshell.screens; Cheatsheet {} }
     Variants { model: Quickshell.screens; Essential {} }
+    Variants { model: Quickshell.screens; EssentialApps {} }
     Variants { model: Quickshell.screens; EssentialFly {} }
     Variants { model: Quickshell.screens; NotificationCenter {} }
     Variants { model: Quickshell.screens; PolkitDialog {} }
@@ -208,6 +217,24 @@ ShellRoot {
             GlobalState.essentialOpen = true;
         }
         function hide(): void { GlobalState.essentialOpen = false; }
+    }
+
+    IpcHandler {
+        target: "apps"
+        function toggle(): void {
+            if (GlobalState.appsOpen) {
+                GlobalState.appsOpen = false;
+                return;
+            }
+            GlobalState.closeAll();
+            GlobalState.appsOpen = true;
+        }
+        function open(): void {
+            GlobalState.closeAll();
+            GlobalState.appsOpen = true;
+        }
+        function hide(): void { GlobalState.appsOpen = false; }
+        function refresh(): void { MiniApps.refresh(); }
     }
 
     IpcHandler {

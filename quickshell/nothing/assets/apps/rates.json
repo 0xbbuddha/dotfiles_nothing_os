@@ -1,0 +1,23 @@
+{
+  "name": "Rates",
+  "icon": "󰄔",
+  "size": "s",
+  "prompt": "what one euro is worth in dollars, pounds and yen",
+  "sources": ["net"],
+  "state": {},
+  "fetch": {
+    "url": "https://api.frankfurter.app/latest?from=EUR&to=USD,GBP,JPY",
+    "pick": "rates",
+    "every": 10800
+  },
+  "body": [
+    { "t": "text", "value": "'ONE EURO BUYS'", "style": "label", "color": "dim" },
+    { "t": "grid", "cols": 3, "kids": [
+      { "t": "stat", "value": "data ? fmt.round(data.USD, 3) : '-'", "caption": "'USD'", "size": "s" },
+      { "t": "stat", "value": "data ? fmt.round(data.GBP, 3) : '-'", "caption": "'GBP'", "size": "s" },
+      { "t": "stat", "value": "data ? fmt.round(data.JPY, 1) : '-'", "caption": "'JPY'", "size": "s" }
+    ] }
+  ],
+  "actions": {},
+  "tick": []
+}

@@ -1,0 +1,25 @@
+{
+  "name": "F1 Next",
+  "icon": "󰄋",
+  "size": "m",
+  "prompt": "the next Formula 1 grand prix with a countdown to lights out",
+  "sources": ["net"],
+  "state": {},
+  "fetch": {
+    "url": "https://api.jolpi.ca/ergast/f1/current/next.json",
+    "pick": "MRData.RaceTable.Races",
+    "every": 3600
+  },
+  "body": [
+    { "t": "text", "value": "data && data[0] ? data[0].raceName : 'LOADING'", "style": "title", "wrap": true },
+    { "t": "text", "value": "data && data[0] ? data[0].Circuit.Location.locality + ', ' + data[0].Circuit.Location.country : '-'", "style": "label", "color": "dim" },
+    { "t": "divider" },
+    { "t": "stat", "value": "data && data[0] ? fmt.until(data[0].date + 'T' + (data[0].time || '12:00:00Z')) : '-'", "caption": "'LIGHTS OUT'", "size": "l" },
+    { "t": "row", "kids": [
+      { "t": "text", "value": "data && data[0] ? 'ROUND ' + data[0].round : ''", "style": "label", "color": "dim" },
+      { "t": "text", "value": "data && data[0] ? fmt.date(data[0].date) : ''", "style": "label", "align": "right", "color": "dim" }
+    ] }
+  ],
+  "actions": {},
+  "tick": []
+}

@@ -1,0 +1,42 @@
+{
+  "name": "Pomodoro",
+  "icon": "󰔟",
+  "size": "m",
+  "prompt": "a pomodoro timer, 25 minutes of focus then a 5 minute break, counting the finished rounds",
+  "sources": ["notify"],
+  "state": { "left": 1500, "total": 1500, "running": false, "onBreak": false, "done": 0 },
+  "body": [
+    { "t": "stat", "value": "fmt.mmss(state.left)", "caption": "state.onBreak ? 'BREAK' : 'FOCUS'", "size": "l" },
+    { "t": "progress", "value": "state.total > 0 ? 1 - state.left / state.total : 0" },
+    { "t": "row", "kids": [
+      { "t": "button", "label": "state.running ? 'PAUSE' : 'START'", "on": "toggleRun" },
+      { "t": "button", "label": "'RESET'", "on": "reset" },
+      { "t": "text", "value": "state.done + ' DONE'", "style": "label", "align": "right", "color": "dim" }
+    ] }
+  ],
+  "actions": {
+    "toggleRun": [ { "toggle": "running" } ],
+    "reset": [
+      { "set": "running", "to": "false" },
+      { "set": "onBreak", "to": "false" },
+      { "set": "total", "to": "1500" },
+      { "set": "left", "to": "1500" }
+    ]
+  },
+  "tick": [
+    { "if": "state.running && state.left > 0", "do": [ { "inc": "left", "by": "-1" } ] },
+    { "if": "state.running && state.left === 0 && !state.onBreak", "do": [
+      { "inc": "done", "by": "1" },
+      { "set": "onBreak", "to": "true" },
+      { "set": "total", "to": "300" },
+      { "set": "left", "to": "300" },
+      { "notify": "'Focus done'", "body": "'Five minute break'" }
+    ] },
+    { "if": "state.running && state.left === 0 && state.onBreak", "do": [
+      { "set": "onBreak", "to": "false" },
+      { "set": "total", "to": "1500" },
+      { "set": "left", "to": "1500" },
+      { "notify": "'Break over'", "body": "'Back to focus'" }
+    ] }
+  ]
+}

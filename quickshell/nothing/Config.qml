@@ -128,6 +128,11 @@ Singleton {
     // ── Desktop widgets ───────────────────────────────────────────────
     property alias widgets: a.widgets
 
+    // ── Essential Apps ────────────────────────────────────────────────
+    property alias deskApps: a.deskApps
+    property alias showDeskApps: a.showDeskApps
+    property alias appsKey: a.appsKey
+
     // ── Glyph Matrix ──────────────────────────────────────────────────
     property alias glyphEnabled: a.glyphEnabled
     property alias glyphX: a.glyphX
@@ -188,6 +193,41 @@ Singleton {
         const [item] = list.splice(index, 1);
         list.splice(to, 0, item);
         a.widgets = list;
+        root.save();
+    }
+
+    // ── Essential Apps on the desktop ─────────────────────────────────
+    // The rice's own widgets hold the left column; generated apps get
+    // the right one, so a bad prompt can never disturb the stock layout.
+
+    function hasDeskApp(id: string): bool {
+        return (a.deskApps ?? []).includes(id);
+    }
+
+    function addDeskApp(id: string): void {
+        if (!id || root.hasDeskApp(id)) return;
+        a.deskApps = (a.deskApps ?? []).concat([id]);
+        root.save();
+    }
+
+    function removeDeskApp(id: string): void {
+        if (!root.hasDeskApp(id)) return;
+        a.deskApps = (a.deskApps ?? []).filter(x => x !== id);
+        root.save();
+    }
+
+    function toggleDeskApp(id: string): void {
+        if (root.hasDeskApp(id)) root.removeDeskApp(id);
+        else root.addDeskApp(id);
+    }
+
+    function moveDeskApp(index: int, delta: int): void {
+        const list = (a.deskApps ?? []).slice();
+        const to = index + delta;
+        if (to < 0 || to >= list.length) return;
+        const [item] = list.splice(index, 1);
+        list.splice(to, 0, item);
+        a.deskApps = list;
         root.save();
     }
 
@@ -405,6 +445,12 @@ Singleton {
             // Desktop widgets, in display order.
             // Known identifiers: date, weather, clock, media, system, calendar.
             property var widgets: ["date", "weather", "clock", "media"]
+
+            // Essential Apps pinned to the right column, in display order.
+            property var deskApps: []
+            property bool showDeskApps: true
+            // Bar button, left of the clock, mirroring the Essential Key.
+            property bool appsKey: true
             property bool showTray: true
             property bool showBattery: true
             property bool showWorkspaces: true

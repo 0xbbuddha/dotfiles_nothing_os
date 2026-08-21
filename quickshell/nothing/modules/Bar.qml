@@ -36,6 +36,9 @@ PanelWindow {
         intersection: Intersection.Combine
         regions: [
             Region { item: leftIsland },
+            // The bar only takes clicks where an island is. A new one has
+            // to be listed here or it is drawn but not clickable.
+            Region { item: appsIsland.visible ? appsIsland : null },
             Region { item: clockIsland },
             Region { item: keyIsland.visible ? keyIsland : null },
             Region { item: rightIsland }
@@ -158,19 +161,80 @@ PanelWindow {
         }
     }
 
-    // ── Centre: clock + Essential Key, centred as a pair ──────────────
+    // ── Centre: Essential Apps, clock, Essential Key, centred together ─
     Item {
         id: midCluster
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
         anchors.topMargin: Theme.px(5)
         height: Theme.z.bar
-        width: clockIsland.width
+        width: (appsIsland.visible ? appsIsland.width + bar.islandGap : 0)
+            + clockIsland.width
             + (keyIsland.visible ? bar.islandGap + keyIsland.width : 0)
+
+        // Left of the clock, the Essential Key being on its right. Drawn
+        // as a dot grid rather than an icon-font glyph: it keeps the same
+        // pitch as the Glyph Matrix and the settings rail.
+        NCard {
+            id: appsIsland
+            visible: Config.appsKey
+            anchors.left: parent.left
+            anchors.top: parent.top
+            radius: Theme.r.pill
+            height: Theme.z.bar
+            width: Theme.z.bar
+
+            Grid {
+                id: appsDots
+                anchors.centerIn: parent
+                columns: 2
+                spacing: Theme.px(3)
+
+                Repeater {
+                    model: 4
+
+                    Rectangle {
+                        width: Theme.px(4)
+                        height: width
+                        radius: Theme.px(1)
+                        color: (GlobalState.appsOpen || appsMa.containsMouse)
+                            ? Theme.c.red : Theme.c.onDim
+                        Behavior on color { ColorAnimation { duration: Theme.fast } }
+                    }
+                }
+            }
+
+            scale: appsMa.pressed ? 0.92 : 1
+            Behavior on scale { NumberAnimation { duration: Theme.fast; easing.type: Easing.OutQuad } }
+
+            MouseArea {
+                id: appsMa
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    if (GlobalState.appsOpen) {
+                        GlobalState.appsOpen = false;
+                        return;
+                    }
+                    GlobalState.closeAll();
+                    GlobalState.appsOpen = true;
+                }
+            }
+
+            Tooltip {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: parent.bottom
+                anchors.topMargin: Theme.px(8)
+                text: "Essential Apps"
+                shown: appsMa.containsMouse && !GlobalState.appsOpen
+            }
+        }
 
         NCard {
             id: clockIsland
-            anchors.left: parent.left
+            anchors.left: appsIsland.visible ? appsIsland.right : parent.left
+            anchors.leftMargin: appsIsland.visible ? bar.islandGap : 0
             anchors.top: parent.top
             radius: Theme.r.pill
             height: Theme.z.bar

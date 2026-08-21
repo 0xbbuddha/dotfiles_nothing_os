@@ -1,0 +1,17 @@
+{
+  "name": "Countdown",
+  "icon": "󰥔",
+  "size": "m",
+  "prompt": "count down to a date I can change, with a label",
+  "sources": ["time"],
+  "state": { "target": "2026-12-25T00:00:00", "label": "CHRISTMAS" },
+  "body": [
+    { "t": "stat", "value": "fmt.until(state.target)", "caption": "state.label", "size": "l" },
+    { "t": "text", "value": "fmt.date(state.target)", "style": "label", "color": "dim" },
+    { "t": "divider" },
+    { "t": "field", "key": "label", "placeholder": "What are you waiting for" },
+    { "t": "field", "key": "target", "placeholder": "2026-12-25T00:00:00" }
+  ],
+  "actions": {},
+  "tick": []
+}

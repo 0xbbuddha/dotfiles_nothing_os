@@ -504,7 +504,13 @@ def gemini_text(prompt: str, env: dict, timeout: int = 30) -> tuple[str, str]:
         if text:
             return text, ""
         last_err = err
-        if "no longer available" in err.lower() or "not found" in err.lower():
+        # A model that is out of quota or overloaded is a reason to try
+        # the next one, not to give up: gemini-3.6-flash can be spent for
+        # the day while gemini-3.5-flash answers fine, and stopping at the
+        # first made every caller report "Gemini is busy".
+        low = err.lower()
+        if ("no longer available" in low or "not found" in low
+                or "busy" in low or "quota" in low):
             continue
         break
     return "", last_err

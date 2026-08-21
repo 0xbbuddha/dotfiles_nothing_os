@@ -17,8 +17,8 @@ Written for **Arch / EndeavourOS**, **Hyprland ≥ 0.56** (Lua config) and
 | ![Control centre](assets/cc.png) | ![Settings](assets/settings.png) |
 | **Game bar** | **Dolphin** |
 | ![Game bar](assets/game-bar.png) | ![File explorer](assets/file-explorer.png) |
-| **Essential Space + Key** |
-| ![Essential Space + Key](assets/essential-space-key.png) |
+| **Essential Space + Key** | **Essential Apps** |
+| ![Essential Space + Key](assets/essential-space-key.png) | ![Essential Apps](assets/essential-apps.png) |
 
 ## Install
 
@@ -95,6 +95,14 @@ The host compositor eats `SUPER`. Optional passthrough: source
 
 - **Bar, dock, control centre, settings** - one scale slider, one accent
 - **Launcher** (`SUPER`) - search on top, 10-workspace overview under it
+- **Essential Apps** (`SUPER+ALT+A`, or the dot grid left of the clock) -
+  a shelf on the opposite edge to Essential Space, mirroring the bar.
+  describe a widget in a sentence and the model writes it: a race
+  countdown, a tea timer, the anime airing this season with their
+  posters. It reads any public JSON API, plus the desktop's own battery,
+  volume, updates, notifications, workspace and Essential Space vault.
+  Six are bundled, so it works with no API key. Yours sit in the right
+  column of the desktop, the rice's widgets keep the left one
 - **Glyph Matrix** - 25×25 disc on the desktop (clock, battery, dice, cava…)
 - **Game bar** (`SUPER+G`) - overlay widgets you pin over a game
 - **Screenshots** - click a window, drag a rect, or click empty for the output
@@ -118,6 +126,8 @@ Settings live in `~/.config/nothing/config.json`.
 | `SUPER+N` | control centre |
 | `SUPER+B` | notifications |
 | `SUPER+I` | settings |
+| `SUPER+A` | Essential Space |
+| `SUPER+ALT+A` | Essential Apps |
 | `SUPER+G` | game bar |
 | `SUPER+V` / `SUPER+.` | clipboard / emoji |
 | `SUPER+SHIFT+S` | region capture |

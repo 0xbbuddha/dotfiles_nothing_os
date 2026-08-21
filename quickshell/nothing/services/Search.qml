@@ -130,6 +130,36 @@ Singleton {
         GlobalState.essentialOpen = true;
     }
 
+    function openApp(id: string): void {
+        if ((id ?? "") === "")
+            return;
+        GlobalState.closeAll();
+        GlobalState.appsFocus = id;
+        GlobalState.appsOpen = true;
+    }
+
+    function matchApps(needle: string): var {
+        const parts = needle.trim().toLowerCase().split(/\s+/).filter(p => p !== "");
+        if (parts.length === 0)
+            return [];
+        const src = MiniApps.specs;
+        const hits = [];
+        for (let i = 0; i < src.length; i++) {
+            const spec = src[i];
+            const hay = [spec.name ?? "", spec.prompt ?? ""].join(" ").toLowerCase();
+            let ok = true;
+            for (let j = 0; j < parts.length; j++) {
+                if (!hay.includes(parts[j])) {
+                    ok = false;
+                    break;
+                }
+            }
+            if (ok)
+                hits.push(spec);
+        }
+        return hits;
+    }
+
     function openSetting(page: int, key: string): void {
         GlobalState.closeAll();
         GlobalState.settingsPage = page;
@@ -194,6 +224,8 @@ Singleton {
           run: () => GlobalState.cheatsheetOpen = true },
         { name: "essential", label: "Essential Space", icon: "󰠮",
           run: () => { GlobalState.closeAll(); GlobalState.essentialOpen = true; } },
+        { name: "apps", label: "Essential Apps", icon: "󰀻",
+          run: () => { GlobalState.closeAll(); GlobalState.appsOpen = true; } },
         { name: "game",        label: "Toggle game mode",        icon: "󰊴",
           run: () => Game.toggle() },
         { name: "crosshair",     label: "Toggle crosshair",        icon: "󰆤",
@@ -289,6 +321,19 @@ Singleton {
                     subtitle: sub,
                     icon: root.captureIcon(it.kind || "note"),
                     run: () => root.openCapture(capId)
+                });
+            }
+            const _apps = MiniApps.stamp;
+            const mini = root.matchApps(text).slice(0, 4);
+            for (const spec of mini) {
+                const appId = spec.id || "";
+                // Not "app": the launcher routes that kind to AppIcon and
+                // a .desktop icon name, which a generated app does not have.
+                out.push({
+                    kind: "miniapp", title: spec.name || "App",
+                    subtitle: "Essential App",
+                    icon: spec.icon || "󰀻",
+                    run: () => root.openApp(appId)
                 });
             }
             const sets = SettingsIndex.search(text).slice(0, 5);

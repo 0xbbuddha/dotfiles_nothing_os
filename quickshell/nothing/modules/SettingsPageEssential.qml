@@ -4,8 +4,10 @@ import ".."
 import "../components"
 import "../services"
 
-// Essential Space and Essential Search, kept together: the shelf, the
-// key, and whether SUPER mixes captures into the launcher.
+// Essential Space, Search and Apps, kept together: the shelf, the key,
+// whether SUPER mixes captures into the launcher, and which generated
+// apps sit on the desktop. Mind is shared by all three, so it lives at
+// the bottom rather than in any one of them.
 SettingsPage {
     id: page
 
@@ -55,6 +57,133 @@ SettingsPage {
     }
 
     SettingsSection {
+        title: "Apps"
+
+        SettingRow {
+            key: "appsKey"
+            label: "Button in the bar"
+            hint: "Left of the clock, where the Essential Key sits on the right"
+            DotSwitch {
+                checked: Config.appsKey
+                onToggled: (v) => { Config.appsKey = v; Config.save(); }
+            }
+        }
+
+        SettingRow {
+            key: "deskApps"
+            label: "Apps on the desktop"
+            hint: Config.showDeskApps
+                ? (Config.deskApps ?? []).length + " in the right column. Widgets keep the left one."
+                : "Hidden. The library stays available with SUPER+ALT+A."
+            DotSwitch {
+                checked: Config.showDeskApps
+                onToggled: (v) => { Config.showDeskApps = v; Config.save(); }
+            }
+        }
+
+        Repeater {
+            model: Config.deskApps ?? []
+
+            Rectangle {
+                id: pinned
+                required property string modelData
+                required property int index
+                readonly property var spec: {
+                    MiniApps.stamp;
+                    return MiniApps.specOf(pinned.modelData);
+                }
+
+                Layout.fillWidth: true
+                implicitHeight: Theme.px(46)
+                radius: Theme.r.chip
+                color: Theme.c.surface2
+
+                Rectangle {
+                    anchors.left: parent.left
+                    anchors.leftMargin: Theme.px(3)
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: Theme.px(3)
+                    height: Theme.px(18)
+                    radius: width / 2
+                    color: Theme.c.red
+                }
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: Theme.px(16)
+                    anchors.rightMargin: Theme.px(10)
+                    spacing: Theme.px(12)
+
+                    NIcon {
+                        text: pinned.spec?.icon ?? "󰀻"
+                        size: Theme.z.iconM
+                        color: Theme.c.on
+                        Layout.preferredWidth: Theme.px(18)
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        // A pin can outlive its app: the spec is gone but
+                        // the id stays in config.json until it is removed.
+                        text: pinned.spec?.name ?? (pinned.modelData + " (missing)")
+                        color: pinned.spec ? Theme.c.on : Theme.c.onDim
+                        font.family: Theme.f.sans
+                        font.pixelSize: Theme.f.body
+                        elide: Text.ElideRight
+                    }
+
+                    NLabel { text: (pinned.index + 1) + "/" + (Config.deskApps ?? []).length }
+
+                    CircleButton {
+                        icon: "󰁝"
+                        size: Theme.px(24)
+                        enabled: pinned.index > 0
+                        opacity: enabled ? 1 : 0.25
+                        onActivated: Config.moveDeskApp(pinned.index, -1)
+                    }
+                    CircleButton {
+                        icon: "󰁅"
+                        size: Theme.px(24)
+                        enabled: pinned.index < (Config.deskApps ?? []).length - 1
+                        opacity: enabled ? 1 : 0.25
+                        onActivated: Config.moveDeskApp(pinned.index, 1)
+                    }
+                    CircleButton {
+                        icon: "󰅖"
+                        size: Theme.px(24)
+                        onActivated: Config.removeDeskApp(pinned.modelData)
+                    }
+                }
+            }
+        }
+
+        Text {
+            Layout.fillWidth: true
+            visible: (Config.deskApps ?? []).length === 0
+            text: MiniApps.empty
+                ? "No apps yet. SUPER+ALT+A opens the library, where a prompt writes one."
+                : "None pinned. Open the library and use the plus on a card."
+            color: Theme.c.onDim
+            font.family: Theme.f.sans
+            font.pixelSize: Theme.f.small
+            wrapMode: Text.WordWrap
+        }
+
+        SettingRow {
+            key: "appsLibrary"
+            label: "Library"
+            hint: MiniApps.specs.length + " apps written, in ~/.local/share/nothing/apps"
+            NPillButton {
+                text: "OPEN"
+                onActivated: {
+                    GlobalState.closeAll();
+                    GlobalState.appsOpen = true;
+                }
+            }
+        }
+    }
+
+    SettingsSection {
         title: "Mind"
 
         SettingRow {
@@ -66,7 +195,7 @@ SettingsPage {
                     : "Gemini — paste a key from Google AI Studio")
                 : (Config.mindBackend === "ollama"
                     ? "Ollama must be running locally"
-                    : "Stub: title from the first line")
+                    : "Stub: title from the first line. Apps cannot be written on stub.")
         }
 
         DotPicker {
