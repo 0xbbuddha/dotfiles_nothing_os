@@ -142,6 +142,10 @@ PanelWindow {
             anchors.fill: parent
             focus: win.want
             Keys.onEscapePressed: {
+                if (MiniApps.busy) {
+                    MiniApps.cancel();
+                    return;
+                }
                 if (win.openId !== "") {
                     win.openId = "";
                     return;
@@ -228,26 +232,44 @@ PanelWindow {
                             onFocusedChanged: if (focused) win.grabKeys = true
                         }
 
+                        // Send, and stop while it is working. A prompt
+                        // can be wrong the moment it leaves, and a
+                        // generation runs for the better part of a minute.
                         Rectangle {
                             Layout.preferredWidth: Theme.px(28)
                             Layout.preferredHeight: Theme.px(28)
                             radius: width / 2
-                            color: MiniApps.busy ? Theme.c.surface3
-                                 : (goMa.containsMouse ? Theme.c.red : Theme.c.surface3)
+                            color: MiniApps.busy
+                                ? Theme.c.red
+                                : (goMa.containsMouse ? Theme.c.red : Theme.c.surface3)
                             Behavior on color { ColorAnimation { duration: Theme.fast } }
 
                             NIcon {
                                 anchors.centerIn: parent
-                                text: MiniApps.busy ? "󰔟" : "󰁔"
-                                size: Theme.px(13)
+                                text: MiniApps.busy ? "󰓛" : "󰁔"
+                                size: MiniApps.busy ? Theme.px(12) : Theme.px(13)
                                 color: Theme.c.on
                             }
 
-                            SequentialAnimation on opacity {
-                                running: MiniApps.busy
-                                loops: Animation.Infinite
-                                NumberAnimation { to: 0.35; duration: 620 }
-                                NumberAnimation { to: 1; duration: 620 }
+                            // The ring breathes while it works, so the
+                            // button reads as busy without hiding the
+                            // stop it now offers.
+                            Rectangle {
+                                anchors.centerIn: parent
+                                width: parent.width + Theme.px(6)
+                                height: width
+                                radius: width / 2
+                                color: "transparent"
+                                border.width: 1
+                                border.color: Theme.c.red
+                                visible: MiniApps.busy
+
+                                SequentialAnimation on opacity {
+                                    running: MiniApps.busy
+                                    loops: Animation.Infinite
+                                    NumberAnimation { to: 0.15; duration: 700 }
+                                    NumberAnimation { to: 0.9; duration: 700 }
+                                }
                             }
 
                             MouseArea {
@@ -255,7 +277,12 @@ PanelWindow {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: win.send(ask.text)
+                                onClicked: {
+                                    if (MiniApps.busy)
+                                        MiniApps.cancel();
+                                    else
+                                        win.send(ask.text);
+                                }
                             }
                         }
                     }
@@ -287,7 +314,8 @@ PanelWindow {
 
                     Text {
                         Layout.fillWidth: true
-                        text: MiniApps.busy ? MiniApps.status
+                        text: MiniApps.busy
+                            ? MiniApps.status + " · Esc or the square to stop"
                             : (MiniApps.lastError !== "" ? MiniApps.lastError
                                                          : MiniApps.note)
                         color: MiniApps.lastError !== "" ? Theme.c.red : Theme.c.onDim

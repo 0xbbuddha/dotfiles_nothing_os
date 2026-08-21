@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell.Bluetooth
 import ".."
 import "../components"
 import "../services"
@@ -21,7 +22,25 @@ Item {
 
     onOpenChanged: {
         Net.scanWifi(open && kind === "wifi");
-        Net.scanBt(open && kind === "bt");
+        Net.scanBt(open && kind === "bt" && Net.btConnected.length === 0);
+    }
+
+    // Discovery is renewed only while nothing is connected or mid
+    // handshake. An active scan steals the radio from A2DP, and blindly
+    // restarting it every 25 seconds knocked a freshly connected speaker
+    // straight back off. It also stands down the moment a device starts
+    // connecting, which is why the guard is a binding and not just a
+    // check inside onTriggered.
+    readonly property bool mayScan: root.open && root.kind === "bt"
+        && Net.btPowered && !Net.btWorking && Net.btConnected.length === 0
+
+    onMayScanChanged: if (root.kind === "bt" && !mayScan) Net.scanBt(false)
+
+    Timer {
+        interval: 30000
+        repeat: true
+        running: root.mayScan
+        onTriggered: if (!Net.btScanning) Net.scanBt(true)
     }
 
     NCard {
@@ -63,8 +82,62 @@ Item {
                 }
             }
 
-            NLabel {
-                text: root.kind === "bt" ? Net.btLabel : Net.name
+            // Says what the panel is doing. The scan already ran on open,
+            // but nothing showed it, so the list read as frozen and the
+            // only recourse was closing and reopening.
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Theme.px(8)
+
+                NLabel {
+                    Layout.fillWidth: true
+                    text: {
+                        if (root.kind !== "bt")
+                            return Net.name;
+                        if (Net.btWorking)
+                            return "CONNECTING";
+                        if (Net.btScanning)
+                            return "SCANNING";
+                        return Net.btLabel;
+                    }
+                    elide: Text.ElideRight
+                }
+
+                Rectangle {
+                    Layout.alignment: Qt.AlignVCenter
+                    width: Theme.px(5)
+                    height: width
+                    radius: width / 2
+                    color: Theme.c.red
+                    visible: root.kind === "bt" && (Net.btScanning || Net.btWorking)
+
+                    SequentialAnimation on opacity {
+                        running: parent.visible
+                        loops: Animation.Infinite
+                        NumberAnimation { to: 0.2; duration: 640 }
+                        NumberAnimation { to: 1; duration: 640 }
+                    }
+                }
+
+                CircleButton {
+                    icon: "󰑐"
+                    size: Theme.px(20)
+                    visible: root.kind === "bt" && Net.btPowered
+                    enabled: !Net.btScanning && !Net.btWorking
+                    opacity: enabled ? 1 : 0.3
+                    onActivated: Net.scanBt(true)
+                }
+            }
+
+            // Says why nothing happened, which the panel never did.
+            Text {
+                Layout.fillWidth: true
+                visible: root.kind === "bt" && Net.btMessage !== ""
+                text: Net.btMessage
+                color: Theme.c.red
+                font.family: Theme.f.sans
+                font.pixelSize: Theme.f.small
+                wrapMode: Text.WordWrap
             }
 
             Flickable {
@@ -83,11 +156,15 @@ Item {
                     Repeater {
                         model: root.kind === "wifi"
                             ? (Net.wifiEnabled ? Net.sortedNetworks() : [])
-                            : (Net.btPowered ? Net.btDevices : [])
+                            : (Net.btPowered ? Net.sortedBt() : [])
 
                         Rectangle {
                             id: row
                             required property var modelData
+                            readonly property bool busy: root.kind === "bt"
+                                && (modelData.pairing
+                                    || modelData.state === BluetoothDeviceState.Connecting
+                                    || modelData.state === BluetoothDeviceState.Disconnecting)
                             Layout.fillWidth: true
                             implicitHeight: Theme.px(36)
                             radius: Theme.r.tiny
@@ -106,12 +183,21 @@ Item {
                                     color: row.modelData.connected ? Theme.c.red : Theme.c.onDim
                                     text: {
                                         if (root.kind === "bt")
-                                            return row.modelData.connected ? "󰂱" : "󰂯";
+                                            return Net.btGlyph(row.modelData);
                                         const s = row.modelData.signalStrength ?? 0;
                                         if (s >= 75) return "󰤨";
                                         if (s >= 50) return "󰤥";
                                         if (s >= 25) return "󰤢";
                                         return "󰤟";
+                                    }
+
+                                    // Breathes while the device is mid-handshake,
+                                    // so a click is visibly doing something.
+                                    SequentialAnimation on opacity {
+                                        running: root.kind === "bt" && row.busy
+                                        loops: Animation.Infinite
+                                        NumberAnimation { to: 0.25; duration: 520 }
+                                        NumberAnimation { to: 1; duration: 520 }
                                     }
                                 }
 
@@ -134,17 +220,25 @@ Item {
 
                                 NLabel {
                                     text: {
-                                        if (root.kind === "bt") {
-                                            if (row.modelData.pairing) return "pairing";
-                                            if (row.modelData.connected) return "connected";
-                                            if (row.modelData.paired) return "paired";
-                                            return "";
-                                        }
+                                        if (root.kind === "bt")
+                                            return Net.btStatus(row.modelData);
                                         if (row.modelData.connected) return "connected";
                                         if (row.modelData.known) return "saved";
                                         return "";
                                     }
-                                    color: row.modelData.connected ? Theme.c.red : Theme.c.onDim
+                                    color: row.modelData.connected ? Theme.c.red
+                                         : (row.busy ? Theme.c.red : Theme.c.onDim)
+                                }
+
+                                // Drop a device the adapter still lists but
+                                // that is no longer paired, or one you want
+                                // to pair afresh.
+                                CircleButton {
+                                    icon: "󰅖"
+                                    size: Theme.px(20)
+                                    visible: root.kind === "bt" && rma.containsMouse
+                                        && (row.modelData.paired || row.modelData.trusted)
+                                    onActivated: row.modelData.forget()
                                 }
                             }
 
@@ -156,9 +250,7 @@ Item {
                                 onClicked: {
                                     const d = row.modelData;
                                     if (root.kind === "bt") {
-                                        if (d.connected) d.disconnect();
-                                        else if (d.paired) d.connect();
-                                        else d.pair();
+                                        Net.btConnect(d);
                                     } else {
                                         if (d.connected) d.disconnect();
                                         else d.connect();
@@ -167,6 +259,18 @@ Item {
                             }
                         }
                     }
+                }
+            }
+
+            // The way out when the built-in agent is not enough: a device
+            // that wants a passkey typed needs a real manager.
+            NPillButton {
+                Layout.alignment: Qt.AlignLeft
+                visible: root.kind === "bt" && Net.btPowered && Net.btWizard
+                text: "PAIR A NEW DEVICE"
+                onActivated: {
+                    Net.openBtWizard();
+                    GlobalState.netPanel = "";
                 }
             }
 

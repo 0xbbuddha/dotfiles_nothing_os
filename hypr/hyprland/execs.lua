@@ -18,6 +18,11 @@ local function startup()
         hl.exec_cmd("qs -p " .. shellDir)
     end
 
+    -- BlueZ will not finish a pairing without an agent registered, and
+    -- nothing else here provides one. The script holds its own lock, so
+    -- running it twice is harmless.
+    hl.exec_cmd(ROOT .. "/scripts/bt-agent.sh")
+
     hl.exec_cmd("hyprctl setcursor " .. cursorTheme .. " " .. cursorSize)
 
     if exists("hypridle") and not pidof("hypridle") then

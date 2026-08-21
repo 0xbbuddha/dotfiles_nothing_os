@@ -25,6 +25,9 @@ Singleton {
     property string lastError: ""
     // Saved, but something was off: the endpoint never answered, say.
     property string note: ""
+    // Set while a generation is being torn down on purpose, so the exit
+    // is not reported as a failure.
+    property bool cancelled: false
 
     // id -> live state object, id -> fetched payload, id -> last fetch (s)
     property var stateBag: ({})
@@ -458,6 +461,7 @@ Singleton {
         if (text === "" || root.busy)
             return;
         root.busy = true;
+        root.cancelled = false;
         root.status = "Writing the app";
         root.lastError = "";
         root.note = "";
@@ -474,6 +478,7 @@ Singleton {
         if (id === "" || text === "" || root.busy)
             return;
         root.busy = true;
+        root.cancelled = false;
         root.status = "Applying the change";
         root.lastError = "";
         root.note = "";
@@ -496,6 +501,8 @@ Singleton {
         }
         stdout: StdioCollector {
             onStreamFinished: {
+                if (root.cancelled)
+                    return;
                 root.busy = false;
                 let reply = null;
                 try {
@@ -517,6 +524,10 @@ Singleton {
             }
         }
         onExited: (code) => {
+            if (root.cancelled) {
+                root.cancelled = false;
+                return;
+            }
             if (root.busy) {
                 root.busy = false;
                 root.status = "";
@@ -535,6 +546,20 @@ Singleton {
         maker.command = ["python3", root.script, "put", id];
         maker.stdinEnabled = true;
         maker.running = true;
+    }
+
+    // A prompt can be wrong the moment it is sent, and a generation takes
+    // the better part of a minute. Nothing is written until the very end,
+    // so killing it mid-flight leaves no half-built app behind.
+    function cancel(): void {
+        if (!root.busy)
+            return;
+        root.cancelled = true;
+        maker.running = false;
+        root.busy = false;
+        root.status = "";
+        root.lastError = "";
+        root.note = "Stopped";
     }
 
     function remove(id: string): void {

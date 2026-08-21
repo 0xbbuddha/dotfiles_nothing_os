@@ -566,6 +566,23 @@ app is saved. So:
 Never invent a field name to fill a gap. If the response shape is given
 to you, use only names that appear in it.
 
+Publication date, not activity date. Feeds often carry both: when a
+thread was posted, and when someone last replied. A "latest posts"
+widget ordered by the second one shows a thread from March that got a
+comment this morning. Order by the publication date, use it for the
+"how long ago" label, and guard it: a brand new item with no replies
+has a null activity date.
+
+Make items openable. When a list shows things a person would want to
+read or watch - articles, posts, discussions, releases, videos - a row
+that cannot be opened is half a widget. Give each one a button:
+  {"t":"button","label":"'OPEN'","on":"open"}
+with the action
+  "open": [{"open": "it.link"}]
+`it` inside the action is the row whose button was pressed. Use whatever
+field carries the address: `link`, `url`, `webUrl`, `permalink`, or a
+path built from a slug. Only http and https addresses open.
+
 For anything meant to show what is new, two rules. Pick a publisher that
 actually posts often: a real feed that went quiet a fortnight ago fails
 the app just as surely as a broken URL, and the freshness of whatever
@@ -945,11 +962,21 @@ def prefer_official(spec: dict, request: str, keep_id: str) -> dict:
     home = spec.get("home") or ""
     if not home:
         return spec
-    if clean_host((spec.get("fetch") or {}).get("url", "")) == home:
+
+    have = (spec.get("fetch") or {}).get("url", "")
+    on_home = clean_host(have) == home
+
+    url, payload, pick, link, when = discover_official(home)
+    if not url:
         return spec
 
-    url, payload, pick = discover_official(home)
-    if not url:
+    # Already on the right endpoint, bar the query string. Adopt the
+    # discovered one rather than redrafting: a refine kept dropping
+    # `?sort=-createdAt`, and that parameter decides which items the
+    # server sends at all.
+    if on_home:
+        if have.split("?")[0] == url.split("?")[0] and have != url:
+            spec["fetch"]["url"] = url
         return spec
 
     picked = json_pick(payload, pick)
@@ -965,7 +992,17 @@ def prefer_official(spec: dict, request: str, keep_id: str) -> dict:
         f'fetch.pick must be exactly: "{pick}"\n\n'
         f"`data` is an array of {len(picked)} items. Inside a list block "
         f"`it` is one of them, with these readable paths:\n{catalogue}\n\n"
-        "Rewrite the complete app against this response. Use only paths "
+        + (f"The publication date is {when}. Order by that, newest first, "
+           "and use it for any 'how long ago' label. Do not order by a "
+           "last-reply or last-activity field: it resurfaces old threads "
+           "that were merely commented on. Guard against a null date.\n\n"
+           if when else "")
+        + (f"One item is read on the web at:\n  {link}\n"
+           "Give every row a way to open it: a button whose action is\n"
+           '  {"open": ' + f'"{link}"' + "}\n"
+           "`it` inside that action is the row whose button was pressed.\n\n"
+           if link else "")
+        + "Rewrite the complete app against this response. Use only paths "
         "from the list, copied character for character. Return JSON only.\n"
         f"App wanted: {request}\n"
     )
@@ -1003,8 +1040,18 @@ def generate(request: str, current: dict | None, keep_id: str) -> tuple[dict | N
     spec, err = draft(base, keep_id)
     if not spec:
         return None, err
+
     spec = prefer_official(spec, request, keep_id)
+    # Once an official endpoint is proven it is pinned, query string and
+    # all. A later redraft would otherwise hand back the bare path and
+    # quietly drop `?sort=-createdAt`, which decides which twenty items
+    # the server sends in the first place; sorting client-side cannot
+    # recover what was never fetched.
+    pinned = (spec.get("fetch") or {}).get("url", "") if spec.get("home") else ""
+
     spec, note = ground(spec, request, keep_id)
+    if pinned and spec.get("fetch") and clean_host(spec["fetch"].get("url", "")) == spec.get("home"):
+        spec["fetch"]["url"] = pinned
     if note or not spec.get("fetch"):
         return spec, note and "NOTE:" + note
 
@@ -1030,6 +1077,8 @@ def generate(request: str, current: dict | None, keep_id: str) -> tuple[dict | N
         return spec, "NOTE:" + complaint
 
     second, note2 = ground(second, request, keep_id)
+    if pinned and second.get("fetch") and clean_host(second["fetch"].get("url", "")) == second.get("home"):
+        second["fetch"]["url"] = pinned
     # A replacement that reaches nothing is worse than a source that is
     # merely slow. Keep what worked and say what is wrong with it, rather
     # than swapping a stale feed for a dead URL.
@@ -1051,13 +1100,27 @@ def generate(request: str, current: dict | None, keep_id: str) -> tuple[dict | N
 # thing asked for. Forums and CMSes expose their own JSON at well-known
 # paths, so when the request names a site those are probed directly.
 
+# path, pick, and how a single item is addressed on the web. Without the
+# last one the model can list discussions but has no way to let you open
+# one, which is most of what a feed widget is for.
+# path, pick, how one item is addressed on the web, and which field is
+# the publication date. Forums carry two dates and they mean different
+# things: sorting a "latest posts" widget by last reply resurfaces a
+# thread from March that someone commented on this morning.
 OFFICIAL_PATHS = [
-    ("/api/discussions?sort=-createdAt", "data"),          # Flarum
-    ("/latest.json", "topic_list.topics"),                 # Discourse
-    ("/api/recent", "topics"),                             # NodeBB
-    ("/wp-json/wp/v2/posts?per_page=10", ""),              # WordPress
-    ("/api/v1/posts", "data"),
-    ("/api/posts", "data"),
+    ("/api/discussions?sort=-createdAt", "data",           # Flarum
+     "'https://{host}/d/' + it.attributes.slug",
+     "it.attributes.createdAt"),
+    ("/latest.json", "topic_list.topics",                  # Discourse
+     "'https://{host}/t/' + it.slug + '/' + it.id",
+     "it.created_at"),
+    ("/api/recent", "topics",                              # NodeBB
+     "'https://{host}/topic/' + it.slug",
+     "it.timestampISO"),
+    ("/wp-json/wp/v2/posts?per_page=10", "",               # WordPress
+     "it.link", "it.date"),
+    ("/api/v1/posts", "data", "", ""),
+    ("/api/posts", "data", "", ""),
 ]
 
 
@@ -1069,17 +1132,17 @@ def clean_host(value: str) -> str:
     return host
 
 
-def discover_official(host: str) -> tuple[str, object, str]:
+def discover_official(host: str) -> tuple[str, object, str, str, str]:
     """First well-known API path on this host that yields real items."""
-    for path, pick in OFFICIAL_PATHS:
+    for path, pick, link, when in OFFICIAL_PATHS:
         url = f"https://{host}{path}"
         payload, err = http_get(url, timeout=10)
         if err:
             continue
         picked = json_pick(payload, pick)
         if isinstance(picked, list) and picked:
-            return url, payload, pick
-    return "", None, ""
+            return url, payload, pick, link.replace("{host}", host), when
+    return "", None, "", "", ""
 
 
 # ── Endpoint discovery ───────────────────────────────────────────────────

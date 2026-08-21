@@ -51,6 +51,15 @@ and an existing `fish/config.fish` are created once and never
 overwritten; `fish/conf.d/nothing.fish` is refreshed. Re-run
 `./install --files` after pulling.
 
+**Bluetooth.** `Bluetooth.defaultAdapter` is null for the first couple
+of seconds after the shell starts, and `Net.scanBt()` on a null adapter
+silently does nothing. The flyout therefore renews discovery on a timer
+rather than only on open, which also covers BlueZ giving up on its own
+after a few minutes and leaving the list looking frozen. Devices are
+sorted connected, then paired, then the rest: unsorted, a passing phone
+outranked your headphones. `Net.btGlyph()` maps BlueZ's icon name to a
+glyph, so `audio-card` reads as a speaker rather than a headset.
+
 **WARP.** The control-centre tile is hidden until `warp-cli` exists.
 `./install --deps` offers AUR `cloudflare-warp-bin` and enables
 `warp-svc`. First connect registers via `warp-cli registration new`.
@@ -161,6 +170,34 @@ which every other check happily accepted. It only runs on requests that
 ask for recency, so a holidays or standings feed is never flagged. The
 model is also told to sort by date rather than trust the order items
 arrive in, using `Date.parse(x)`, since `new` is not available.
+
+`prefer_official()` re-runs discovery even when the spec is already on
+the right host, because a refine kept handing back the bare path and
+dropping `?sort=-createdAt`. That parameter decides which twenty items
+the server sends, and sorting client-side cannot recover what was never
+fetched. When only the query string differs, the discovered URL is
+adopted outright rather than costing a redraft.
+
+`OFFICIAL_PATHS` carries a third field: how one item of that platform
+is addressed on the web, `/d/<slug>` for Flarum, `/t/<slug>/<id>` for
+Discourse, the `link` field for WordPress. Without it the model lists
+discussions correctly and gives no way to open one, which is most of
+what a feed widget is for. It cannot be derived from the payload: the
+API returns a slug, not a URL.
+
+A fourth field names the publication date, `createdAt` for Flarum,
+`created_at` for Discourse, `timestampISO` for NodeBB, `date` for
+WordPress. Forums carry two dates and the wrong one is invisible: a
+"latest posts" widget sorted by last reply put a thread from March at
+the top because someone commented on it that morning. One item in
+twenty also has a null activity date, having no replies at all.
+
+`MiniApps.cancel()` stops a run in flight, from the square in the
+composer or from Escape. Nothing is written until `cmd_gen` returns, so
+a kill leaves no half-built app. The `cancelled` flag exists because the
+process still emits an exit after being torn down, and without it that
+exit was reported as "The generator failed" seconds after the user
+deliberately stopped.
 
 A rejection must never leave the user worse off. When the redraft's
 endpoint reaches nothing, or fails the gate again, the original spec is
