@@ -341,4 +341,36 @@ SettingsPage {
             }
         }
     }
+
+    SettingsSection {
+        title: "Lock"
+
+        SettingRow {
+            key: "lockScreen"
+            label: "Lock screen"
+            hint: Config.lockScreen === "shell"
+                ? "Drawn by the shell: a dot-matrix mark per character, session buttons that wait for the password"
+                : "hyprlock, from hypr/hyprlock.conf"
+        }
+
+        DotPicker {
+            options: [
+                { label: "hyprlock", value: "hyprlock" },
+                { label: "Shell",    value: "shell" }
+            ]
+            current: Config.lockScreen
+            onPicked: (v) => { Config.lockScreen = v; Config.save(); }
+        }
+
+        Text {
+            Layout.fillWidth: true
+            text: "Try it with SUPER+L before trusting it to the idle timer. "
+                + "If the shell ever fails to answer, locking falls back to "
+                + "hyprlock rather than leaving the session open."
+            color: Theme.c.onDim
+            font.family: Theme.f.sans
+            font.pixelSize: Theme.f.small
+            wrapMode: Text.WordWrap
+        }
+    }
 }

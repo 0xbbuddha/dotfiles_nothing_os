@@ -32,8 +32,9 @@ hl.bind(mainMod .. " + Escape",     ipc("session", "toggle"))
 hl.bind("CTRL + " .. mainMod .. " + R", ipc("shell", "reload"))
 
 --## Session
-hl.bind(mainMod .. " + L",          hl.dsp.exec_cmd(
-    "hyprlock -c " .. ROOT .. "/hypr/hyprlock.conf"))
+-- Through the wrapper, not hyprlock directly: it is what carries out a
+-- session action the lock screen armed, once the password is accepted.
+hl.bind(mainMod .. " + L",          hl.dsp.exec_cmd(ROOT .. "/scripts/lock.sh"))
 hl.bind(mainMod .. " + SHIFT + L",  hl.dsp.exec_cmd("systemctl suspend || loginctl suspend"),
     { locked = true })
 hl.bind("CTRL + SHIFT + ALT + " .. mainMod .. " + Delete",
@@ -172,6 +173,15 @@ hl.bind("XF86MonBrightnessUp",   hl.dsp.global("quickshell:brightnessUp"),
     { locked = true, repeating = true })
 hl.bind("XF86MonBrightnessDown", hl.dsp.global("quickshell:brightnessDown"),
     { locked = true, repeating = true })
+
+-- Keyboard backlight. Generic: the shell drives whatever device exposes
+-- kbd_backlight, so this keeps working past the machine it was written on.
+hl.bind("XF86KbdBrightnessUp",   hl.dsp.global("quickshell:kbdBrightnessUp"),
+    { locked = true, repeating = true })
+hl.bind("XF86KbdBrightnessDown", hl.dsp.global("quickshell:kbdBrightnessDown"),
+    { locked = true, repeating = true })
+hl.bind("XF86KbdLightOnOff",     hl.dsp.global("quickshell:kbdBrightnessUp"),
+    { locked = true })
 
 hl.bind("XF86AudioPlay",  hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
 hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })

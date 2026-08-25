@@ -133,6 +133,9 @@ Singleton {
     property alias showDeskApps: a.showDeskApps
     property alias appsKey: a.appsKey
 
+    // ── Lock screen ───────────────────────────────────────────────────
+    property alias lockScreen: a.lockScreen
+
     // ── Glyph Matrix ──────────────────────────────────────────────────
     property alias glyphEnabled: a.glyphEnabled
     property alias glyphX: a.glyphX
@@ -451,6 +454,12 @@ Singleton {
             property bool showDeskApps: true
             // Bar button, left of the clock, mirroring the Essential Key.
             property bool appsKey: true
+
+            // hyprlock | shell. The shell's own lock draws in the Nothing
+            // language and varies the mark per character, but a lock
+            // screen is not a thing to switch by default: hyprlock keeps
+            // it until you have tried the other.
+            property string lockScreen: "hyprlock"
             property bool showTray: true
             property bool showBattery: true
             property bool showWorkspaces: true

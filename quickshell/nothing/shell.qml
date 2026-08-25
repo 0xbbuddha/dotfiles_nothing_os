@@ -90,6 +90,10 @@ ShellRoot {
     Variants { model: Quickshell.screens; NotificationCenter {} }
     Variants { model: Quickshell.screens; PolkitDialog {} }
 
+    // One instance only: WlSessionLock raises a surface per monitor
+    // by itself.
+    LockScreen {}
+
     // The crosshair lives on every screen, unmasked: never clickable.
     Variants {
         model: Config.crosshair ? Quickshell.screens : []
@@ -127,6 +131,20 @@ ShellRoot {
         function toggle(): void { GlobalState.settingsOpen = !GlobalState.settingsOpen; }
         function open(): void { GlobalState.settingsOpen = true; }
         function hide(): void { GlobalState.settingsOpen = false; }
+    }
+
+    IpcHandler {
+        target: "lock"
+        // Answers only when the shell's own lock is the chosen one, so
+        // scripts/lock.sh can tell the difference and fall back to
+        // hyprlock rather than leaving the screen open.
+        function activate(): string {
+            if (Config.lockScreen !== "shell")
+                return "hyprlock";
+            Lock.reset();
+            Lock.locked = true;
+            return "ok";
+        }
     }
 
     IpcHandler {
@@ -304,6 +322,18 @@ ShellRoot {
         name: "brightnessUp"
         description: "Brightness up (gamma then backlight)"
         onPressed: Brightness.up()
+    }
+
+    GlobalShortcut {
+        name: "kbdBrightnessUp"
+        description: "Keyboard backlight up"
+        onPressed: Brightness.kbdUp()
+    }
+
+    GlobalShortcut {
+        name: "kbdBrightnessDown"
+        description: "Keyboard backlight down"
+        onPressed: Brightness.kbdDown()
     }
 
     GlobalShortcut {

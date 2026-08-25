@@ -17,12 +17,23 @@ Singleton {
     readonly property string lockConfig:
         Quickshell.shellPath("../../hypr/hyprlock.conf")
 
+    // The wrapper, never hyprlock directly: it is what performs a session
+    // action armed from the lock screen, and only after the password is
+    // accepted.
+    readonly property string lockScript:
+        Quickshell.shellPath("../../scripts/lock.sh")
+
     function run(cmd: string): void {
         Quickshell.execDetached(["sh", "-c", cmd]);
     }
 
     function lock(): void {
-        root.run(`pidof hyprlock || hyprlock -c ${root.lockConfig}`);
+        if (Config.lockScreen === "shell") {
+            Lock.reset();
+            Lock.locked = true;
+            return;
+        }
+        root.run(`${root.lockScript}`);
     }
 
     function suspend(): void {

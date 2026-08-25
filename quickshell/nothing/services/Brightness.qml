@@ -122,6 +122,24 @@ Singleton {
         root.changedExternally("keyboard");
     }
 
+    // Keyboard backlight by steps, so a key press moves one notch of what
+    // the hardware actually offers rather than a fixed percentage. Nothing
+    // here knows any vendor: the device is whatever exposes kbd_backlight,
+    // and on a machine with none these simply do nothing.
+    function kbdUp(): void {
+        if (!root.kbdAvailable || root.kbdMax < 1)
+            return;
+        const step = Math.round(root.kbdValue * root.kbdMax);
+        root.setKbd(Math.min(root.kbdMax, step + 1) / root.kbdMax);
+    }
+
+    function kbdDown(): void {
+        if (!root.kbdAvailable || root.kbdMax < 1)
+            return;
+        const step = Math.round(root.kbdValue * root.kbdMax);
+        root.setKbd(Math.max(0, step - 1) / root.kbdMax);
+    }
+
     function setCombined(v: real): void {
         const t = Math.max(0, Math.min(1, v));
         if (!NightLight.available) {
