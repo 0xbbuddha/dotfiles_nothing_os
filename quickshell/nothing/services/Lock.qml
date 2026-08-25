@@ -2,6 +2,7 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Services.Pam
 import ".."
 
@@ -28,6 +29,10 @@ Singleton {
 
     // Bumped on every failure so the surfaces can shake in unison.
     property int shake: 0
+
+    // Fingerprint, when the machine has a reader with something enrolled.
+    property bool fingerprint: false
+    property string fingerNotice: ""
 
     signal granted(string action)
 
@@ -57,6 +62,9 @@ Singleton {
     function submit(): void {
         if (root.busy || root.secret === "")
             return;
+        // One PAM conversation at a time: a pending fingerprint attempt
+        // would otherwise answer the password prompt.
+        root.stopFinger();
         root.busy = true;
         root.notice = "";
         pam.start();
@@ -68,6 +76,87 @@ Singleton {
         root.failed = false;
         root.action = "";
         root.notice = "";
+        root.fingerNotice = "";
+    }
+
+    // fprintd stops listening after about thirty seconds. Rather than
+    // leave the reader dead until the next keystroke, the attempt is
+    // started again whenever it lapses while the screen is still locked.
+    function watchFinger(): void {
+        if (!root.fingerprint || !root.locked || root.busy)
+            return;
+        if (!fingerPam.active)
+            fingerPam.start();
+    }
+
+    function stopFinger(): void {
+        if (fingerPam.active)
+            fingerPam.abort();
+    }
+
+    onLockedChanged: {
+        if (root.locked)
+            root.watchFinger();
+        else
+            root.stopFinger();
+    }
+
+    Process {
+        running: true
+        // whoami rather than $USER: the variable is set in a normal
+        // session but nothing guarantees it in the shell's environment.
+        command: ["sh", "-c", "fprintd-list \"$(whoami)\" 2>/dev/null"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.fingerprint = text.indexOf("Fingerprints for user") >= 0;
+                if (root.fingerprint && root.locked)
+                    root.watchFinger();
+            }
+        }
+    }
+
+    PamContext {
+        id: fingerPam
+        // Relative to this file, so "pam" is services/pam next door.
+        configDirectory: "pam"
+        config: "fprintd.conf"
+
+        // PAM's own text is never shown: it is translated by the system
+        // locale, and this shell speaks English throughout. The states
+        // worth reporting are few enough to word here.
+        onCompleted: (result) => {
+            if (result === PamResult.Success) {
+                root.fingerNotice = "";
+                const act = root.action;
+                root.secret = "";
+                root.failed = false;
+                root.granted(act);
+                return;
+            }
+            // A refusal is not a lockout here: the reader simply lapsed or
+            // the finger was not recognised, so listen again.
+            if (result !== PamResult.Error) {
+                root.fingerNotice = "Finger not recognised";
+                fingerClear.restart();
+            }
+            fingerRetry.restart();
+        }
+
+        onError: (error) => fingerRetry.restart()
+    }
+
+    Timer {
+        id: fingerRetry
+        interval: 600
+        onTriggered: root.watchFinger()
+    }
+
+    // The refusal fades back to the plain invitation rather than sitting
+    // there accusing you.
+    Timer {
+        id: fingerClear
+        interval: 2600
+        onTriggered: root.fingerNotice = ""
     }
 
     // A half-typed secret must not sit in memory while the screen is
@@ -93,6 +182,7 @@ Singleton {
                 const act = root.action;
                 root.secret = "";
                 root.failed = false;
+                root.stopFinger();
                 root.granted(act);
                 return;
             }
@@ -101,6 +191,9 @@ Singleton {
             root.shake++;
             root.notice = result === PamResult.MaxTries
                 ? "Too many attempts" : "Wrong password";
+            // The reader was stopped to make way for the password; a
+            // refusal must hand it back rather than leave it deaf.
+            root.watchFinger();
         }
 
         onError: (error) => {

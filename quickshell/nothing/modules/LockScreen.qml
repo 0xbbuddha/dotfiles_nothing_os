@@ -209,6 +209,41 @@ Scope {
                     color: Lock.notice !== "" ? Theme.c.red : Theme.c.onFaint
                 }
 
+                // ── Fingerprint ──────────────────────────────────────
+                // Only when the machine has a reader with something
+                // enrolled, so this row simply does not exist elsewhere.
+                RowLayout {
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.topMargin: Theme.px(16)
+                    visible: Lock.fingerprint && !Lock.busy
+                    spacing: Theme.px(8)
+
+                    NIcon {
+                        text: "󰈷"
+                        size: Theme.px(15)
+                        // The accent while the reader is listening: it is a
+                        // live affordance, not a caption.
+                        color: Theme.c.red
+
+                        SequentialAnimation on opacity {
+                            running: Lock.fingerprint && !Lock.busy
+                            loops: Animation.Infinite
+                            NumberAnimation { to: 0.35; duration: 1100; easing.type: Easing.InOutQuad }
+                            NumberAnimation { to: 1; duration: 1100; easing.type: Easing.InOutQuad }
+                        }
+                    }
+
+                    NLabel {
+                        text: Lock.fingerNotice !== ""
+                            ? Lock.fingerNotice.toUpperCase()
+                            : "OR TOUCH THE SENSOR"
+                        font.pixelSize: Theme.px(12)
+                        color: Theme.c.red
+                        elide: Text.ElideRight
+                        Layout.maximumWidth: Theme.px(280)
+                    }
+                }
+
                 // ── Session chips ────────────────────────────────────
                 RowLayout {
                     Layout.alignment: Qt.AlignHCenter
