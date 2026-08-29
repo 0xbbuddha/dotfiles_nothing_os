@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Io
 import Quickshell.Hyprland
 import Quickshell.Wayland
 import ".."
@@ -180,7 +179,7 @@ PanelWindow {
                         id: modeLabel
                         anchors.centerIn: parent
                         text: Search.modeLabel(search.text)
-                        color: Theme.c.on
+                        color: Theme.c.onAccent
                         font.family: Theme.f.mono
                         font.pixelSize: Theme.f.micro
                         font.letterSpacing: Theme.f.track
@@ -203,7 +202,7 @@ PanelWindow {
                         id: askLab
                         anchors.centerIn: parent
                         text: Search.askBusy ? "…" : "Ask"
-                        color: Theme.c.on
+                        color: Theme.c.onAccent
                         font.family: Theme.f.mono
                         font.pixelSize: Theme.f.micro
                         font.letterSpacing: Theme.f.track
@@ -386,11 +385,9 @@ PanelWindow {
                         }
                     }
 
-                    Text {
+                    NText {
                         Layout.fillWidth: true
                         text: Search.askBusy ? "Asking…" : Search.askAnswer
-                        color: Theme.c.on
-                        font.family: Theme.f.sans
                         font.pixelSize: Theme.f.body
                         wrapMode: Text.WordWrap
                         maximumLineCount: 6
@@ -427,26 +424,22 @@ PanelWindow {
                         Layout.fillWidth: true
                         spacing: 0
 
-                        Text {
+                        NText {
                             Layout.fillWidth: true
                             text: Songrec.listening
                                 ? "Listening…"
                                 : (Songrec.hasResult ? Songrec.title : Songrec.error)
-                            color: Theme.c.on
-                            font.family: Theme.f.sans
                             font.pixelSize: Theme.f.body
                             elide: Text.ElideRight
                         }
 
-                        Text {
+                        NText {
                             Layout.fillWidth: true
                             visible: text !== ""
                             text: Songrec.listening
                                 ? (Songrec.duration - Songrec.elapsed) + " s"
                                 : Songrec.artist
                             color: Theme.c.onDim
-                            font.family: Theme.f.sans
-                            font.pixelSize: Theme.f.small
                             elide: Text.ElideRight
                         }
                     }
@@ -500,11 +493,10 @@ PanelWindow {
                                 font.family: Theme.f.mono
                                 font.pixelSize: Theme.f.small
                             }
-                            Text {
+                            NText {
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: hint.modelData.label
                                 color: Theme.c.onDim
-                                font.family: Theme.f.sans
                                 font.pixelSize: Theme.f.tiny
                             }
                         }
@@ -624,13 +616,11 @@ PanelWindow {
                                 elide: Text.ElideRight
                             }
 
-                            Text {
+                            NText {
                                 Layout.fillWidth: true
                                 text: row.modelData.subtitle ?? ""
                                 visible: text !== ""
                                 color: Theme.c.onDim
-                                font.family: Theme.f.sans
-                                font.pixelSize: Theme.f.small
                                 elide: Text.ElideRight
                             }
                         }
@@ -653,15 +643,13 @@ PanelWindow {
                 }
             }
 
-            Text {
+            NText {
                 Layout.fillWidth: true
                 Layout.margins: Theme.pad
                 visible: win.results.length === 0 && !win.browsing
                     && !Search.askBusy && Search.askAnswer === ""
                 text: "No matching results."
                 color: Theme.c.onDim
-                font.family: Theme.f.sans
-                font.pixelSize: Theme.f.small
                 horizontalAlignment: Text.AlignHCenter
             }
         }

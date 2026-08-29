@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import ".."
 
 // Images found in the rice and the usual folders, for the wallpaper grid.
 Singleton {
@@ -14,7 +15,7 @@ Singleton {
         probe.running = true;
     }
 
-    Process {
+    NProcess {
         id: probe
         running: true
         command: ["sh", "-c", `

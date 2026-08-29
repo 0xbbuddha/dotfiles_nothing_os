@@ -36,12 +36,9 @@ ColumnLayout {
                 Layout.fillWidth: true
                 spacing: Theme.px(2)
 
-                Text {
+                NText {
                     Layout.fillWidth: true
                     text: Audio.appName(row.modelData)
-                    color: Theme.c.on
-                    font.family: Theme.f.sans
-                    font.pixelSize: Theme.f.small
                     elide: Text.ElideRight
                 }
 
@@ -65,12 +62,10 @@ ColumnLayout {
         }
     }
 
-    Text {
+    NText {
         Layout.fillWidth: true
         visible: Audio.streams.length === 0
         text: "Nothing is playing."
         color: Theme.c.onDim
-        font.family: Theme.f.sans
-        font.pixelSize: Theme.f.small
     }
 }

@@ -26,13 +26,11 @@ Item {
                 size: Theme.px(58)
             }
 
-            Text {
+            NText {
                 anchors.top: parent.top
                 anchors.right: parent.right
                 anchors.margins: Theme.px(11)
                 text: Time.dayShort
-                font.family: Theme.f.sans
-                font.pixelSize: Theme.f.small
                 font.weight: Font.DemiBold
                 color: Theme.c.red
             }
@@ -56,12 +54,10 @@ Item {
                 width: parent.width - Theme.px(20)
                 spacing: Theme.px(3)
 
-                Text {
+                NText {
                     Layout.fillWidth: true
                     horizontalAlignment: Text.AlignHCenter
                     text: Time.dateLong
-                    color: Theme.c.on
-                    font.family: Theme.f.sans
                     font.pixelSize: Theme.f.body
                     elide: Text.ElideRight
                 }

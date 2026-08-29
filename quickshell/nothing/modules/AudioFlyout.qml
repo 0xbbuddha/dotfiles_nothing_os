@@ -40,11 +40,9 @@ Item {
                     size: Theme.z.iconM
                 }
 
-                Text {
+                NText {
                     Layout.fillWidth: true
                     text: "Sound"
-                    color: Theme.c.on
-                    font.family: Theme.f.sans
                     font.pixelSize: Theme.f.big
                     font.weight: Font.Medium
                 }

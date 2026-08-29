@@ -56,21 +56,17 @@ Flickable {
                         Layout.fillWidth: true
                         spacing: Theme.px(1)
 
-                        Text {
+                        NText {
                             Layout.fillWidth: true
                             text: row.modelData.name
-                            color: Theme.c.on
-                            font.family: Theme.f.sans
                             font.pixelSize: Theme.f.body
                             elide: Text.ElideRight
                         }
 
-                        Text {
+                        NText {
                             Layout.fillWidth: true
                             text: row.modelData.prompt
                             color: Theme.c.onDim
-                            font.family: Theme.f.sans
-                            font.pixelSize: Theme.f.small
                             elide: Text.ElideRight
                         }
                     }
@@ -95,15 +91,13 @@ Flickable {
             }
         }
 
-        Text {
+        NText {
             Layout.fillWidth: true
             Layout.topMargin: Theme.px(6)
             text: "Clicking a preset adds a copy to your library. It costs nothing "
                 + "and needs no API key, which is also how the model is shown what "
                 + "a good app looks like."
             color: Theme.c.onFaint
-            font.family: Theme.f.sans
-            font.pixelSize: Theme.f.small
             wrapMode: Text.WordWrap
         }
     }

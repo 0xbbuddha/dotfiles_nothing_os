@@ -42,10 +42,8 @@ NCard {
             Layout.fillWidth: true
             spacing: Theme.px(6)
 
-            Text {
+            NText {
                 text: "‹"
-                color: Theme.c.on
-                font.family: Theme.f.sans
                 font.pixelSize: Theme.f.big
                 font.weight: Font.Medium
 
@@ -57,13 +55,10 @@ NCard {
                 }
             }
 
-            Text {
+            NText {
                 Layout.fillWidth: true
                 horizontalAlignment: Text.AlignHCenter
                 text: root.title
-                color: Theme.c.on
-                font.family: Theme.f.sans
-                font.pixelSize: Theme.f.small
 
                 MouseArea {
                     anchors.fill: parent
@@ -72,10 +67,8 @@ NCard {
                 }
             }
 
-            Text {
+            NText {
                 text: "›"
-                color: Theme.c.on
-                font.family: Theme.f.sans
                 font.pixelSize: Theme.f.big
                 font.weight: Font.Medium
 

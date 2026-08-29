@@ -77,11 +77,9 @@ PanelWindow {
                     Layout.fillWidth: true
                     spacing: 0
 
-                    Text {
+                    NText {
                         Layout.fillWidth: true
                         text: "Authentication required"
-                        color: Theme.c.on
-                        font.family: Theme.f.sans
                         font.pixelSize: Theme.f.big
                         font.weight: Font.Medium
                         elide: Text.ElideRight
@@ -95,13 +93,11 @@ PanelWindow {
                 }
             }
 
-            Text {
+            NText {
                 Layout.fillWidth: true
                 text: Polkit.message
                 visible: text !== ""
                 color: Theme.c.onDim
-                font.family: Theme.f.sans
-                font.pixelSize: Theme.f.small
                 wrapMode: Text.WordWrap
             }
 
@@ -129,13 +125,11 @@ PanelWindow {
                         radius: height / 2
                         color: active ? Theme.c.on : Theme.c.surface2
 
-                        Text {
+                        NText {
                             id: idLabel
                             anchors.centerIn: parent
                             text: idBtn.modelData.toString()
                             color: idBtn.active ? Theme.c.surface : Theme.c.onDim
-                            font.family: Theme.f.sans
-                            font.pixelSize: Theme.f.small
                         }
 
                         MouseArea {
@@ -206,12 +200,10 @@ PanelWindow {
                     color: Polkit.noteIsError ? Theme.c.red : Theme.c.onDim
                 }
 
-                Text {
+                NText {
                     Layout.fillWidth: true
                     text: Polkit.note
                     color: Polkit.noteIsError ? Theme.c.red : Theme.c.onDim
-                    font.family: Theme.f.sans
-                    font.pixelSize: Theme.f.small
                     wrapMode: Text.WordWrap
                 }
             }

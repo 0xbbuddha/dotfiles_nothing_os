@@ -231,20 +231,26 @@ Singleton {
         root.run(["ingest-song", Songrec.title, Songrec.artist]);
     }
 
+    // The value is handed over as $1, never pasted into the script text.
+    // JSON.stringify looks like a shell escape and is not one: it quotes
+    // quotes and backslashes but leaves $ and ` live inside double quotes,
+    // so a note reading $(...) ran as a command instead of being copied.
+    // These strings come from speech to text and from OCR, so they are not
+    // ours to trust.
     function copyItem(it: var): void {
         if (!it)
             return;
-        if (it.kind === "voice" && it.text) {
-            Quickshell.execDetached(["sh", "-c",
-                `printf '%s' ${JSON.stringify(it.text)} | wl-copy`]);
+        // A voice item carries its transcript; the recording itself is not
+        // what you want on the clipboard, so text wins over path here.
+        const wantsFile = it.kind !== "voice" && it.path && it.path.length > 0;
+        if (wantsFile) {
+            Quickshell.execDetached(["sh", "-c", 'wl-copy < "$1"',
+                                     "copy-item", it.path]);
             return;
         }
-        if (it.path && it.path.length > 0)
-            Quickshell.execDetached(["sh", "-c",
-                `wl-copy < ${JSON.stringify(it.path)}`]);
-        else if (it.text)
-            Quickshell.execDetached(["sh", "-c",
-                `printf '%s' ${JSON.stringify(it.text)} | wl-copy`]);
+        if (it.text)
+            Quickshell.execDetached(["sh", "-c", `printf '%s' "$1" | wl-copy`,
+                                     "copy-item", it.text]);
     }
 
     function openItem(it: var): void {
@@ -254,18 +260,18 @@ Singleton {
             Songrec.openTrack();
     }
 
-    Process {
+    NProcess {
         id: keyProbe
         stdout: StdioCollector {
             onStreamFinished: root.hasGeminiKey = text.trim() === "yes"
         }
     }
 
-    Process {
+    NProcess {
         id: backendWriter
     }
 
-    Process {
+    NProcess {
         id: keyWriter
         property string payload: ""
         command: ["python3", root.script, "set-key"]
@@ -280,7 +286,7 @@ Singleton {
         }
     }
 
-    Process {
+    NProcess {
         id: lister
         stdout: StdioCollector {
             onStreamFinished: {
@@ -295,7 +301,7 @@ Singleton {
         }
     }
 
-    Process {
+    NProcess {
         id: worker
         stdout: StdioCollector {
             onStreamFinished: {
@@ -317,7 +323,7 @@ Singleton {
         }
     }
 
-    Process {
+    NProcess {
         id: patcher
         property string payload: ""
         onRunningChanged: {
@@ -331,7 +337,7 @@ Singleton {
         }
     }
 
-    Process {
+    NProcess {
         id: calc
         property string expr: ""
         stdout: StdioCollector {
@@ -378,7 +384,7 @@ Singleton {
         onTriggered: root.grimKey(keyWait.mon)
     }
 
-    Process {
+    NProcess {
         id: keyGrim
         property string mon: ""
         onExited: (code) => {

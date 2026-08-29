@@ -312,15 +312,13 @@ PanelWindow {
                         }
                     }
 
-                    Text {
+                    NText {
                         Layout.fillWidth: true
                         text: MiniApps.busy
                             ? MiniApps.status + " · Esc or the square to stop"
                             : (MiniApps.lastError !== "" ? MiniApps.lastError
                                                          : MiniApps.note)
                         color: MiniApps.lastError !== "" ? Theme.c.red : Theme.c.onDim
-                        font.family: Theme.f.sans
-                        font.pixelSize: Theme.f.small
                         wrapMode: Text.WordWrap
                     }
                 }

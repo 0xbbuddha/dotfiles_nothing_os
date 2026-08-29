@@ -23,12 +23,10 @@ Item {
                 anchors.centerIn: parent
                 spacing: Theme.px(3)
 
-                Text {
+                NText {
                     Layout.alignment: Qt.AlignHCenter
                     text: Weather.temp + "°"
-                    font.family: Theme.f.sans
                     font.pixelSize: Theme.px(24)
-                    color: Theme.c.on
                 }
 
                 NIcon {
@@ -37,13 +35,11 @@ Item {
                     size: Theme.px(20)
                 }
 
-                Text {
+                NText {
                     Layout.alignment: Qt.AlignHCenter
                     Layout.topMargin: Theme.px(2)
                     Layout.maximumWidth: Theme.px(110)
                     text: Weather.city
-                    font.family: Theme.f.sans
-                    font.pixelSize: Theme.f.small
                     color: Theme.c.onDim
                     elide: Text.ElideRight
                 }
@@ -75,12 +71,9 @@ Item {
                         NIcon { anchors.centerIn: parent; text: Weather.glyph; size: Theme.px(13) }
                     }
 
-                    Text {
+                    NText {
                         Layout.fillWidth: true
                         text: Weather.desc
-                        font.family: Theme.f.sans
-                        font.pixelSize: Theme.f.small
-                        color: Theme.c.on
                         elide: Text.ElideRight
                     }
                 }
@@ -97,12 +90,10 @@ Item {
                     Layout.fillHeight: true
                     radius: width / 2
 
-                    Text {
+                    NText {
                         anchors.centerIn: parent
                         text: Weather.temp + "°"
-                        font.family: Theme.f.sans
                         font.pixelSize: Theme.f.big
-                        color: Theme.c.on
                     }
                 }
 

@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import ".."
 
 // CPU / RAM / GPU / temperatures, read directly from /proc and /sys.
 Singleton {
@@ -53,7 +54,7 @@ Singleton {
     property int _prevTotal: 0
     property int _prevIdle: 0
 
-    Process {
+    NProcess {
         id: probe
         running: true
         command: ["sh", "-c", `

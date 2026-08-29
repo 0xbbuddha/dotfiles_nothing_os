@@ -57,7 +57,9 @@ Singleton {
         + "monstercat = 0\n"
         + "noise_reduction = 77\n"
 
-    Process {
+    NProcess {
+        // Absent is an answer here, not a fault.
+        quiet: true
         running: true
         command: ["sh", "-c", "command -v cava >/dev/null 2>&1 && echo yes"]
         stdout: StdioCollector {
@@ -84,7 +86,7 @@ Singleton {
         }
     }
 
-    Process {
+    NProcess {
         id: cava
         running: false
         command: ["cava", "-p", root.confPath]

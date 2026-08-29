@@ -19,14 +19,13 @@ NCard {
         anchors.margins: Theme.px(9)
         spacing: Theme.px(8)
 
-        Text {
+        NText {
             visible: (Player.players ?? []).length === 0
             Layout.fillWidth: true
             Layout.preferredHeight: Theme.px(56)
             verticalAlignment: Text.AlignVCenter
             text: "Nothing is playing"
             color: Theme.c.onDim
-            font.family: Theme.f.sans
             font.pixelSize: Theme.f.body
         }
 

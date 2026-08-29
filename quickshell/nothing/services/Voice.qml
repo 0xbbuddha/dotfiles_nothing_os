@@ -2,7 +2,7 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
-import Quickshell.Io
+import ".."
 
 // Microphone notes for the Essential Key long-press.
 Singleton {
@@ -19,7 +19,7 @@ Singleton {
 
     signal finished(string message)
 
-    Process {
+    NProcess {
         id: rec
         onExited: {
             const ms = Date.now() - root.startedAt;

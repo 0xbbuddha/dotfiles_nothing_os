@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Networking
 import Quickshell.Bluetooth
 import Quickshell.Io
+import ".."
 
 // Network and Bluetooth via Quickshell's native modules.
 Singleton {
@@ -110,7 +111,9 @@ Singleton {
     // also how the illogical-impulse config handles pairing throughout.
     property bool btWizard: false
 
-    Process {
+    NProcess {
+        // Absent is an answer here, not a fault.
+        quiet: true
         running: true
         command: ["sh", "-c",
             "command -v bluedevil-wizard >/dev/null 2>&1 && echo yes"]

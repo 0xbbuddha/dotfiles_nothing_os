@@ -18,7 +18,9 @@ Singleton {
     readonly property bool advised: count >= 10
     readonly property bool urgent: count >= 40
 
-    Process {
+    NProcess {
+        // Absent is an answer here, not a fault.
+        quiet: true
         id: probe
         running: true
         command: ["sh", "-c", "command -v checkupdates >/dev/null 2>&1 && echo yes"]
@@ -30,7 +32,7 @@ Singleton {
         }
     }
 
-    Process {
+    NProcess {
         id: check
         command: ["sh", "-c", "checkupdates 2>/dev/null || true"]
         stdout: StdioCollector {

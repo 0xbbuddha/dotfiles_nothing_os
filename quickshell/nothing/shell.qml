@@ -370,5 +370,5 @@ ShellRoot {
         }
     }
 
-    Process { id: notify }
+    NProcess { id: notify }
 }

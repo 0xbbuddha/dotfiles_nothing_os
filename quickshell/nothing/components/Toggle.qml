@@ -25,7 +25,7 @@ Rectangle {
     // only by accident: the active fill is white on a dark shell, but black
     // on a light one, where the subtitle then turned black on black.
     readonly property color fgDim: active
-        ? Qt.rgba(Theme.c.surface.r, Theme.c.surface.g, Theme.c.surface.b, 0.5)
+        ? ColorUtils.applyAlpha(Theme.c.surface, 0.5)
         : Theme.c.onDim
 
     RowLayout {
@@ -110,11 +110,10 @@ Rectangle {
             Layout.fillWidth: true
             spacing: 0
 
-            Text {
+            NText {
                 Layout.fillWidth: true
                 text: root.title
                 color: root.fg
-                font.family: Theme.f.sans
                 font.pixelSize: Theme.f.body
                 font.weight: Font.Medium
                 elide: Text.ElideRight

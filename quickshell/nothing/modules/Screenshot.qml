@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Io
 import ".."
 import "../components"
 import "../services"
@@ -36,10 +35,8 @@ OverlayWindow {
         anchors.margins: Theme.pad
         spacing: Theme.gap
 
-        Text {
+        NText {
             text: "Screenshot"
-            color: Theme.c.on
-            font.family: Theme.f.sans
             font.pixelSize: Theme.f.big
             font.weight: Font.Medium
         }
@@ -78,12 +75,10 @@ OverlayWindow {
                             size: Theme.z.iconM
                             color: modeBtn.active ? Theme.c.surface : Theme.c.on
                         }
-                        Text {
+                        NText {
                             Layout.alignment: Qt.AlignHCenter
                             text: modeBtn.modelData.label
                             color: modeBtn.active ? Theme.c.surface : Theme.c.onDim
-                            font.family: Theme.f.sans
-                            font.pixelSize: Theme.f.small
                         }
                     }
 
@@ -128,11 +123,9 @@ OverlayWindow {
                             text: actBtn.modelData.icon
                             size: Theme.z.icon
                         }
-                        Text {
+                        NText {
                             Layout.alignment: Qt.AlignHCenter
                             text: actBtn.modelData.label
-                            color: Theme.c.on
-                            font.family: Theme.f.sans
                             font.pixelSize: Theme.f.tiny
                         }
                     }

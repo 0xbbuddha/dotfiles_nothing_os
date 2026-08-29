@@ -59,12 +59,10 @@ Flow {
                     }
                 }
 
-                Text {
+                NText {
                     anchors.verticalCenter: parent.verticalCenter
                     text: opt.modelData.label
                     color: opt.active ? Theme.c.on : Theme.c.onDim
-                    font.family: Theme.f.sans
-                    font.pixelSize: Theme.f.small
                 }
             }
 

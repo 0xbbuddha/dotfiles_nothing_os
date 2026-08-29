@@ -23,7 +23,7 @@ Singleton {
     signal finished(string message)
     signal cancelled()
 
-    Process {
+    NProcess {
         id: runner
         stdout: StdioCollector {
             onStreamFinished: {
@@ -34,7 +34,7 @@ Singleton {
         }
     }
 
-    Process {
+    NProcess {
         id: pregrab
         onExited: {
             if (!root.grabPending)

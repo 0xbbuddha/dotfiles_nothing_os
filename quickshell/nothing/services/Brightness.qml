@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import ".."
 
 // Brightness: panel, software gamma, keyboard backlight.
 // The screen slider has two phases, like the other rice:
@@ -72,7 +73,7 @@ Singleton {
             root.changedExternally("screen");
     }
 
-    Process {
+    NProcess {
         id: probe
         running: true
         command: ["brightnessctl", "-m", "--class", "backlight"]
@@ -81,7 +82,7 @@ Singleton {
         }
     }
 
-    Process {
+    NProcess {
         id: kbdProbe
         running: true
         command: ["sh", "-c", "brightnessctl -l -m --class leds 2>/dev/null | grep kbd_backlight | head -1"]
@@ -90,7 +91,7 @@ Singleton {
         }
     }
 
-    Process {
+    NProcess {
         running: true
         command: ["python3", Quickshell.shellPath("../../scripts/watch-brightness.py")]
         stdout: SplitParser {
@@ -98,8 +99,8 @@ Singleton {
         }
     }
 
-    Process { id: setter }
-    Process { id: kbdSetter }
+    NProcess { id: setter }
+    NProcess { id: kbdSetter }
 
     function set(v: real): void {
         const clamped = Math.max(0.01, Math.min(1, v));

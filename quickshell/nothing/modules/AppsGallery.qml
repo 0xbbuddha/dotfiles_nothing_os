@@ -67,13 +67,11 @@ ListView {
             color: Theme.c.onFaint
         }
 
-        Text {
+        NText {
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             text: "Describe an app in the field above, or start from a preset."
             color: Theme.c.onDim
-            font.family: Theme.f.sans
-            font.pixelSize: Theme.f.small
             wrapMode: Text.WordWrap
         }
     }

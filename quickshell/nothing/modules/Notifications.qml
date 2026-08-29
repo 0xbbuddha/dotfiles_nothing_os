@@ -105,24 +105,20 @@ PanelWindow {
                         }
                     }
 
-                    Text {
+                    NText {
                         Layout.fillWidth: true
                         text: bubble.modelData.summary
                         visible: text !== ""
-                        color: Theme.c.on
-                        font.family: Theme.f.sans
                         font.pixelSize: Theme.f.body
                         font.weight: Font.Medium
                         elide: Text.ElideRight
                     }
 
-                    Text {
+                    NText {
                         Layout.fillWidth: true
                         text: bubble.modelData.body
                         visible: text !== ""
                         color: Theme.c.onDim
-                        font.family: Theme.f.sans
-                        font.pixelSize: Theme.f.small
                         wrapMode: Text.WordWrap
                         maximumLineCount: 3
                         elide: Text.ElideRight

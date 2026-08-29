@@ -48,14 +48,13 @@ Rectangle {
         Keys.onEscapePressed: root.escaped()
     }
 
-    Text {
+    NText {
         id: ph
         anchors.left: parent.left
         anchors.leftMargin: Theme.px(8)
         anchors.verticalCenter: parent.verticalCenter
         visible: input.text === "" && !input.activeFocus
         color: Theme.c.onFaint
-        font.family: Theme.f.sans
         font.pixelSize: Theme.f.body
     }
 }

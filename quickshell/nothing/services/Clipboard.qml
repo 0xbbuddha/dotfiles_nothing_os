@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import ".."
 
 // Clipboard history via cliphist.
 Singleton {
@@ -16,7 +17,9 @@ Singleton {
 
     readonly property bool available: probe.found
 
-    Process {
+    NProcess {
+        // Absent is an answer here, not a fault.
+        quiet: true
         id: probe
         property bool found: false
         running: true
@@ -27,7 +30,7 @@ Singleton {
     }
 
     // cliphist list returns "<id>\t<preview>" per line, newest first.
-    Process {
+    NProcess {
         id: lister
         command: ["cliphist", "list"]
         stdout: StdioCollector {
@@ -58,23 +61,10 @@ Singleton {
         }
     }
 
-    // Every clipboard action runs through here. Without a stderr collector
-    // a failure was completely silent: cliphist would print "id N not found"
-    // into the void and the click looked like it had simply done nothing.
-    Process {
-        id: runner
-        stderr: StdioCollector {
-            onStreamFinished: {
-                const t = text.trim();
-                if (t !== "")
-                    console.warn("clipboard:", t);
-            }
-        }
-        onExited: (code) => {
-            if (code !== 0)
-                console.warn("clipboard: command exited", code);
-        }
-    }
+    // NProcess reports stderr and a non-zero exit on its own, and the
+    // script name passed as argv[0] is what it labels them with, so a
+    // failure shows up as "clip-copy: id 370 not found" instead of nothing.
+    NProcess { id: runner }
 
     Component.onCompleted: {
         root.refresh();
@@ -132,7 +122,6 @@ Singleton {
     `
 
     function copy(id: string, preview: string): void {
-        console.log("clipboard: copy id=" + id + " preview=" + JSON.stringify(preview));
         runner.command = ["sh", "-c", root.copyScript, "clip-copy",
                           id, preview ?? ""];
         runner.running = false;
@@ -140,8 +129,8 @@ Singleton {
     }
 
     function remove(id: string): void {
-        runner.command = ["sh", "-c",
-            `printf '%s\\t' ${JSON.stringify(id)} | cliphist delete`];
+        runner.command = ["sh", "-c", `printf '%s\\t' "$1" | cliphist delete`,
+                          "clip-remove", id];
         runner.running = false;
         runner.running = true;
         removeTimer.restart();

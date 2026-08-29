@@ -26,13 +26,10 @@ Rectangle {
     // Always above neighbouring elements on the card
     z: 100
 
-    Text {
+    NText {
         id: label
         anchors.centerIn: parent
         text: root.text
-        color: Theme.c.on
-        font.family: Theme.f.sans
-        font.pixelSize: Theme.f.small
         renderType: Text.QtRendering
     }
 }

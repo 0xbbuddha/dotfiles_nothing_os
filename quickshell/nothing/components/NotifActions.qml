@@ -33,13 +33,11 @@ RowLayout {
             color: ma.containsMouse ? Theme.c.on : Theme.c.surface3
             Behavior on color { ColorAnimation { duration: Theme.fast } }
 
-            Text {
+            NText {
                 id: label
                 anchors.centerIn: parent
                 text: chip.modelData.text
                 color: ma.containsMouse ? Theme.c.surface : Theme.c.on
-                font.family: Theme.f.sans
-                font.pixelSize: Theme.f.small
             }
 
             MouseArea {

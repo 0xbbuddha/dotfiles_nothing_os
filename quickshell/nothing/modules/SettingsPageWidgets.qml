@@ -87,20 +87,16 @@ SettingsPage {
                     ColumnLayout {
                         Layout.fillWidth: true
                         spacing: 0
-                        Text {
+                        NText {
                             Layout.fillWidth: true
                             text: toy.modelData.label
-                            color: Theme.c.on
-                            font.family: Theme.f.sans
                             font.pixelSize: Theme.f.body
                             elide: Text.ElideRight
                         }
-                        Text {
+                        NText {
                             Layout.fillWidth: true
                             text: toy.modelData.hint
                             color: Theme.c.onDim
-                            font.family: Theme.f.sans
-                            font.pixelSize: Theme.f.small
                             elide: Text.ElideRight
                         }
                     }
@@ -113,14 +109,12 @@ SettingsPage {
             }
         }
 
-        Text {
+        NText {
             Layout.fillWidth: true
             visible: Config.hasGlyphToy("visualizer") && !Cava.available
             text: "cava is not installed. The visualizer stays blank until it is. sudo pacman -S cava"
             color: Theme.c.onDim
             wrapMode: Text.WordWrap
-            font.family: Theme.f.sans
-            font.pixelSize: Theme.f.small
         }
     }
 
@@ -133,13 +127,11 @@ SettingsPage {
             hint: Config.widgets.length + " in the column, ordered top to bottom"
         }
 
-        Text {
+        NText {
             Layout.fillWidth: true
             visible: Config.widgets.length === 0
             text: "No widgets. Add one from the list below."
             color: Theme.c.onDim
-            font.family: Theme.f.sans
-            font.pixelSize: Theme.f.small
         }
 
         Repeater {
@@ -184,20 +176,16 @@ SettingsPage {
                         Layout.fillWidth: true
                         spacing: 0
 
-                        Text {
+                        NText {
                             Layout.fillWidth: true
                             text: row.meta?.label ?? row.modelData
-                            color: Theme.c.on
-                            font.family: Theme.f.sans
                             font.pixelSize: Theme.f.body
                             elide: Text.ElideRight
                         }
-                        Text {
+                        NText {
                             Layout.fillWidth: true
                             text: row.meta?.hint ?? ""
                             color: Theme.c.onDim
-                            font.family: Theme.f.sans
-                            font.pixelSize: Theme.f.small
                             elide: Text.ElideRight
                         }
                     }
@@ -262,20 +250,16 @@ SettingsPage {
                     ColumnLayout {
                         Layout.fillWidth: true
                         spacing: 0
-                        Text {
+                        NText {
                             Layout.fillWidth: true
                             text: avail.modelData.label
-                            color: Theme.c.on
-                            font.family: Theme.f.sans
                             font.pixelSize: Theme.f.body
                             elide: Text.ElideRight
                         }
-                        Text {
+                        NText {
                             Layout.fillWidth: true
                             text: avail.modelData.hint
                             color: Theme.c.onDim
-                            font.family: Theme.f.sans
-                            font.pixelSize: Theme.f.small
                             elide: Text.ElideRight
                         }
                     }
@@ -293,13 +277,11 @@ SettingsPage {
             }
         }
 
-        Text {
+        NText {
             Layout.fillWidth: true
             visible: WidgetRegistry.all.length === Config.widgets.length
             text: "Every widget is already shown."
             color: Theme.c.onDim
-            font.family: Theme.f.sans
-            font.pixelSize: Theme.f.small
         }
     }
 

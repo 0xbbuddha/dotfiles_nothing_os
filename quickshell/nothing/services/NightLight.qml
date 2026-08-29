@@ -38,7 +38,9 @@ Singleton {
             : (now >= root.fromMin || now < root.toMin);
     }
 
-    Process {
+    NProcess {
+        // Absent is an answer here, not a fault.
+        quiet: true
         id: probe
         property bool found: false
         running: true
@@ -97,7 +99,7 @@ Singleton {
         onTriggered: Quickshell.execDetached(["hyprctl", "hyprsunset", "gamma", String(root.gamma)])
     }
 
-    Process {
+    NProcess {
         running: true
         command: ["hyprctl", "hyprsunset", "gamma"]
         stdout: StdioCollector {

@@ -89,11 +89,10 @@ SettingsPage {
                         Layout.fillWidth: true
                         spacing: 0
 
-                        Text {
+                        NText {
                             Layout.fillWidth: true
                             text: row.entry?.name ?? row.modelData
                             color: row.entry ? Theme.c.on : Theme.c.red
-                            font.family: Theme.f.sans
                             font.pixelSize: Theme.f.body
                             elide: Text.ElideRight
                         }
@@ -126,13 +125,11 @@ SettingsPage {
             }
         }
 
-        Text {
+        NText {
             Layout.fillWidth: true
             visible: Config.dockApps.length === 0
             text: "Dock is empty. Pick an app below."
             color: Theme.c.onDim
-            font.family: Theme.f.sans
-            font.pixelSize: Theme.f.small
         }
     }
 
@@ -175,11 +172,9 @@ SettingsPage {
 
                     AppIcon { iconName: cand.modelData.icon; size: Theme.px(17) }
 
-                    Text {
+                    NText {
                         Layout.fillWidth: true
                         text: cand.modelData.name
-                        color: Theme.c.on
-                        font.family: Theme.f.sans
                         font.pixelSize: Theme.f.body
                         elide: Text.ElideRight
                     }

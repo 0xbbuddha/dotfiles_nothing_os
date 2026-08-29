@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import ".."
 
 // Music recognition, Shazam-style, via songrec.
 Singleton {
@@ -21,7 +22,9 @@ Singleton {
     readonly property bool available: probe.found
     readonly property bool hasResult: title !== ""
 
-    Process {
+    NProcess {
+        // Absent is an answer here, not a fault.
+        quiet: true
         id: probe
         property bool found: false
         running: true
@@ -31,7 +34,7 @@ Singleton {
         }
     }
 
-    Process {
+    NProcess {
         id: runner
         stdout: StdioCollector {
             onStreamFinished: {
@@ -94,5 +97,5 @@ Singleton {
         lookup.running = true;
     }
 
-    Process { id: lookup }
+    NProcess { id: lookup }
 }

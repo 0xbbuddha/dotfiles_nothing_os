@@ -22,7 +22,7 @@ Rectangle {
         : Theme.c.surface3
     Behavior on color { ColorAnimation { duration: Theme.fast } }
 
-    Text {
+    NText {
         id: label
         anchors.centerIn: parent
         width: root.maxWidth > 0
@@ -31,8 +31,6 @@ Rectangle {
         elide: Text.ElideRight
         text: root.text
         color: (ma.containsMouse && !root.danger) ? Theme.c.surface : Theme.c.on
-        font.family: Theme.f.sans
-        font.pixelSize: Theme.f.small
     }
 
     MouseArea {

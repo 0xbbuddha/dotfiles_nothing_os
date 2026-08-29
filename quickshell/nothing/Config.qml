@@ -397,7 +397,7 @@ Singleton {
         }
     }
 
-    Process {
+    NProcess {
         id: mkdir
         running: true
         command: ["mkdir", "-p", root.dir]

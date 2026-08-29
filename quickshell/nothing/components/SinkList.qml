@@ -35,12 +35,9 @@ ColumnLayout {
                     Layout.preferredWidth: Theme.px(16)
                 }
 
-                Text {
+                NText {
                     Layout.fillWidth: true
                     text: Audio.nameOf(row.modelData)
-                    color: Theme.c.on
-                    font.family: Theme.f.sans
-                    font.pixelSize: Theme.f.small
                     elide: Text.ElideRight
                 }
 
@@ -64,12 +61,10 @@ ColumnLayout {
         }
     }
 
-    Text {
+    NText {
         Layout.fillWidth: true
         visible: Audio.sinks.length === 0
         text: "No output detected"
         color: Theme.c.onDim
-        font.family: Theme.f.sans
-        font.pixelSize: Theme.f.small
     }
 }

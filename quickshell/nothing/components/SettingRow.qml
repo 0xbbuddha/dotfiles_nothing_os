@@ -74,22 +74,18 @@ Rectangle {
             Layout.fillWidth: true
             spacing: Theme.px(1)
 
-            Text {
+            NText {
                 Layout.fillWidth: true
                 text: root.label
-                color: Theme.c.on
-                font.family: Theme.f.sans
                 font.pixelSize: Theme.f.body
                 elide: Text.ElideRight
             }
 
-            Text {
+            NText {
                 Layout.fillWidth: true
                 text: root.hint
                 visible: root.hint !== ""
                 color: Theme.c.onDim
-                font.family: Theme.f.sans
-                font.pixelSize: Theme.f.small
                 wrapMode: Text.WordWrap
             }
         }

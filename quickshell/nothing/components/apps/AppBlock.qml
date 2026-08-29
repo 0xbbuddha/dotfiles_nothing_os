@@ -158,7 +158,7 @@ Loader {
                 Layout.minimumWidth: 0
                 implicitHeight: value.implicitHeight
 
-                Text {
+                NText {
                     id: unit
                     text: root.txt("unit", "")
                     // Dropped rather than elided down to "A…": a stub of
@@ -166,8 +166,6 @@ Loader {
                     visible: text !== ""
                         && (width >= implicitWidth || width >= Theme.px(34))
                     color: Theme.c.onDim
-                    font.family: Theme.f.sans
-                    font.pixelSize: Theme.f.small
                     renderType: Text.QtRendering
                     width: Math.min(implicitWidth, Math.max(0, band.width * 0.34))
                     elide: Text.ElideRight
@@ -325,11 +323,9 @@ Loader {
                     color: sma.containsMouse ? Theme.c.surface3 : Theme.c.surface2
                     Behavior on color { ColorAnimation { duration: Theme.fast } }
 
-                    Text {
+                    NText {
                         anchors.centerIn: parent
                         text: root.txt("label", "")
-                        color: Theme.c.on
-                        font.family: Theme.f.sans
                         font.pixelSize: Theme.f.body
                     }
 
@@ -351,12 +347,10 @@ Loader {
         RowLayout {
             spacing: Theme.px(8)
 
-            Text {
+            NText {
                 Layout.fillWidth: true
                 text: root.txt("label", "")
                 visible: text !== ""
-                color: Theme.c.on
-                font.family: Theme.f.sans
                 font.pixelSize: Theme.f.body
                 elide: Text.ElideRight
             }

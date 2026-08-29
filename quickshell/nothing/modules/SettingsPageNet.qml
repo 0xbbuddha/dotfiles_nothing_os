@@ -57,11 +57,9 @@ SettingsPage {
                         }
                     }
 
-                    Text {
+                    NText {
                         Layout.fillWidth: true
                         text: netRow.modelData.name
-                        color: Theme.c.on
-                        font.family: Theme.f.sans
                         font.pixelSize: Theme.f.body
                         elide: Text.ElideRight
                     }
@@ -93,13 +91,11 @@ SettingsPage {
             }
         }
 
-        Text {
+        NText {
             Layout.fillWidth: true
             visible: Net.wifiEnabled && Net.networks.length === 0
             text: "Looking for networks…"
             color: Theme.c.onDim
-            font.family: Theme.f.sans
-            font.pixelSize: Theme.f.small
         }
     }
 
@@ -142,11 +138,9 @@ SettingsPage {
                         color: btRow.modelData.connected ? Theme.c.red : Theme.c.onDim
                     }
 
-                    Text {
+                    NText {
                         Layout.fillWidth: true
                         text: btRow.modelData.name || btRow.modelData.address
-                        color: Theme.c.on
-                        font.family: Theme.f.sans
                         font.pixelSize: Theme.f.body
                         elide: Text.ElideRight
                     }
@@ -179,13 +173,11 @@ SettingsPage {
             }
         }
 
-        Text {
+        NText {
             Layout.fillWidth: true
             visible: Net.btPowered && Net.btDevices.length === 0
             text: "Looking for devices…"
             color: Theme.c.onDim
-            font.family: Theme.f.sans
-            font.pixelSize: Theme.f.small
         }
     }
 }

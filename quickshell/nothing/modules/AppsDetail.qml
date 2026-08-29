@@ -148,13 +148,11 @@ Flickable {
                 }
             }
 
-            Text {
+            NText {
                 Layout.fillWidth: true
                 visible: (root.spec?.sources ?? []).length === 0
                 text: "Nothing. This app only uses what you type into it."
                 color: Theme.c.onDim
-                font.family: Theme.f.sans
-                font.pixelSize: Theme.f.small
                 wrapMode: Text.WordWrap
             }
 
@@ -186,12 +184,9 @@ Flickable {
 
             NLabel { text: "PROMPT"; dim: false }
 
-            Text {
+            NText {
                 Layout.fillWidth: true
                 text: root.spec?.prompt ?? ""
-                color: Theme.c.on
-                font.family: Theme.f.sans
-                font.pixelSize: Theme.f.small
                 wrapMode: Text.WordWrap
             }
 
@@ -208,12 +203,10 @@ Flickable {
 
                     NLabel { text: "V" + (step.index + 2) }
 
-                    Text {
+                    NText {
                         Layout.fillWidth: true
                         text: step.modelData
                         color: Theme.c.onDim
-                        font.family: Theme.f.sans
-                        font.pixelSize: Theme.f.small
                         wrapMode: Text.WordWrap
                     }
 
@@ -298,13 +291,11 @@ Flickable {
             Layout.bottomMargin: Theme.px(6)
             spacing: Theme.px(8)
 
-            Text {
+            NText {
                 Layout.fillWidth: true
                 visible: root.confirming
                 text: "This deletes the app and everything it saved."
                 color: Theme.c.red
-                font.family: Theme.f.sans
-                font.pixelSize: Theme.f.small
                 wrapMode: Text.WordWrap
             }
 

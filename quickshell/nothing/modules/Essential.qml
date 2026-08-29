@@ -461,15 +461,13 @@ PanelWindow {
                                         font.pixelSize: Theme.px(16)
                                     }
 
-                                    Text {
+                                    NText {
                                         Layout.fillWidth: true
                                         text: card.pending
                                             ? "Mind…"
                                             : ((card.it.title ?? "") !== ""
                                                 ? card.it.title
                                                 : (card.it.kind ?? "note"))
-                                        color: Theme.c.on
-                                        font.family: Theme.f.sans
                                         font.pixelSize: Theme.f.body
                                         elide: Text.ElideRight
                                         maximumLineCount: 1
@@ -482,7 +480,7 @@ PanelWindow {
                                         }
                                     }
 
-                                    Text {
+                                    NText {
                                         Layout.fillWidth: true
                                         visible: win.tab !== "you"
                                             && !card.pending
@@ -491,8 +489,6 @@ PanelWindow {
                                         text: card.it.summary
                                         color: card.it.mind === "error" || card.it.mind === "nokey"
                                             ? Theme.c.red : Theme.c.onDim
-                                        font.family: Theme.f.sans
-                                        font.pixelSize: Theme.f.small
                                         elide: Text.ElideRight
                                         maximumLineCount: 1
                                     }
@@ -627,15 +623,13 @@ PanelWindow {
                                 }
                             }
 
-                            Text {
+                            NText {
                                 Layout.fillWidth: true
                                 text: (win.detailItem?.mind === "pending")
                                     ? "Mind…"
                                     : ((win.detailItem?.title ?? "") !== ""
                                         ? win.detailItem.title
                                         : (win.detailItem?.kind ?? ""))
-                                color: Theme.c.on
-                                font.family: Theme.f.sans
                                 font.pixelSize: Theme.f.big
                                 wrapMode: Text.Wrap
                                 opacity: (win.detailItem?.mind === "pending") ? 0.4 : 1
@@ -659,17 +653,15 @@ PanelWindow {
                                 }
                             }
 
-                            Text {
+                            NText {
                                 Layout.fillWidth: true
                                 visible: (win.detailItem?.kind ?? "") !== ""
                                 text: (win.detailItem?.kind ?? "")
                                     + (win.detailItem?.mind === "pending" ? " · mind" : "")
                                 color: Theme.c.onDim
-                                font.family: Theme.f.sans
-                                font.pixelSize: Theme.f.small
                             }
 
-                            Text {
+                            NText {
                                 Layout.fillWidth: true
                                 visible: {
                                     const s = win.detailItem?.summary ?? "";
@@ -678,12 +670,11 @@ PanelWindow {
                                 text: win.detailItem?.summary ?? ""
                                 color: (win.detailItem?.mind === "error" || win.detailItem?.mind === "nokey")
                                     ? Theme.c.red : Theme.c.onDim
-                                font.family: Theme.f.sans
                                 font.pixelSize: Theme.f.body
                                 wrapMode: Text.Wrap
                             }
 
-                            Text {
+                            NText {
                                 Layout.fillWidth: true
                                 visible: {
                                     const t = win.detailItem?.text ?? "";
@@ -692,30 +683,24 @@ PanelWindow {
                                 }
                                 text: win.detailItem?.text ?? ""
                                 color: Theme.c.onDim
-                                font.family: Theme.f.sans
-                                font.pixelSize: Theme.f.small
                                 wrapMode: Text.Wrap
                             }
 
                             Repeater {
                                 model: win.detailItem?.actions ?? []
-                                Text {
+                                NText {
                                     required property var modelData
                                     Layout.fillWidth: true
                                     text: "·  " + modelData
-                                    color: Theme.c.on
-                                    font.family: Theme.f.sans
-                                    font.pixelSize: Theme.f.small
                                     wrapMode: Text.Wrap
                                 }
                             }
 
-                            Text {
+                            NText {
                                 Layout.fillWidth: true
                                 visible: (win.detailItem?.tags ?? []).length > 0
                                 text: (win.detailItem?.tags ?? []).join("  ·  ")
                                 color: Theme.c.onFaint
-                                font.family: Theme.f.sans
                                 font.pixelSize: Theme.f.micro
                             }
 
@@ -779,7 +764,7 @@ PanelWindow {
                             font.letterSpacing: 1.0
                         }
 
-                        Text {
+                        NText {
                             width: parent.width
                             horizontalAlignment: Text.AlignHCenter
                             visible: win.tab === "you"
@@ -789,8 +774,6 @@ PanelWindow {
                                     : "Add a Gemini key in settings")
                                 : "Dates and reminders land here"
                             color: Theme.c.onFaint
-                            font.family: Theme.f.sans
-                            font.pixelSize: Theme.f.small
                             wrapMode: Text.Wrap
                         }
                     }
@@ -876,12 +859,10 @@ PanelWindow {
                                         color: (tile.lit && !tile.danger) ? Theme.c.surface : Theme.c.on
                                     }
 
-                                    Text {
+                                    NText {
                                         anchors.horizontalCenter: parent.horizontalCenter
                                         text: tile.modelData.label
                                         color: (tile.lit && !tile.danger) ? Theme.c.surface : Theme.c.on
-                                        font.family: Theme.f.sans
-                                        font.pixelSize: Theme.f.small
                                         font.letterSpacing: 0.4
                                     }
                                 }
@@ -994,12 +975,9 @@ PanelWindow {
                                             }
                                         }
 
-                                        Text {
+                                        NText {
                                             visible: youSeg.on
                                             text: "For You"
-                                            color: Theme.c.on
-                                            font.family: Theme.f.sans
-                                            font.pixelSize: Theme.f.small
                                             font.letterSpacing: 0.3
                                         }
                                     }
@@ -1049,12 +1027,9 @@ PanelWindow {
                                             }
                                         }
 
-                                        Text {
+                                        NText {
                                             visible: libSeg.on
                                             text: "Library"
-                                            color: Theme.c.on
-                                            font.family: Theme.f.sans
-                                            font.pixelSize: Theme.f.small
                                             font.letterSpacing: 0.3
                                         }
                                     }

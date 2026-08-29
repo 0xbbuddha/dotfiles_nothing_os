@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import ".."
 
 // Drives hypridle, started by hypr/hyprland/execs.lua with the repo
 // config. systemd is not used: stopping a unit would do nothing, there
@@ -15,9 +16,9 @@ Singleton {
 
     property bool inhibited: false      // true = sleep is disabled
 
-    Process { id: runner }
+    NProcess { id: runner }
 
-    Process {
+    NProcess {
         id: status
         stdout: StdioCollector {
             onStreamFinished: root.inhibited = text.trim() === ""
@@ -39,7 +40,10 @@ Singleton {
         root.inhibited = inhibit;
         runner.command = ["sh", "-c", inhibit
             ? "pkill -x hypridle 2>/dev/null || true"
-            : `pgrep -x hypridle >/dev/null || hypridle -c ${root.config} &`];
+            // Positional, and quoted: the config path is interpolated by
+            // nobody, so a space in it cannot split the command.
+            : 'pgrep -x hypridle >/dev/null || hypridle -c "$1" &',
+            "idle", root.config];
         runner.running = true;
     }
 

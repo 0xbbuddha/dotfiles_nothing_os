@@ -89,11 +89,9 @@ Item {
         color: Theme.c.surface3
         visible: root.resolved === "" || img.status !== Image.Ready
 
-        Text {
+        NText {
             anchors.centerIn: parent
             text: (Apps.nameFor(root.appId)[0] ?? "?").toUpperCase()
-            color: Theme.c.on
-            font.family: Theme.f.sans
             font.pixelSize: root.size * 0.55
         }
     }

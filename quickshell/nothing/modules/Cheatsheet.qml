@@ -120,12 +120,10 @@ OverlayWindow {
                                 Layout.fillWidth: true
                                 spacing: Theme.px(10)
 
-                                Text {
+                                NText {
                                     Layout.fillWidth: true
                                     text: row.modelData.label
                                     color: Theme.c.onDim
-                                    font.family: Theme.f.sans
-                                    font.pixelSize: Theme.f.small
                                     elide: Text.ElideRight
                                 }
 
@@ -147,14 +145,12 @@ OverlayWindow {
             }
         }
 
-        Text {
+        NText {
             Layout.fillWidth: true
             Layout.margins: Theme.pad
             visible: win.results.length === 0
             text: "No matching shortcut."
             color: Theme.c.onDim
-            font.family: Theme.f.sans
-            font.pixelSize: Theme.f.small
             horizontalAlignment: Text.AlignHCenter
         }
     }

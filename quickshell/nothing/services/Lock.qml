@@ -101,7 +101,7 @@ Singleton {
             root.stopFinger();
     }
 
-    Process {
+    NProcess {
         running: true
         // whoami rather than $USER: the variable is set in a normal
         // session but nothing guarantees it in the shell's environment.

@@ -33,13 +33,11 @@ Flickable {
         }
     }
 
-    Text {
+    NText {
         anchors.left: parent.left
         anchors.top: parent.top
         visible: edit.text === "" && !edit.activeFocus
         text: "Codes, macros, loadouts…"
         color: Theme.c.onFaint
-        font.family: Theme.f.sans
-        font.pixelSize: Theme.f.small
     }
 }

@@ -69,12 +69,9 @@ Rectangle {
                     }
                 }
 
-                Text {
+                NText {
                     Layout.fillWidth: true
                     text: card.spec?.name ?? ""
-                    color: Theme.c.on
-                    font.family: Theme.f.sans
-                    font.pixelSize: Theme.f.small
                     font.weight: Font.Medium
                     elide: Text.ElideRight
                 }

@@ -114,13 +114,11 @@ NCard {
             }
         }
 
-        Text {
+        NText {
             Layout.fillWidth: true
             visible: root.broken
             text: "This app has nothing to show. Edit it and describe what it should display."
             color: Theme.c.onDim
-            font.family: Theme.f.sans
-            font.pixelSize: Theme.f.small
             wrapMode: Text.WordWrap
         }
     }

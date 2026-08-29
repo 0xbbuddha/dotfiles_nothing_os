@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Hyprland
 import Quickshell.Services.SystemTray
@@ -135,13 +134,11 @@ PanelWindow {
                     color: Player.playing ? Theme.c.red : Theme.c.onDim
                 }
 
-                Text {
+                NText {
                     anchors.verticalCenter: parent.verticalCenter
                     width: Theme.px(120)
                     text: Player.cleanTitle
                     color: Theme.c.onDim
-                    font.family: Theme.f.sans
-                    font.pixelSize: Theme.f.small
                     elide: Text.ElideRight
                 }
             }
@@ -715,7 +712,7 @@ PanelWindow {
                     id: badgeTxt
                     anchors.centerIn: parent
                     text: Notifs.unread > 9 ? "9+" : String(Notifs.unread)
-                    color: Theme.c.surface
+                    color: Theme.c.onAccent
                     font.family: Theme.f.mono
                     font.pixelSize: Theme.f.micro
                     font.weight: Font.DemiBold

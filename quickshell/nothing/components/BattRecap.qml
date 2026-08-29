@@ -46,11 +46,9 @@ NCard {
             renderType: Text.QtRendering
         }
 
-        Text {
+        NText {
             text: root.charging ? "Charging" : "On battery"
             color: Theme.c.onDim
-            font.family: Theme.f.sans
-            font.pixelSize: Theme.f.small
         }
 
         Text {
@@ -61,11 +59,10 @@ NCard {
             font.pixelSize: Theme.f.tiny
         }
 
-        Text {
+        NText {
             visible: root.eta > 30 && root.eta < 86400
             text: (root.charging ? "Full in " : "Empty in ") + Time.duration(root.eta)
             color: Theme.c.onDim
-            font.family: Theme.f.sans
             font.pixelSize: Theme.f.tiny
         }
 

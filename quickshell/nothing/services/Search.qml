@@ -34,7 +34,7 @@ Singleton {
     // Read via a process rather than FileView: its onLoaded signal fires
     // before the text property is populated, and JSON.parse would get
     // an empty string.
-    Process {
+    NProcess {
         running: true
         command: ["cat", Quickshell.shellPath("assets/emoji.json")]
         stdout: StdioCollector {
@@ -46,7 +46,7 @@ Singleton {
     }
 
     // ── Calculator via qalc ─────────────────────────────────────────
-    Process {
+    NProcess {
         id: math
         stdout: StdioCollector {
             onStreamFinished: root.mathResult = text.trim()
@@ -60,13 +60,13 @@ Singleton {
         math.running = true;
     }
 
-    Process { id: runner }
+    NProcess { id: runner }
     function run(cmd: string): void {
         runner.command = ["sh", "-c", cmd];
         runner.running = true;
     }
 
-    Process {
+    NProcess {
         id: asker
         property string payload: ""
         onRunningChanged: {

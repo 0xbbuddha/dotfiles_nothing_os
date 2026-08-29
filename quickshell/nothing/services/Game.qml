@@ -15,7 +15,9 @@ Singleton {
     property bool applying: false
     property bool mangohudAvailable: false
 
-    Process {
+    NProcess {
+        // Absent is an answer here, not a fault.
+        quiet: true
         running: true
         command: ["sh", "-c", "command -v mangohud >/dev/null 2>&1 && echo yes"]
         stdout: StdioCollector {
@@ -23,7 +25,7 @@ Singleton {
         }
     }
 
-    Process { id: runner }
+    NProcess { id: runner }
 
     function hyprEval(lua: string): void {
         runner.command = ["hyprctl", "eval", lua];
@@ -71,19 +73,25 @@ Singleton {
 
     // FPS cap via MangoHud: write its config and send SIGUSR2 so it
     // reloads it live.
-    Process { id: fps }
+    NProcess { id: fps }
 
     function setFpsLimit(value: int): void {
         Config.gameFpsLimit = Math.max(0, value);
         Config.save();
         if (!root.mangohudAvailable) return;
-        const conf = "$HOME/.config/MangoHud/MangoHud.conf";
-        fps.command = ["sh", "-c",
-            `mkdir -p "$(dirname ${conf})" && touch ${conf} && `
-            + `if grep -q '^fps_limit=' ${conf}; `
-            + `then sed -i 's/^fps_limit=.*/fps_limit=${Config.gameFpsLimit}/' ${conf}; `
-            + `else echo 'fps_limit=${Config.gameFpsLimit}' >> ${conf}; fi; `
-            + `pkill -SIGUSR2 mangohud 2>/dev/null || true`];
+        // The limit arrives as $1 and the path is built inside the script,
+        // so both stay quoted. Unquoted, a $HOME with a space split the
+        // command into pieces and MangoHud never saw its new config.
+        fps.command = ["sh", "-c", `
+            conf="$HOME/.config/MangoHud/MangoHud.conf"
+            mkdir -p "$(dirname "$conf")" && touch "$conf" || exit 1
+            if grep -q '^fps_limit=' "$conf"; then
+                sed -i "s/^fps_limit=.*/fps_limit=$1/" "$conf"
+            else
+                printf 'fps_limit=%s\n' "$1" >> "$conf"
+            fi
+            pkill -SIGUSR2 mangohud 2>/dev/null || true
+        `, "fps-limit", String(Config.gameFpsLimit)];
         fps.running = true;
     }
 

@@ -15,7 +15,7 @@ SettingsPage {
     property bool armed: false
     Timer { id: disarm; interval: 4000; onTriggered: page.armed = false }
 
-    Process {
+    NProcess {
         running: true
         command: ["sh", "-c",
             "hyprctl version | head -1 | cut -d' ' -f1-2; quickshell --version"]
@@ -28,7 +28,7 @@ SettingsPage {
         }
     }
 
-    Process { id: sh; function run(cmd) { command = ["sh", "-c", cmd]; running = true; } }
+    NProcess { id: sh; function run(cmd) { command = ["sh", "-c", cmd]; running = true; } }
 
     SettingsSection {
         title: "Versions"

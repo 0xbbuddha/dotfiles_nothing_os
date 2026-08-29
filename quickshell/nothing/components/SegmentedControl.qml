@@ -30,12 +30,10 @@ RowLayout {
                  : (sma.containsMouse ? Theme.c.surface3 : Theme.c.surface2)
             Behavior on color { ColorAnimation { duration: Theme.fast } }
 
-            Text {
+            NText {
                 anchors.centerIn: parent
                 text: seg.modelData.label
                 color: seg.active ? Theme.c.surface : Theme.c.onDim
-                font.family: Theme.f.sans
-                font.pixelSize: Theme.f.small
                 font.weight: seg.active ? Font.Medium : Font.Normal
             }
 

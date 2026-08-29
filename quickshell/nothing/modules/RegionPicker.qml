@@ -157,7 +157,7 @@ PanelWindow {
             win.sendGeo(0, 0, win.width, win.height);
     }
 
-    Process {
+    NProcess {
         id: detect
         function kick(): void {
             running = false;

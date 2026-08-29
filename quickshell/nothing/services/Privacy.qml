@@ -4,6 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Pipewire
+import ".."
 
 // Privacy indicators: mic, camera, screen share.
 // Mic and share are inferred from active Pipewire links; the camera is
@@ -56,8 +57,11 @@ Singleton {
     }
 
     // Camera: look at who holds a /dev/video open.
-    Process {
+    NProcess {
         id: cam
+        // fuser exits 1 when nobody holds the device, which is the normal
+        // state and the answer this poll is after, not a failure.
+        quiet: true
         stdout: StdioCollector {
             onStreamFinished: root.cameraActive = text.trim() !== ""
         }

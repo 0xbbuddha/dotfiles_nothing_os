@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Hyprland
 import ".."
@@ -166,7 +165,7 @@ PanelWindow {
         regions: win.revealed ? [hotzoneRegion, dockRegion] : [hotzoneRegion]
     }
 
-    Process { id: sh; function run(cmd) { command = ["sh", "-c", cmd]; running = true; } }
+    NProcess { id: sh; function run(cmd) { command = ["sh", "-c", cmd]; running = true; } }
 
     readonly property var openClasses: {
         const out = {};

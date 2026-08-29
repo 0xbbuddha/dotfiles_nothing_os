@@ -28,6 +28,11 @@ Singleton {
         readonly property color onDim:    root.light ? "#6e6e6e" : "#8a8a8a"
         readonly property color onFaint:  root.light ? "#b4b4b4" : "#454545"
         readonly property color red:      Config.accent
+        // Ink for whatever sits ON the accent. It cannot just follow the
+        // theme: the accent is the user's choice and the presets include
+        // white, where white ink scores a contrast of exactly 1.00 and the
+        // content simply disappears. Picked by contrast instead.
+        readonly property color onAccent: ColorUtils.readableOn(Config.accent)
         readonly property color outline:  root.light ? "#dcdcdc" : "#2a2a2a"
         readonly property color scrim:    root.light ? Qt.rgba(0, 0, 0, 0.35)
                                                      : Qt.rgba(0, 0, 0, 0.6)
@@ -55,8 +60,7 @@ Singleton {
     // A translucent panel, for a card floating over the wallpaper rather
     // than over another panel.
     function pane(a: real): color {
-        const s = root.c.surface;
-        return Qt.rgba(s.r, s.g, s.b, a);
+        return ColorUtils.applyAlpha(root.c.surface, a);
     }
 
     // ── Typo ──────────────────────────────────────────────────────────

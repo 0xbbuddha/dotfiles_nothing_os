@@ -40,7 +40,7 @@ Singleton {
         });
     }
 
-    Process {
+    NProcess {
         id: fetch
         running: Config.weatherEnabled
         command: ["curl", "-sf", "--max-time", "8",

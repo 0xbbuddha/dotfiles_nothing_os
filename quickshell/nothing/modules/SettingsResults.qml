@@ -47,13 +47,12 @@ Flickable {
             }
         }
 
-        Text {
+        NText {
             Layout.fillWidth: true
             Layout.topMargin: Theme.px(10)
             visible: root.results.length === 0
             text: "Nothing matches \u201c" + root.query + "\u201d."
             color: Theme.c.onDim
-            font.family: Theme.f.sans
             font.pixelSize: Theme.f.body
         }
 
@@ -109,11 +108,9 @@ Flickable {
                         Behavior on color { ColorAnimation { duration: Theme.fast } }
                     }
 
-                    Text {
+                    NText {
                         Layout.fillWidth: true
                         text: hit.modelData.label
-                        color: Theme.c.on
-                        font.family: Theme.f.sans
                         font.pixelSize: Theme.f.body
                         elide: Text.ElideRight
                     }

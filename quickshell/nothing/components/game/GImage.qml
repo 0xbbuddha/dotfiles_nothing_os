@@ -53,12 +53,10 @@ Item {
         }
     }
 
-    Text {
+    NText {
         anchors.centerIn: parent
         visible: img.status !== Image.Ready && !GlobalState.gameBarOpen
         text: "No image"
         color: Theme.c.onFaint
-        font.family: Theme.f.sans
-        font.pixelSize: Theme.f.small
     }
 }

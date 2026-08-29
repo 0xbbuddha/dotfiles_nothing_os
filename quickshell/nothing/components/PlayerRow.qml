@@ -102,16 +102,15 @@ Item {
                 Layout.fillWidth: true
                 spacing: 0
 
-                Text {
+                NText {
                     Layout.fillWidth: true
                     text: Player.titleOf(root.player) || (root.player?.identity ?? "Player")
                     color: root.hasArt ? Theme.c.onArt : Theme.c.on
-                    font.family: Theme.f.sans
                     font.pixelSize: Theme.f.body
                     elide: Text.ElideRight
                 }
 
-                Text {
+                NText {
                     Layout.fillWidth: true
                     text: {
                         const sub = Player.subtitleOf(root.player);
@@ -121,8 +120,6 @@ Item {
                         return who;
                     }
                     color: root.hasArt ? Theme.c.onArtDim : Theme.c.onDim
-                    font.family: Theme.f.sans
-                    font.pixelSize: Theme.f.small
                     elide: Text.ElideRight
                 }
             }

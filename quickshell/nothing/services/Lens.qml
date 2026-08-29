@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import ".."
 
 // Google Lens image search on a screen selection.
 // The captured crop is uploaded to a third-party host for a public URL:
@@ -16,7 +17,7 @@ Singleton {
     property bool busy: false
     signal finished(string message)
 
-    Process {
+    NProcess {
         id: runner
         stdout: StdioCollector {
             onStreamFinished: {

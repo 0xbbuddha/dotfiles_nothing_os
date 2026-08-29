@@ -121,13 +121,12 @@ SettingsPage {
                         Layout.preferredWidth: Theme.px(18)
                     }
 
-                    Text {
+                    NText {
                         Layout.fillWidth: true
                         // A pin can outlive its app: the spec is gone but
                         // the id stays in config.json until it is removed.
                         text: pinned.spec?.name ?? (pinned.modelData + " (missing)")
                         color: pinned.spec ? Theme.c.on : Theme.c.onDim
-                        font.family: Theme.f.sans
                         font.pixelSize: Theme.f.body
                         elide: Text.ElideRight
                     }
@@ -157,15 +156,13 @@ SettingsPage {
             }
         }
 
-        Text {
+        NText {
             Layout.fillWidth: true
             visible: (Config.deskApps ?? []).length === 0
             text: MiniApps.empty
                 ? "No apps yet. SUPER+ALT+A opens the library, where a prompt writes one."
                 : "None pinned. Open the library and use the plus on a card."
             color: Theme.c.onDim
-            font.family: Theme.f.sans
-            font.pixelSize: Theme.f.small
             wrapMode: Text.WordWrap
         }
 

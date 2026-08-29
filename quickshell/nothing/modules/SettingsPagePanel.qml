@@ -362,14 +362,12 @@ SettingsPage {
             onPicked: (v) => { Config.lockScreen = v; Config.save(); }
         }
 
-        Text {
+        NText {
             Layout.fillWidth: true
             text: "Try it with SUPER+L before trusting it to the idle timer. "
                 + "If the shell ever fails to answer, locking falls back to "
                 + "hyprlock rather than leaving the session open."
             color: Theme.c.onDim
-            font.family: Theme.f.sans
-            font.pixelSize: Theme.f.small
             wrapMode: Text.WordWrap
         }
     }

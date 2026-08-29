@@ -23,7 +23,7 @@ Singleton {
 
     signal finished(string message)
 
-    Process {
+    NProcess {
         id: runner
         stdout: StdioCollector {
             onStreamFinished: {
@@ -35,8 +35,10 @@ Singleton {
         }
     }
 
-    Process {
+    NProcess {
         id: probe
+        // Exit 1 is the answer "nothing is recording", not a fault.
+        quiet: true
         command: ["pgrep", "-x", "wf-recorder"]
         onExited: (code) => {
             const on = code === 0;

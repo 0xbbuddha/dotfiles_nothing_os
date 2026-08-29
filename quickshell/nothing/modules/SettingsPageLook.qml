@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Io
 import ".."
 import "../components"
 import "../services"
@@ -11,7 +10,7 @@ SettingsPage {
 
     onCurrentChanged: if (current) Walls.refresh()
 
-    Process { id: sh; function run(cmd) { command = ["sh", "-c", cmd]; running = true; } }
+    NProcess { id: sh; function run(cmd) { command = ["sh", "-c", cmd]; running = true; } }
 
     SettingsSection {
         title: "Theme"

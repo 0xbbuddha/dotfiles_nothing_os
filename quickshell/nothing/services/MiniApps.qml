@@ -341,7 +341,7 @@ Singleton {
         root.pumpFetch();
     }
 
-    Process {
+    NProcess {
         id: fetcher
         property string appId: ""
         property string pickPath: ""
@@ -398,7 +398,7 @@ Singleton {
         }
     }
 
-    Process {
+    NProcess {
         id: writer
         property string payload: ""
         onRunningChanged: {
@@ -418,7 +418,7 @@ Singleton {
         lister.running = true;
     }
 
-    Process {
+    NProcess {
         id: lister
         stdout: StdioCollector {
             onStreamFinished: {
@@ -490,7 +490,7 @@ Singleton {
         maker.running = true;
     }
 
-    Process {
+    NProcess {
         id: maker
         property string payload: ""
         onRunningChanged: {
@@ -595,7 +595,7 @@ Singleton {
         simple.running = true;
     }
 
-    Process {
+    NProcess {
         id: simple
         stdout: StdioCollector {
             onStreamFinished: root.refresh()
@@ -605,7 +605,7 @@ Singleton {
     // Bundled presets, for the panel's second tab.
     property var presets: []
 
-    Process {
+    NProcess {
         id: presetLister
         stdout: StdioCollector {
             onStreamFinished: {
@@ -619,7 +619,7 @@ Singleton {
         }
     }
 
-    Process {
+    NProcess {
         id: seeder
         stdout: StdioCollector {
             onStreamFinished: root.refresh()

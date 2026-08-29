@@ -64,11 +64,9 @@ Item {
                     dy: 1
                 }
 
-                Text {
+                NText {
                     Layout.fillWidth: true
                     text: root.kind === "bt" ? "Bluetooth" : "Wi-Fi"
-                    color: Theme.c.on
-                    font.family: Theme.f.sans
                     font.pixelSize: Theme.f.big
                     font.weight: Font.Medium
                 }
@@ -130,13 +128,11 @@ Item {
             }
 
             // Says why nothing happened, which the panel never did.
-            Text {
+            NText {
                 Layout.fillWidth: true
                 visible: root.kind === "bt" && Net.btMessage !== ""
                 text: Net.btMessage
                 color: Theme.c.red
-                font.family: Theme.f.sans
-                font.pixelSize: Theme.f.small
                 wrapMode: Text.WordWrap
             }
 
@@ -201,13 +197,11 @@ Item {
                                     }
                                 }
 
-                                Text {
+                                NText {
                                     Layout.fillWidth: true
                                     text: root.kind === "bt"
                                         ? (row.modelData.name || row.modelData.address)
                                         : row.modelData.name
-                                    color: Theme.c.on
-                                    font.family: Theme.f.sans
                                     font.pixelSize: Theme.f.body
                                     elide: Text.ElideRight
                                 }
@@ -274,14 +268,12 @@ Item {
                 }
             }
 
-            Text {
+            NText {
                 Layout.fillWidth: true
                 visible: (root.kind === "wifi" && Net.wifiEnabled && Net.networks.length === 0)
                       || (root.kind === "bt" && Net.btPowered && Net.btDevices.length === 0)
                 text: "Looking…"
                 color: Theme.c.onDim
-                font.family: Theme.f.sans
-                font.pixelSize: Theme.f.small
             }
 
             NLabel {

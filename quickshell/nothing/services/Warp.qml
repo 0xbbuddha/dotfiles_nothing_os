@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import ".."
 
 // Cloudflare WARP (1.1.1.1). Hidden until warp-cli is installed.
 Singleton {
@@ -18,7 +19,9 @@ Singleton {
         return "1.1.1.1";
     }
 
-    Process {
+    NProcess {
+        // Absent is an answer here, not a fault.
+        quiet: true
         id: probe
         running: true
         command: ["sh", "-c", "command -v warp-cli >/dev/null 2>&1 && echo yes"]
@@ -31,15 +34,18 @@ Singleton {
         }
     }
 
-    Process {
+    NProcess {
         id: status
+        // A dead daemon answers with exit 1 and a message on stderr; that
+        // is simply "not connected", which parse() already handles.
+        quiet: true
         command: ["warp-cli", "status"]
         stdout: StdioCollector {
             onStreamFinished: root.parse(text)
         }
     }
 
-    Process {
+    NProcess {
         id: register
         command: ["warp-cli", "registration", "new"]
         onExited: (code) => {
@@ -102,7 +108,7 @@ Singleton {
         }
     }
 
-    Process {
+    NProcess {
         id: checkReg
         command: ["warp-cli", "status"]
         stdout: StdioCollector {

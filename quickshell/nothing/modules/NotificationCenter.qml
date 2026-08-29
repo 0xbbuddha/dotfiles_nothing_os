@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Io
 import Quickshell.Services.Notifications
 import ".."
 import "../components"
@@ -30,10 +29,8 @@ OverlayWindow {
             ColumnLayout {
                 Layout.fillWidth: true
                 spacing: 0
-                Text {
+                NText {
                     text: "Notifications"
-                    color: Theme.c.on
-                    font.family: Theme.f.sans
                     font.pixelSize: Theme.f.big
                     font.weight: Font.Medium
                 }
@@ -145,24 +142,20 @@ OverlayWindow {
                                 Layout.fillWidth: true
                                 spacing: Theme.px(2)
 
-                                Text {
+                                NText {
                                     Layout.fillWidth: true
                                     text: item.modelData.summary
                                     visible: text !== ""
-                                    color: Theme.c.on
-                                    font.family: Theme.f.sans
                                     font.pixelSize: Theme.f.body
                                     font.weight: Font.Medium
                                     elide: Text.ElideRight
                                 }
 
-                                Text {
+                                NText {
                                     Layout.fillWidth: true
                                     text: item.modelData.body
                                     visible: text !== ""
                                     color: Theme.c.onDim
-                                    font.family: Theme.f.sans
-                                    font.pixelSize: Theme.f.small
                                     wrapMode: Text.WordWrap
                                     maximumLineCount: 4
                                     elide: Text.ElideRight
@@ -200,14 +193,12 @@ OverlayWindow {
             }
         }
 
-        Text {
+        NText {
             Layout.fillWidth: true
             Layout.margins: Theme.pad
             visible: Notifs.history.length === 0
             text: "Nothing to show."
             color: Theme.c.onDim
-            font.family: Theme.f.sans
-            font.pixelSize: Theme.f.small
             horizontalAlignment: Text.AlignHCenter
         }
     }

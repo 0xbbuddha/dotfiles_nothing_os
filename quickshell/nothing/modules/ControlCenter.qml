@@ -79,12 +79,9 @@ Item {
                         id: calCol
                         spacing: 0
 
-                        Text {
+                        NText {
                             Layout.alignment: Qt.AlignRight
                             text: Time.dateLong
-                            color: Theme.c.on
-                            font.family: Theme.f.sans
-                            font.pixelSize: Theme.f.small
                         }
                         NLabel {
                             Layout.alignment: Qt.AlignRight
@@ -208,12 +205,9 @@ Item {
                                 size: Theme.z.iconM
                                 color: Updates.urgent ? Theme.c.red : Theme.c.on
                             }
-                            Text {
+                            NText {
                                 Layout.fillWidth: true
                                 text: Updates.count + " update" + (Updates.count === 1 ? "" : "s")
-                                color: Theme.c.on
-                                font.family: Theme.f.sans
-                                font.pixelSize: Theme.f.small
                             }
                             NLabel { text: "install" }
                         }
