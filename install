@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Nothing - installer.
 #
-#   ./install              packages, ~/.config links, SDDM session
+#   ./install              packages, ~/.config copies, SDDM session
 #   ./install --deps       packages only
 #   ./install --files      ~/.config + theme, skip pacman
 #   ./install --uninstall  restore ~/.config backups (not packages)
@@ -11,9 +11,12 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
+NOTHING_ROOT="$ROOT"
+export NOTHING_ROOT
 # shellcheck source=scripts/lib.sh
 source "$ROOT/scripts/lib.sh"
-NOTHING_ROOT="$ROOT"
+
+DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 
 DO_DEPS=true
 DO_FILES=true
@@ -24,7 +27,7 @@ usage() {
     cat <<'EOF'
 Nothing - installer.
 
-  ./install              packages, ~/.config links, SDDM session
+  ./install              packages, ~/.config copies, SDDM session
   ./install --deps       packages only
   ./install --files      ~/.config + theme, skip pacman
   ./install --uninstall  restore ~/.config backups (not packages)
@@ -52,72 +55,114 @@ done
 
 need_root_denied
 
-install_files() {
-    log "Shaders"
-    run bash "$ROOT/scripts/compile-shaders.sh" || warn "shader compile failed (settings dots fall back to Canvas)"
+# The step numbers are worked out up front rather than counted as we go:
+# each stage runs in its own process, so a counter living in this shell
+# would never reach them, and --files alone would still print "02".
+N=0
+STEP_DEPS=0; STEP_FILES=0; STEP_SESSION=0
+[[ "$DO_DEPS" == true ]]    && { N=$((N + 1)); STEP_DEPS=$N; }
+[[ "$DO_FILES" == true ]]   && { N=$((N + 1)); STEP_FILES=$N; }
+[[ "$DO_SESSION" == true ]] && { N=$((N + 1)); STEP_SESSION=$N; }
 
-    log "App theme (Dolphin, GTK, icons, file pickers)"
+plan_row() {
+    printf '  %s%02d%s  %-10s %s%s%s\n' "$RED" "$1" "$RST" "$2" "$FAINT" "$3" "$RST"
+}
+
+install_files() {
+    step "$STEP_FILES" "config"
+
+    log "Shaders"
+    run bash "$ROOT/scripts/compile-shaders.sh" \
+        || warn "shader compile failed (settings dots fall back to Canvas)"
+
+    log "App theme: Dolphin, GTK, icons, file pickers"
     run bash "$ROOT/scripts/apply-app-theme.sh"
 
-    log "~/.config/hypr, quickshell, scripts, theme"
+    log "Copies into $HOME/.config: hypr, quickshell, scripts, theme"
     run bash "$ROOT/scripts/install-config.sh"
 }
 
 install_session() {
-    log "SDDM session \"Nothing\""
-    printf '%s\n' \
-        "  This writes /usr/share/wayland-sessions/nothing.desktop and" \
-        "  /usr/local/bin/nothing-session, plus the astronaut greeter." \
-        "  After the ~/.config copies, the normal Hyprland entry loads" \
-        "  this rice too."
+    step "$STEP_SESSION" "session"
+
+    log "Registers a \"Nothing\" entry in the display manager."
+    field "writes" "/usr/share/wayland-sessions/nothing.desktop"
+    field ""       "/usr/local/bin/nothing-session"
+    field ""       "the astronaut greeter theme"
+    log "The plain Hyprland entry loads this rice too, once the copies are in."
+    echo
+
     if ask_yn "Add the Nothing session and SDDM theme?" y; then
         run sudo bash "$ROOT/scripts/install-session.sh"
     else
         warn "Skipped. You can still start from a TTY:"
-        echo "    $ROOT/scripts/nothing-session.sh"
+        field "" "$ROOT/scripts/nothing-session.sh"
     fi
 }
 
 if [[ "$UNINSTALL" == true ]]; then
-    log "Uninstall"
+    echo
+    banner
+    step 1 "uninstall"
     bash "$ROOT/scripts/uninstall.sh"
     if [[ -f /usr/share/wayland-sessions/nothing.desktop ]]; then
         if ask_yn "Remove the SDDM session too?" y; then
             run sudo bash "$ROOT/scripts/install-session.sh" --remove
         fi
     fi
+    # Built by apply-icon-theme.sh, so it is ours to offer to clean up.
+    # Nothing else writes there, and leaving it makes Dolphin keep an icon
+    # theme the rest of the rice no longer installs.
+    if [[ -d "$DATA_HOME/icons/Nothing" ]]; then
+        if ask_yn "Remove the generated icon theme too?" y; then
+            run rm -rf "$DATA_HOME/icons/Nothing"
+        fi
+    fi
+    echo
     ok "Done."
     exit 0
 fi
 
-cat <<MSG
-${BLD}Nothing${RST} - Hyprland + Quickshell, inspired by Nothing OS.
+echo
+banner
+echo
+printf '  %sHyprland and Quickshell, in the shape of Nothing OS.%s\n' "$DIM" "$RST"
+printf '  %sUnofficial, not affiliated with Nothing Technology.%s\n\n' "$FAINT" "$RST"
 
-Repo:  $ROOT
-This installer:
-  1. installs packages (Arch / EndeavourOS)
-  2. copies into ~/.config/hypr, quickshell, scripts, theme
-  3. registers a Nothing session in SDDM
+field "repo"    "$ROOT"
+field "target"  "$HOME/.config"
+field "backups" "*.bak-$(date +%Y%m%d)-<time>"
+echo
 
-Existing files in those paths are backed up as *.bak-<date>.
+[[ "$DO_DEPS" == true ]]    && plan_row "$STEP_DEPS"    "packages" "Arch / EndeavourOS, plus AUR"
+[[ "$DO_FILES" == true ]]   && plan_row "$STEP_FILES"   "config"   "hypr, quickshell, scripts, theme"
+[[ "$DO_SESSION" == true ]] && plan_row "$STEP_SESSION" "session"  "a \"Nothing\" entry in SDDM"
+echo
 
-MSG
+printf '  %sAnything already at those paths is backed up, never overwritten.%s\n\n' \
+       "$DIM" "$RST"
 pause
 
-[[ "$DO_DEPS" == true ]] && bash "$ROOT/scripts/install-deps.sh"
+if [[ "$DO_DEPS" == true ]]; then
+    NOTHING_STEP="$STEP_DEPS" bash "$ROOT/scripts/install-deps.sh"
+fi
 [[ "$DO_FILES" == true ]] && install_files
 [[ "$DO_SESSION" == true ]] && install_session
 
-cat <<MSG
-
-${BLD}Next${RST}
-  Log out and choose ${BLD}Nothing${RST} in the session picker.
-  Or from a TTY:  $ROOT/scripts/nothing-session.sh
-
-  SUPER tap     launcher + workspaces
-  SUPER+I       settings
-  SUPER+G       game bar
-
-  Personal binds: ~/.config/hypr/custom.lua
-  Uninstall:      ./install --uninstall
-MSG
+echo
+rule
+printf '  %s%s%s\n' "$BLD" "$(track "READY")" "$RST"
+rule
+printf '  Log out and pick %sNothing%s in the session list,\n' "$BLD" "$RST"
+printf '  or start it from a TTY:\n'
+field "" "$ROOT/scripts/nothing-session.sh"
+echo
+printf '  %s%s%s\n' "$DIM" "$(track "KEYS")" "$RST"
+field "SUPER"   "launcher and workspaces"
+field "SUPER+I" "settings"
+field "SUPER+V" "clipboard"
+field "SUPER+G" "game bar"
+echo
+field "your binds" "$HOME/.config/hypr/custom.lua"
+field "uninstall"  "./install --uninstall"
+echo

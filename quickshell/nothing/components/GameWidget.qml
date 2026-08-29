@@ -94,7 +94,7 @@ Item {
         radius: Theme.r.chip
         color: root.editing
             ? Theme.c.surface
-            : Qt.rgba(0, 0, 0, 0.55)
+            : Theme.pane(0.55)
         border.width: root.editing ? 1 : 0
         border.color: root.selected ? Theme.c.red
                     : (headerDrag.drag.active ? Theme.c.onDim : Theme.c.outline)

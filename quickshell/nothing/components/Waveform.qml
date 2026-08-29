@@ -34,7 +34,7 @@ Item {
                 width: root.barW
                 radius: root.barW / 2
                 height: Math.max(Theme.px(2), root.implicitHeight * (played ? amp : amp * 0.6))
-                color: played ? Theme.c.on : Qt.rgba(1, 1, 1, 0.22)
+                color: played ? Theme.c.on : Theme.veil(0.22)
 
                 Behavior on color { ColorAnimation { duration: Theme.med } }
                 Behavior on height { NumberAnimation { duration: Theme.med; easing.type: Easing.OutQuad } }

@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
-# Install the Nothing icon theme (inherits Qogir Dark) and apply it
-# to GTK / KDE / the GNOME portal.
+# Install the Nothing icon theme and apply it to GTK / KDE / the GNOME
+# portal.
+#
+# The theme covers the file manager only: folders, file types and toolbar
+# glyphs. Application icons are inherited from Qogir-Dark, so no icon is
+# ever generated per application.
 #
 #   ./scripts/apply-icon-theme.sh [ThemeName]
 set -euo pipefail
@@ -12,17 +16,11 @@ DATA="${XDG_DATA_HOME:-$HOME/.local/share}"
 
 install_nothing() {
     local dest="$DATA/icons/Nothing"
-    local lawn="$HOME/.cache/nothing/lawnicons"
-    if [[ ! -d "$lawn/svgs" ]]; then
-        echo "    cloning Lawnicons (Apache-2.0)"
-        mkdir -p "$(dirname "$lawn")"
-        git clone --depth 1 https://github.com/LawnchairLauncher/lawnicons.git "$lawn"
-    fi
     # Old shortcut to Qogir: vendor logos, not Nothing OS.
     if [[ -L "$dest" ]]; then
         rm -f "$dest"
     fi
-    mkdir -p "$dest/scalable/apps"
+    mkdir -p "$dest"
     install -m644 "$ROOT/theme/icons/Nothing/index.theme" "$dest/index.theme"
     python3 "$ROOT/scripts/build-nothing-icons.py" "$dest"
     if command -v gtk-update-icon-cache >/dev/null 2>&1; then

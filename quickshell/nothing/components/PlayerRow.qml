@@ -70,7 +70,7 @@ Item {
                 Layout.preferredWidth: Theme.px(34)
                 Layout.preferredHeight: Theme.px(34)
                 radius: Theme.r.tiny
-                color: Qt.rgba(0, 0, 0, 0.35)
+                color: Theme.shade(0.35)
                 clip: true
 
                 Image {
@@ -105,7 +105,7 @@ Item {
                 Text {
                     Layout.fillWidth: true
                     text: Player.titleOf(root.player) || (root.player?.identity ?? "Player")
-                    color: Theme.c.on
+                    color: root.hasArt ? Theme.c.onArt : Theme.c.on
                     font.family: Theme.f.sans
                     font.pixelSize: Theme.f.body
                     elide: Text.ElideRight
@@ -120,7 +120,7 @@ Item {
                             return who !== "" ? who + " · " + sub : sub;
                         return who;
                     }
-                    color: Theme.c.onDim
+                    color: root.hasArt ? Theme.c.onArtDim : Theme.c.onDim
                     font.family: Theme.f.sans
                     font.pixelSize: Theme.f.small
                     elide: Text.ElideRight

@@ -102,7 +102,7 @@ PanelWindow {
     Rectangle {
         id: flash
         anchors.fill: parent
-        color: "#ffffff"
+        color: Theme.c.on
         opacity: 0
     }
 

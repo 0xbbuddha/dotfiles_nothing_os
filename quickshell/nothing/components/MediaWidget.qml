@@ -61,7 +61,7 @@ RowLayout {
             Text {
                 Layout.fillWidth: true
                 text: Player.cleanTitle
-                color: Theme.c.on
+                color: art.status === Image.Ready ? Theme.c.onArt : Theme.c.on
                 font.family: Theme.f.sans
                 font.pixelSize: Theme.f.body
                 font.weight: Font.Medium
@@ -74,7 +74,7 @@ RowLayout {
                 Layout.fillWidth: true
                 text: Player.subtitle
                 visible: text !== "" && text !== Player.cleanTitle
-                color: Theme.c.onDim
+                color: art.status === Image.Ready ? Theme.c.onArtDim : Theme.c.onDim
                 font.family: Theme.f.sans
                 font.pixelSize: Theme.f.small
                 elide: Text.ElideRight

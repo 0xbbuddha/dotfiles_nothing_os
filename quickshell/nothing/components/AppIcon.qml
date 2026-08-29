@@ -3,19 +3,17 @@ import Quickshell
 import ".."
 import "../services"
 
-// Nothing pack: Lawnicons glyphs (white on black squircle), the real
-// phone pack look. Other packs keep the theme icons.
+// Whatever icon theme GTK / Qt are set to. The shell no longer ships or
+// builds a pack of its own: it just resolves the name through the system
+// theme and falls back to the app's initial when nothing is found.
 Item {
     id: root
     property string appId: ""
     property string iconName: ""
     property real size: Theme.z.dockIcon
-    property bool tinted: false
 
     implicitWidth: size
     implicitHeight: size
-
-    readonly property bool nothingPack: (Config.iconTheme || "Nothing") === "Nothing"
 
     readonly property var candidates: {
         const urls = [];
@@ -26,45 +24,29 @@ Item {
             seen[u] = true;
             urls.push(u);
         };
-        const addPack = n => {
-            if (!root.nothingPack || !n)
-                return;
-            const ps = Icons.packPathsFor(n);
-            for (let i = 0; i < ps.length; i++)
-                add(ps[i]);
-        };
-        void Icons.catalog;
-        void Icons.named;
 
-        addPack(root.appId);
         if (root.iconName !== "") {
             const n = root.iconName;
+            // Pixmaps handed over by the tray or a notification: already an
+            // image, nothing to look up.
             if (n.startsWith("image://") || n.startsWith("qrc:")) {
                 add(n);
                 return urls;
             }
-            addPack(n);
             if (n.includes("://") || n.startsWith("/")) {
-                if (!root.nothingPack)
-                    add(n.startsWith("/") ? "file://" + n : n);
+                add(Apps.toImageUrl(n));
             } else {
                 const p = Quickshell.iconPath(n, true);
-                if (p && p !== "") {
-                    const url = Apps.toImageUrl(p);
-                    if (!root.nothingPack || url.indexOf("/icons/Nothing/") >= 0)
-                        add(url);
-                }
+                if (p)
+                    add(Apps.toImageUrl(p));
             }
-            return urls;
         }
-        const names = Apps.iconNames(root.appId);
-        for (let i = 0; i < names.length; i++)
-            addPack(names[i]);
-        if (root.nothingPack)
-            return urls;
+
+        // The name may be missing or wrong (SNI ids in particular), so the
+        // .desktop entry is always tried as well, never instead.
         const rest = Apps.iconCandidates(root.appId);
-        for (let j = 0; j < rest.length; j++)
-            add(rest[j]);
+        for (let i = 0; i < rest.length; i++)
+            add(rest[i]);
         return urls;
     }
 
@@ -89,7 +71,6 @@ Item {
         sourceSize.height: Math.max(64, Math.round(root.size * 2))
         fillMode: Image.PreserveAspectFit
         asynchronous: true
-        cache: false
         smooth: true
         mipmap: true
         visible: status === Image.Ready

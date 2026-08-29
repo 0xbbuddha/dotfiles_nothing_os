@@ -1,7 +1,7 @@
 [Icon Theme]
 Name=Nothing
-Comment=Nothing OS - white glyphs on dark squircles
-Inherits=hicolor
+Comment=Nothing OS - white glyphs on dark squircles (file manager chrome)
+Inherits=Qogir-Dark,breeze-dark,hicolor
 DisplayDepth=32
 Example=folder
 FollowsColorScheme=false
@@ -19,19 +19,7 @@ PanelSizes=16,22,32,48,64,128,256
 DialogDefault=32
 DialogSizes=16,22,32,48,64,128,256
 
-Directories=scalable/apps,scalable/places,128/apps,128/places,128/mimetypes,22/actions
-
-[scalable/apps]
-Size=128
-Context=Applications
-Type=Scalable
-MinSize=16
-MaxSize=512
-
-[128/apps]
-Size=128
-Context=Applications
-Type=Fixed
+Directories=scalable/places,128/places,128/mimetypes,22/actions
 
 [scalable/places]
 Size=128

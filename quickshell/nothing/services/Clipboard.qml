@@ -58,7 +58,23 @@ Singleton {
         }
     }
 
-    Process { id: runner }
+    // Every clipboard action runs through here. Without a stderr collector
+    // a failure was completely silent: cliphist would print "id N not found"
+    // into the void and the click looked like it had simply done nothing.
+    Process {
+        id: runner
+        stderr: StdioCollector {
+            onStreamFinished: {
+                const t = text.trim();
+                if (t !== "")
+                    console.warn("clipboard:", t);
+            }
+        }
+        onExited: (code) => {
+            if (code !== 0)
+                console.warn("clipboard: command exited", code);
+        }
+    }
 
     Component.onCompleted: {
         root.refresh();
@@ -90,10 +106,35 @@ Singleton {
         lister.running = true;
     }
 
-    // Copies the entry back into the current clipboard.
-    function copy(id: string): void {
-        runner.command = ["sh", "-c",
-            `cliphist decode ${JSON.stringify(id)} | wl-copy`];
+    // `cliphist decode ID | wl-copy` looks obvious and is wrong: a decode
+    // that fails prints nothing, and wl-copy given nothing still takes the
+    // selection, so a failed copy does not merely fail, it empties the
+    // clipboard. Decode into a buffer, then only touch the selection if
+    // something came out.
+    //
+    // The second half is the id going stale. cliphist renumbers an entry
+    // whenever its content is stored again, so the preview is passed as a
+    // second chance: it is the exact string cliphist itself printed, which
+    // makes it safe to compare against a fresh listing.
+    //
+    // Both arguments are positional ($1, $2), never interpolated into the
+    // script text, so a preview full of quotes or newlines cannot escape.
+    readonly property string copyScript: `
+        t=$(mktemp) || exit 1
+        trap 'rm -f "$t"' EXIT
+        cliphist decode "$1" >"$t" 2>/dev/null
+        if [ ! -s "$t" ] && [ -n "$2" ]; then
+            id=$(cliphist list | awk -v p="$2" '{ i = index($0, "\t")
+                if (i && substr($0, i + 1) == p) { print substr($0, 1, i - 1); exit } }')
+            [ -n "$id" ] && cliphist decode "$id" >"$t" 2>/dev/null
+        fi
+        [ -s "$t" ] && wl-copy <"$t"
+    `
+
+    function copy(id: string, preview: string): void {
+        console.log("clipboard: copy id=" + id + " preview=" + JSON.stringify(preview));
+        runner.command = ["sh", "-c", root.copyScript, "clip-copy",
+                          id, preview ?? ""];
         runner.running = false;
         runner.running = true;
     }

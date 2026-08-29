@@ -28,7 +28,6 @@ Singleton {
         // ── Appearance ────────────────────────────────────────────────
         { key: "scale",      label: "Interface size",   page: 0, words: "scale zoom size dpi big small" },
         { key: "accent",     label: "Accent colour",    page: 0, words: "colour color red theme" },
-        { key: "iconTheme",  label: "App icons",        page: 0, words: "icons theme nothing qogir breeze papirus squircle" },
         { key: "wallpaper",  label: "Wallpaper image",  page: 0, words: "background picture desktop image" },
         { key: "wallpaperDraw", label: "Wallpaper drawn by the shell", page: 0, words: "background swww hyprpaper" },
 

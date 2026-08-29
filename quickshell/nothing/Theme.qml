@@ -13,18 +13,50 @@ Singleton {
     function px(v: real): int { return Math.round(v * root.s); }
 
     // ── Palette Nothing OS ────────────────────────────────────────────
+    // Nothing ships both looks. The numbered surfaces read the same way in
+    // either: the higher the number, the further the surface stands out
+    // from the panel it sits on. Dark goes black to grey, light goes white
+    // to grey, so every call site keeps its meaning without being touched.
+    readonly property bool light: Config.theme === "light"
+
     readonly property QtObject c: QtObject {
-        readonly property color bg:       "#c4c4c4"
-        readonly property color surface:  "#0b0b0b"   // black panels
-        readonly property color surface2: "#161616"   // inner cards
-        readonly property color surface3: "#212121"   // rails, hover
-        readonly property color on:       "#ffffff"
-        readonly property color onDim:    "#8a8a8a"
-        readonly property color onFaint:  "#454545"
+        readonly property color bg:       "#c4c4c4"   // under the wallpaper
+        readonly property color surface:  root.light ? "#ffffff" : "#0b0b0b"
+        readonly property color surface2: root.light ? "#f1f1f1" : "#161616"
+        readonly property color surface3: root.light ? "#e4e4e4" : "#212121"
+        readonly property color on:       root.light ? "#0b0b0b" : "#ffffff"
+        readonly property color onDim:    root.light ? "#6e6e6e" : "#8a8a8a"
+        readonly property color onFaint:  root.light ? "#b4b4b4" : "#454545"
         readonly property color red:      Config.accent
-        readonly property color redDim:   Qt.darker(Config.accent, 2.4)
-        readonly property color outline:  "#2a2a2a"
-        readonly property color scrim:    Qt.rgba(0, 0, 0, 0.6)
+        readonly property color outline:  root.light ? "#dcdcdc" : "#2a2a2a"
+        readonly property color scrim:    root.light ? Qt.rgba(0, 0, 0, 0.35)
+                                                     : Qt.rgba(0, 0, 0, 0.6)
+
+        // Text laid over album art. The art has a dark gradient under it in
+        // both themes, so this stays light: following `on` would turn the
+        // track title black on a black scrim as soon as the theme went
+        // light, and the title would vanish.
+        readonly property color onArt:    "#ffffff"
+        readonly property color onArtDim: Qt.rgba(1, 1, 1, 0.62)
+    }
+
+    // A translucent veil in the direction that contrasts with the current
+    // surface: white over black, black over white. Use this wherever a
+    // hardcoded Qt.rgba(1,1,1,a) or Qt.rgba(0,0,0,a) meant "lift this a
+    // little off its background" rather than a genuine black.
+    function veil(a: real): color {
+        return root.light ? Qt.rgba(0, 0, 0, a) : Qt.rgba(1, 1, 1, a);
+    }
+
+    // A genuinely dark veil, for what sits on album art or a screenshot,
+    // where the background is an image and never the theme.
+    function shade(a: real): color { return Qt.rgba(0, 0, 0, a); }
+
+    // A translucent panel, for a card floating over the wallpaper rather
+    // than over another panel.
+    function pane(a: real): color {
+        const s = root.c.surface;
+        return Qt.rgba(s.r, s.g, s.b, a);
     }
 
     // ── Typo ──────────────────────────────────────────────────────────

@@ -163,6 +163,25 @@ Singleton {
         return root.entry(id)?.name ?? id;
     }
 
+    // SNI tray: the id is often chrome_status_icon_1; the tooltip names the app.
+    function trayKey(item: var): string {
+        if (!item)
+            return "";
+        const id = String(item.id ?? "").toLowerCase();
+        const title = String(item.title ?? "").toLowerCase();
+        const tip = String(item.tooltipTitle ?? "").toLowerCase();
+        const blob = `${id} ${title} ${tip}`;
+        if (blob.indexOf("spotify") >= 0)
+            return "spotify";
+        if (blob.indexOf("vesktop") >= 0 || blob.indexOf("discord") >= 0)
+            return "vesktop";
+        if (blob.indexOf("cursor") >= 0)
+            return "cursor";
+        if (id && id.indexOf("chrome_status") < 0 && id.indexOf(":") < 0)
+            return id;
+        return title || tip;
+    }
+
     // Expected Hyprland class for this app (used by the dock indicator dot).
     function classFor(id: string): string {
         const e = root.entry(id);

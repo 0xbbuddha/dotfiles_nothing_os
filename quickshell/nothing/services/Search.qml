@@ -281,7 +281,7 @@ Singleton {
                     kind: "clip", title: it.preview,
                     subtitle: it.isImage ? "Image" : "Clipboard",
                     icon: it.isImage ? "󰋩" : "󰅍",
-                    run: () => Clipboard.copy(it.id)
+                    run: () => Clipboard.copy(it.id, it.preview)
                 });
             }
             return out;

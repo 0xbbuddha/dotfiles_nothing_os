@@ -20,7 +20,13 @@ Rectangle {
     Behavior on color { ColorAnimation { duration: Theme.med } }
 
     readonly property color fg: active ? Theme.c.surface : Theme.c.on
-    readonly property color fgDim: active ? Qt.rgba(0, 0, 0, 0.5) : Theme.c.onDim
+    // An active tile is filled with `on`, so its text sits on the inverted
+    // surface and has to be `surface`, dimmed. A hardcoded black was right
+    // only by accident: the active fill is white on a dark shell, but black
+    // on a light one, where the subtitle then turned black on black.
+    readonly property color fgDim: active
+        ? Qt.rgba(Theme.c.surface.r, Theme.c.surface.g, Theme.c.surface.b, 0.5)
+        : Theme.c.onDim
 
     RowLayout {
         anchors.fill: parent

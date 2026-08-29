@@ -169,6 +169,5 @@ Packages are left installed. App theme revert:
   that was my daily rice. I got used to a handful of its behaviours, and
   those habits steered the direction Nothing took.
 - [Quickshell](https://quickshell.outfoxxed.me/)
-- [Lawnicons](https://github.com/LawnchairLauncher/lawnicons) (Apache-2.0)
 
 Internals (file map, Hyprland Lua notes): [docs/internals.md](docs/internals.md).

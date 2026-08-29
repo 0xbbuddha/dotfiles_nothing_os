@@ -96,7 +96,6 @@ SettingsPage {
                 onActivated: {
                     if (page.armed) {
                         Config.reset();
-                        Icons.apply("Nothing", false);
                         page.armed = false;
                         return;
                     }

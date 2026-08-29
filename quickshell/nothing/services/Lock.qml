@@ -121,6 +121,22 @@ Singleton {
         configDirectory: "pam"
         config: "fprintd.conf"
 
+        // pam_fprintd runs a retry loop of its own: one start() can refuse
+        // several fingers before the stack ever completes, and each refusal
+        // arrives here rather than in onCompleted. Without this the screen
+        // sits on its invitation through every failed touch, which reads as
+        // a dead reader rather than a finger that was seen and rejected.
+        //
+        // Which message is a refusal is taken from messageIsError, never
+        // from the text: PAM's wording follows the system locale, and this
+        // shell speaks English throughout.
+        onPamMessage: {
+            if (fingerPam.messageIsError) {
+                root.fingerNotice = "Finger not recognised";
+                fingerClear.restart();
+            }
+        }
+
         // PAM's own text is never shown: it is translated by the system
         // locale, and this shell speaks English throughout. The states
         // worth reporting are few enough to word here.

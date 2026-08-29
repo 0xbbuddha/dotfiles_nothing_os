@@ -95,7 +95,7 @@ PanelWindow {
     Rectangle {
         id: scrim
         anchors.fill: parent
-        color: Qt.rgba(0, 0, 0, 0.5)
+        color: Theme.shade(0.5)
         opacity: win.editing ? 1 : 0
         visible: win.editing || opacity > 0.01
         Behavior on opacity { NumberAnimation { duration: Theme.med } }
@@ -344,7 +344,7 @@ PanelWindow {
                         Rectangle {
                             required property bool modelData
                             width: Theme.px(3); height: width; radius: width / 2
-                            color: modelData ? Theme.c.on : Qt.rgba(1, 1, 1, 0.25)
+                            color: modelData ? Theme.c.on : Theme.veil(0.25)
                         }
                     }
                 }

@@ -65,7 +65,10 @@ PanelWindow {
             anchors.fill: parent
             anchors.margins: Theme.px(10)
             toy: toyOsd
-            onColor: NightLight.active ? "#e8a070" : Theme.c.on
+            // The plate is the Glyph Matrix itself, always black, so the
+            // dots stay white even on the light theme. Following
+            // `on` painted them black on black.
+            onColor: NightLight.active ? "#e8a070" : "#ffffff"
             offOpacity: NightLight.active ? 0.10 : 0.18
         }
     }

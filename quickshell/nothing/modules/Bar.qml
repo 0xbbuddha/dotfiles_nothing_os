@@ -422,7 +422,7 @@ PanelWindow {
 
                     AppIcon {
                         anchors.fill: parent
-                        appId: Icons.trayKey(trayItem.modelData)
+                        appId: Apps.trayKey(trayItem.modelData)
                         iconName: trayItem.modelData.icon
                         size: parent.width
                         opacity: tma.containsMouse ? 1 : 0.7

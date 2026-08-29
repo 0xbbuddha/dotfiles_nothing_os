@@ -18,8 +18,8 @@ Singleton {
 
     // ── Appearance ────────────────────────────────────────────────────
     property alias scale: a.scale
+    property alias theme: a.theme
     property alias accent: a.accent
-    property alias iconTheme: a.iconTheme
     property alias drawWallpaper: a.drawWallpaper
     property alias wallpaper: a.wallpaper
 
@@ -288,8 +288,8 @@ Singleton {
     // light and the wallpaper is lying about what it does.
     function reset(): void {
         a.scale = 1.0;
+        a.theme = "dark";
         a.accent = "#d71921";
-        a.iconTheme = "Nothing";
         a.drawWallpaper = true;
         a.wallpaper = "";
 
@@ -436,8 +436,10 @@ Singleton {
             id: a
 
             property real   scale: 1.0
+            // "dark" or "light". Nothing OS ships both; the dark one is the
+            // signature look, so it stays the default.
+            property string theme: "dark"
             property string accent: "#d71921"
-            property string iconTheme: "Nothing"
             property bool   drawWallpaper: true
             // Empty = hypr/wallpaper.png (see wallpaperUrl).
             property string wallpaper: ""

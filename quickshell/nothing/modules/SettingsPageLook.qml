@@ -14,6 +14,25 @@ SettingsPage {
     Process { id: sh; function run(cmd) { command = ["sh", "-c", cmd]; running = true; } }
 
     SettingsSection {
+        title: "Theme"
+
+        SettingRow {
+            key: "theme"
+            label: "Light or dark"
+            hint: "Dark is the Nothing signature. Light keeps the same layout on white."
+        }
+
+        DotPicker {
+            options: [
+                { label: "Dark",  value: "dark" },
+                { label: "Light", value: "light" }
+            ]
+            current: Config.theme
+            onPicked: (v) => { Config.theme = v; Config.save(); }
+        }
+    }
+
+    SettingsSection {
         title: "Scale"
 
         SettingRow {
@@ -87,37 +106,6 @@ SettingsPage {
                             onClicked: { Config.accent = sw.modelData; Config.save(); }
                         }
                     }
-                }
-            }
-        }
-    }
-
-    SettingsSection {
-        title: "Icons"
-
-        SettingRow {
-            key: "iconTheme"
-            label: "App icons"
-            hint: "Every app icon is a white glyph on a dark squircle. Lawnicons when they exist, converted otherwise."
-        }
-
-        DotPicker {
-            options: Icons.available
-            current: Config.iconTheme
-            onPicked: (v) => Icons.apply(v, true)
-        }
-
-        Row {
-            Layout.leftMargin: Theme.px(2)
-            spacing: Theme.px(8)
-
-            Repeater {
-                model: ["firefox", "kitty", "spotify", "org.kde.dolphin", "com.google.Chrome"]
-
-                AppIcon {
-                    required property string modelData
-                    appId: modelData
-                    size: Theme.px(28)
                 }
             }
         }

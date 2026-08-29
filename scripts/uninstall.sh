@@ -25,6 +25,8 @@ restore "$CONF/fontconfig"
 restore "$CONF/fastfetch"
 restore "$CONF/starship.toml"
 restore "$CONF/fish/conf.d/nothing.fish"
+# Only written when the user had none, so restoring means removing ours.
+restore "$CONF/fish/config.fish"
 restore "$CONF/quickshell/nothing"
 restore "$CONF/scripts"
 restore "$CONF/theme"

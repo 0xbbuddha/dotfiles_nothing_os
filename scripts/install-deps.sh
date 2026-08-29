@@ -5,9 +5,13 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck disable=SC2034  # read by lib.sh when it is sourced
+NOTHING_ROOT="$ROOT"
 # shellcheck source=lib.sh
 source "$ROOT/scripts/lib.sh"
-NOTHING_ROOT="$ROOT"
+
+# Set by ./install so the heading matches its plan; 1 when run on its own.
+step "${NOTHING_STEP:-1}" "packages"
 
 # Skip names that are not in the sync DB so one missing package
 # does not abort the whole `pacman -S` line.
@@ -51,26 +55,38 @@ PACMAN_PKGS=(
     ttf-jetbrains-mono-nerd
     inter-font
     adw-gtk-theme
-    qogir-icon-theme
     breeze
+    librsvg
     # audio / backlight / media
     pipewire pipewire-pulse wireplumber pavucontrol-qt
     playerctl upower brightnessctl cava
     # tools the shell actually calls
-    wl-clipboard cliphist grim slurp swappy tesseract
+    wl-clipboard cliphist grim slurp swappy hyprshot tesseract
     tesseract-data-eng tesseract-data-fra wf-recorder
-    jq imagemagick libqalculate rsync
+    jq imagemagick libqalculate rsync songrec
     python python-pillow python-numpy python-opencv
     git
 )
 
+# hyprshot and songrec used to live here; both are in extra now, so they
+# go through pacman and no longer need yay to be present.
 AUR_PKGS=(
     ttf-nothing-font-git
     bibata-cursor-theme-bin
-    hyprshot
-    songrec
     darkly-bin
 )
+
+# Qogir supplies the application icons the Nothing icon theme inherits, so
+# without it every app falls back to breeze-dark's near-monochrome set. The
+# package name is not the same everywhere: EndeavourOS ships it as
+# eos-qogir-icons, plain Arch has it only in the AUR.
+if pacman -Si eos-qogir-icons >/dev/null 2>&1; then
+    PACMAN_PKGS+=(eos-qogir-icons)
+elif pacman -Si qogir-icon-theme >/dev/null 2>&1; then
+    PACMAN_PKGS+=(qogir-icon-theme)
+else
+    AUR_PKGS+=(qogir-icon-theme)
+fi
 
 # Quickshell: extra as `quickshell`, otherwise the git package.
 if pacman -Si quickshell >/dev/null 2>&1; then
@@ -79,7 +95,7 @@ else
     AUR_PKGS+=(quickshell-git)
 fi
 
-log "Official packages"
+log "Official repositories"
 mapfile -t PACMAN_OK < <(filter_sync "${PACMAN_PKGS[@]}")
 if ((${#PACMAN_OK[@]})); then
     run sudo pacman -S --needed --noconfirm "${PACMAN_OK[@]}"

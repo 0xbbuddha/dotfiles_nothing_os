@@ -4,11 +4,18 @@ Third-party notices
 This rice is inspired by Nothing OS. It is unofficial and is not
 affiliated with, endorsed by, or connected to Nothing Technology Limited.
 
-Lawnicons
-  Apache License 2.0
-  https://github.com/LawnchairLauncher/lawnicons
-  Outline glyphs used when building the Nothing icon theme
-  (`~/.cache/nothing/lawnicons`, cloned at install time).
+Breeze icons
+  LGPL-3.0-or-later
+  https://invent.kde.org/frameworks/breeze-icons
+  Source glyphs for the file manager part of the Nothing icon theme
+  (folders, file types, toolbar). Converted locally at install time from
+  the installed `breeze-dark`; nothing is redistributed here.
+
+Qogir icon theme
+  GPL-3.0
+  https://github.com/vinceliuice/Qogir-icon-theme
+  Inherited by the Nothing icon theme for application icons, which this
+  rice does not theme.
 
 Nothing fonts (Ndot77, Inter)
   Installed from the AUR package `ttf-nothing-font-git`.
