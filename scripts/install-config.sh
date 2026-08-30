@@ -5,6 +5,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONF="${XDG_CONFIG_HOME:-$HOME/.config}"
+DATA="${XDG_DATA_HOME:-$HOME/.local/share}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 
 backup() {
@@ -42,6 +43,23 @@ copy_tree "$ROOT/scripts" "$CONF/scripts"
 
 echo "-> ~/.config/theme"
 copy_tree "$ROOT/theme" "$CONF/theme"
+
+# Desktop entries and their icons go in one file at a time, never as a
+# tree: $DATA/applications holds every other launcher entry on the machine
+# and replacing the directory would take them with it.
+echo "-> $DATA/applications"
+for d in "$ROOT"/applications/*.desktop; do
+    [[ -e "$d" ]] || continue
+    copy_file "$d" "$DATA/applications/$(basename "$d")"
+done
+for i in "$ROOT"/icons/hicolor/scalable/apps/*.svg; do
+    [[ -e "$i" ]] || continue
+    copy_file "$i" "$DATA/icons/hicolor/scalable/apps/$(basename "$i")"
+done
+command -v update-desktop-database >/dev/null 2>&1 \
+    && update-desktop-database "$DATA/applications" 2>/dev/null || true
+command -v gtk-update-icon-cache >/dev/null 2>&1 \
+    && gtk-update-icon-cache -f "$DATA/icons/hicolor" >/dev/null 2>&1 || true
 
 echo "-> ~/.config/kitty"
 copy_tree "$ROOT/config/kitty" "$CONF/kitty"

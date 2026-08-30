@@ -17,6 +17,7 @@ Singleton {
         clip:    ";",
         emoji:   ":",
         math:    "=",
+        nothing: "#",
         shell:   "$",
         web:     "?"
     })
@@ -254,6 +255,45 @@ Singleton {
           run: () => Power.restartShell() }
     ]
 
+    // ── The Nothing side of the machine ───────────────────────────────
+    // The rice's own surfaces, plus any installed application that says
+    // Nothing or CMF. The scan is what keeps this list honest: install
+    // another Nothing tool tomorrow and it shows up here on its own,
+    // without this file being edited.
+    readonly property var nothingSurfaces: [
+        { label: "Control centre", icon: "󰕾", hint: "Panel under the bar",
+          run: () => { GlobalState.closeAll(); GlobalState.controlCenterOpen = true; } },
+        { label: "Essential Space", icon: "󰠮", hint: "Captures and notes",
+          run: () => { GlobalState.closeAll(); GlobalState.essentialOpen = true; } },
+        { label: "Essential Apps", icon: "󰀻", hint: "Your mini apps",
+          run: () => { GlobalState.closeAll(); GlobalState.appsOpen = true; } },
+        { label: "Glyph settings", icon: "󰍹", hint: "Matrix and light effects",
+          run: () => GlobalState.settingsOpen = true },
+        { label: "Settings", icon: "󰒓", hint: "Every shell setting",
+          run: () => GlobalState.settingsOpen = true },
+        { label: "Shortcuts", icon: "󰌌", hint: "The whole keymap",
+          run: () => GlobalState.cheatsheetOpen = true }
+    ]
+
+    function nothingApps(): var {
+        const out = [];
+        const seen = {};
+        for (const e of (Apps.visible ?? [])) {
+            const blob = [
+                e?.name ?? "", e?.genericName ?? "", e?.comment ?? "",
+                (e?.keywords ?? []).join(" "), e?.id ?? ""
+            ].join(" ").toLowerCase();
+            if (!/\bnothing\b|\bcmf\b|ear-native/.test(blob))
+                continue;
+            const id = e?.id ?? "";
+            if (seen[id])
+                continue;
+            seen[id] = true;
+            out.push(e);
+        }
+        return out;
+    }
+
     // ── Query parsing ─────────────────────────────────────────────────
     function prefixOf(q: string): string {
         for (const k of Object.keys(root.prefixes))
@@ -282,6 +322,35 @@ Singleton {
                     subtitle: it.isImage ? "Image" : "Clipboard",
                     icon: it.isImage ? "󰋩" : "󰅍",
                     run: () => Clipboard.copy(it.id, it.preview)
+                });
+            }
+            return out;
+        }
+
+        if (mode === "nothing") {
+            const needle = text.trim().toLowerCase();
+            const keep = (t) => needle === "" || t.toLowerCase().includes(needle);
+
+            // Real applications first: they are the ones you cannot reach
+            // any other way from here.
+            for (const e of root.nothingApps()) {
+                const name = e?.name ?? "";
+                if (!keep(name))
+                    continue;
+                out.push({
+                    kind: "app", title: name,
+                    subtitle: e?.genericName || e?.comment || "Application",
+                    iconName: e?.icon ?? "",
+                    appId: e?.id ?? "",
+                    run: () => e.execute()
+                });
+            }
+            for (const s of root.nothingSurfaces) {
+                if (!keep(s.label))
+                    continue;
+                out.push({
+                    kind: "action", title: s.label, subtitle: s.hint,
+                    icon: s.icon, run: s.run
                 });
             }
             return out;
@@ -441,7 +510,8 @@ Singleton {
         { p: "=", label: "calculator" },
         { p: "$", label: "command" },
         { p: "?", label: "web" },
-        { p: "/", label: "actions" }
+        { p: "/", label: "actions" },
+        { p: "#", label: "nothing" }
     ]
 
     // Label of the current mode, shown in the search bar.
@@ -453,6 +523,7 @@ Singleton {
         case "shell":  return "Command";
         case "web":    return "Web";
         case "action": return "Actions";
+        case "nothing": return "Nothing";
         case "app":    return "Applications";
         default:       return "";
         }

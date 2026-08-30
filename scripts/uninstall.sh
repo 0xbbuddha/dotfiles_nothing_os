@@ -17,6 +17,7 @@ restore() {
 }
 
 CONF="${XDG_CONFIG_HOME:-$HOME/.config}"
+DATA="${XDG_DATA_HOME:-$HOME/.local/share}"
 
 echo "-> Restore ~/.config copies"
 restore "$CONF/kitty"
@@ -38,5 +39,8 @@ restore "$CONF/hypr/wallpaper.png"
 restore "$CONF/hypr/hyprland.lua"
 restore "$CONF/hypr/hyprland"
 restore "$CONF/hypr/hyprland.conf"
+restore "$DATA/applications/nothing-x.desktop"
+restore "$DATA/icons/hicolor/scalable/apps/nothing-x.svg"
+
 echo "Left in place: $CONF/hypr/custom.lua"
 echo "Done."

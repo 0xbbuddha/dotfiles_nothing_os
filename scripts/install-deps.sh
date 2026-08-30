@@ -117,6 +117,35 @@ else
     done
 fi
 
+# Backs the "Nothing X" launcher entry: ANC, equaliser, battery and
+# firmware for Nothing and CMF earbuds. Offered rather than installed
+# outright: it is 28 MiB and it is worth nothing without the hardware.
+# Declining costs nothing either, because the entry carries TryExec and
+# hides itself when the binary is absent.
+offer_ear_native() {
+    if have ear-native; then
+        ok "ear-native already present (the Nothing X entry works)"
+        return
+    fi
+    log "Nothing X"
+    printf '%s\n' \
+        "  This rice ships a \"Nothing X\" launcher entry for Nothing and" \
+        "  CMF earbuds: ANC, equaliser, battery and firmware. It is backed" \
+        "  by ear-native (AUR), about 28 MiB, and the entry stays hidden" \
+        "  until that binary exists."
+    if ! have yay; then
+        warn "yay is not installed. Later: yay -S ear-native"
+        return
+    fi
+    if ! ask_yn "Install ear-native for the Nothing X app?" y; then
+        warn "Skipped. Later: yay -S ear-native"
+        return
+    fi
+    run yay -S --needed --noconfirm ear-native \
+        || { warn "could not install ear-native"; return; }
+    ok "Nothing X is ready. Find it in the launcher, or type # for the lot."
+}
+
 offer_warp() {
     if have warp-cli; then
         ok "warp-cli already present (WARP tile in the control centre)"
@@ -143,6 +172,7 @@ offer_warp() {
     ok "WARP is ready. Toggle it from the control centre (SUPER+N)."
 }
 
+offer_ear_native
 offer_warp
 
 ok "Dependencies are in place."

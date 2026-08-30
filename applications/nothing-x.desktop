@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=Nothing X
+GenericName=Earbuds
+Comment=ANC, equaliser and controls for Nothing and CMF audio devices
+Exec=ear-native
+# The entry hides itself when ear-native is not installed, so the rice can
+# ship it unconditionally without leaving a dead icon in the launcher.
+TryExec=ear-native
+Icon=nothing-x
+Terminal=false
+Categories=AudioVideo;Audio;
+Keywords=nothing;cmf;ear;earbuds;buds;headphones;anc;equaliser;equalizer;bluetooth;
+StartupWMClass=ear-native
