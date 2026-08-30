@@ -112,6 +112,15 @@ ShellRoot {
     }
 
     IpcHandler {
+        target: "widgets"
+        function arrange(): void { GlobalState.widgetsEditing = true; }
+        function done(): void { GlobalState.widgetsEditing = false; }
+        function toggle(): void {
+            GlobalState.widgetsEditing = !GlobalState.widgetsEditing;
+        }
+    }
+
+    IpcHandler {
         target: "shell"
         function reload(): void { Power.restartShell(); }
         function reloadAll(): void { Power.reloadAll(); }

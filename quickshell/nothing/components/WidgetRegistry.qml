@@ -5,6 +5,20 @@ import Quickshell
 
 // Catalogue of desktop widgets: used by the render and the settings panel.
 Singleton {
+    // Widths a widget may take, in cells. The cell itself is a fixed size
+    // (see Desktop.qml), so the count of columns follows the screen rather
+    // than the other way round.
+    //
+    // A grid that divided the screen into a fixed number of columns was
+    // the obvious first idea and the wrong one: three columns of twelve
+    // is 456px on a 1920 screen and 936px on a 3840 one, so the same clock
+    // would be readable on one monitor and absurd on the next. A fixed
+    // cell keeps every widget the size it was drawn to be, and a wider
+    // screen simply offers more places to put things.
+    readonly property int defaultWidth: 2
+    readonly property int minWidth: 1
+    readonly property int maxWidth: 4
+
     readonly property var all: [
         { id: "date",     label: "Date",        icon: "󰃭", hint: "Day, full date, week" },
         { id: "weather",  label: "Weather",       icon: "󰖐", hint: "Temperature, summary, high and low" },

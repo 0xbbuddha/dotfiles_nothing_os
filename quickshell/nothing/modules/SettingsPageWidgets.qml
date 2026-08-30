@@ -124,7 +124,18 @@ SettingsPage {
         SettingRow {
             key: "widgets"
             label: "Desktop widgets"
-            hint: Config.widgets.length + " in the column, ordered top to bottom"
+            hint: Config.widgets.length + " on the desktop, placed on a grid"
+
+            NPillButton {
+                text: "Arrange"
+                enabled: Config.widgets.length > 0 && Config.showDesktopWidgets
+                onActivated: {
+                    // The settings window sits over the desktop, so it has
+                    // to get out of the way before anything can be dragged.
+                    GlobalState.settingsOpen = false;
+                    GlobalState.widgetsEditing = true;
+                }
+            }
         }
 
         NText {
@@ -134,14 +145,22 @@ SettingsPage {
             color: Theme.c.onDim
         }
 
+        NText {
+            Layout.fillWidth: true
+            visible: Config.widgets.length > 0 && !Config.showDesktopWidgets
+            text: "Desktop widgets are hidden, so there is nothing to arrange."
+            color: Theme.c.onDim
+        }
+
         Repeater {
             model: Config.widgets
 
             Rectangle {
                 id: row
-                required property string modelData
+                required property var modelData
                 required property int index
-                readonly property var meta: WidgetRegistry.meta(modelData)
+                readonly property string wid: modelData?.id ?? ""
+                readonly property var meta: WidgetRegistry.meta(row.wid)
 
                 Layout.fillWidth: true
                 implicitHeight: Theme.px(50)
@@ -166,7 +185,7 @@ SettingsPage {
                     spacing: Theme.px(12)
 
                     NIcon {
-                        text: WidgetRegistry.icon(row.modelData)
+                        text: WidgetRegistry.icon(row.wid)
                         size: Theme.z.iconM
                         color: Theme.c.on
                         Layout.preferredWidth: Theme.px(18)
@@ -178,7 +197,7 @@ SettingsPage {
 
                         NText {
                             Layout.fillWidth: true
-                            text: row.meta?.label ?? row.modelData
+                            text: row.meta?.label ?? row.wid
                             font.pixelSize: Theme.f.body
                             elide: Text.ElideRight
                         }
@@ -190,26 +209,19 @@ SettingsPage {
                         }
                     }
 
-                    NLabel { text: (row.index + 1) + "/" + Config.widgets.length }
+                    // Where it sits, rather than a rank: the grid decides
+                    // the order now, so a position in a list would be a
+                    // number that means nothing.
+                    NLabel {
+                        text: "C" + ((row.modelData?.col ?? 0) + 1)
+                            + " R" + ((row.modelData?.row ?? 0) + 1)
+                            + " · " + (row.modelData?.w ?? 3) + " wide"
+                    }
 
-                    CircleButton {
-                        icon: "󰁝"
-                        size: Theme.px(24)
-                        enabled: row.index > 0
-                        opacity: enabled ? 1 : 0.25
-                        onActivated: Config.moveWidget(row.index, -1)
-                    }
-                    CircleButton {
-                        icon: "󰁅"
-                        size: Theme.px(24)
-                        enabled: row.index < Config.widgets.length - 1
-                        opacity: enabled ? 1 : 0.25
-                        onActivated: Config.moveWidget(row.index, 1)
-                    }
                     CircleButton {
                         icon: "󰅖"
                         size: Theme.px(24)
-                        onActivated: Config.removeWidget(row.modelData)
+                        onActivated: Config.removeWidget(row.wid)
                     }
                 }
             }
