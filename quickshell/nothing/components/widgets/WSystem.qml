@@ -16,23 +16,23 @@ NCard {
 
         NLabel { text: "System" }
 
-        Stat { label: "CPU"; icon: "󰻠"; value: Sys.cpu; temp: Sys.cpuTemp }
-        Stat { label: "RAM"; icon: "󰍛"; value: Sys.ram }
+        Stat { label: "CPU"; icon: "󰻠"; value: Sys.cpu; history: Sys.cpuHistory; temp: Sys.cpuTemp }
+        Stat { label: "RAM"; icon: "󰍛"; value: Sys.ram; history: Sys.ramHistory }
         RecapDetail { text: Sys.ramDetail }
         Stat {
             label: "Zram"
             icon: "󰍛"
-            value: Sys.zram
+            value: Sys.zram; history: Sys.zramHistory
             visible: Sys.hasZram
         }
         RecapDetail { text: Sys.zramDetail; visible: Sys.hasZram }
         Stat {
             label: "Swap"
             icon: "󰓡"
-            value: Sys.diskSwap
+            value: Sys.diskSwap; history: Sys.swapHistory
             visible: Sys.hasDiskSwap
         }
         RecapDetail { text: Sys.swapDetail; visible: Sys.hasDiskSwap }
-        Stat { label: "GPU"; icon: "󰢮"; value: Sys.gpu; temp: Sys.gpuTemp; visible: Sys.gpuSeen }
+        Stat { label: "GPU"; icon: "󰢮"; value: Sys.gpu; history: Sys.gpuHistory; temp: Sys.gpuTemp; visible: Sys.gpuSeen }
     }
 }

@@ -39,6 +39,25 @@ Singleton {
     readonly property string swapDetail: root.detailLine(diskSwapUsedKb, diskSwapFreeKb, diskSwapTotalKb)
 
     // Alert thresholds: beyond these, the UI turns red.
+    // Recent history, so the gauges can show a trend and not just an
+    // instant. Sampled with the poll below, so 40 slots is a little over
+    // a minute: long enough to see a build spike come and go, short
+    // enough that the row stays narrow.
+    readonly property int historyLength: 40
+    property var cpuHistory: []
+    property var ramHistory: []
+    property var gpuHistory: []
+    property var zramHistory: []
+    property var swapHistory: []
+
+    function pushed(list: var, v: real): var {
+        const a = (list ?? []).slice();
+        a.push(Math.max(0, Math.min(1, v)));
+        while (a.length > root.historyLength)
+            a.shift();
+        return a;
+    }
+
     readonly property bool hot: cpuTemp >= 80 || gpuTemp >= 85
     readonly property bool busy: cpu > 0.85 || ram > 0.9
 
@@ -83,6 +102,16 @@ Singleton {
 
         stdout: StdioCollector {
             onStreamFinished: {
+                // Sampled once per poll, after every line of this batch has
+                // been read: doing it per line would record the same tick
+                // several times and squash the history.
+                const sample = () => {
+                    root.cpuHistory  = root.pushed(root.cpuHistory,  root.cpu);
+                    root.ramHistory  = root.pushed(root.ramHistory,  root.ram);
+                    root.gpuHistory  = root.pushed(root.gpuHistory,  root.gpu);
+                    root.zramHistory = root.pushed(root.zramHistory, root.zram);
+                    root.swapHistory = root.pushed(root.swapHistory, root.diskSwap);
+                };
                 for (const line of text.trim().split("\n")) {
                     const p = line.trim().split(/\s+/);
                     switch (p[0]) {
@@ -117,6 +146,7 @@ Singleton {
                         break;
                     }
                 }
+                sample();
             }
         }
     }

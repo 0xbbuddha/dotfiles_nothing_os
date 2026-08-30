@@ -9,6 +9,10 @@ RowLayout {
     property string label: ""
     property string icon: ""
     property real value: 0
+    // Recent samples for this metric, newest last. Empty falls back to a
+    // single bar at the current value, so a caller that has no history
+    // still gets something truthful rather than an empty gap.
+    property var history: []
     property int temp: -1
     property int hotAt: 80
 
@@ -27,11 +31,10 @@ RowLayout {
         Layout.preferredWidth: Theme.px(34)
     }
 
-    DotBar {
+    HistoryBars {
         Layout.fillWidth: true
-        value: root.value
-        count: 20
-        onColor: root.value > 0.85 ? Theme.c.red : Theme.c.on
+        Layout.preferredHeight: Theme.px(12)
+        values: (root.history ?? []).length > 0 ? root.history : [root.value]
     }
 
     Text {

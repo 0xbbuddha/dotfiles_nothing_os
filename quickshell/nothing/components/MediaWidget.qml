@@ -77,21 +77,16 @@ RowLayout {
                 elide: Text.ElideRight
             }
 
-            // Thin progress at the bottom of the tile
-            Rectangle {
+            // Position ruler. Over a cover the ground is an image, so the
+            // ink is the art palette rather than the theme's.
+            SeekBand {
                 Layout.fillWidth: true
                 Layout.topMargin: Theme.px(6)
-                implicitHeight: Theme.px(2)
-                radius: 1
-                color: Qt.rgba(1, 1, 1, 0.18)
                 visible: Player.hasLength
-
-                Rectangle {
-                    width: parent.width * Player.progress
-                    height: parent.height
-                    radius: parent.radius
-                    color: Theme.c.red
-                }
+                inkOn:   art.status === Image.Ready ? Theme.c.onArt : Theme.c.on
+                inkOff:  art.status === Image.Ready
+                    ? ColorUtils.applyAlpha(Theme.c.onArt, 0.28) : Theme.c.onFaint
+                inkText: art.status === Image.Ready ? Theme.c.onArtDim : Theme.c.onDim
             }
         }
 

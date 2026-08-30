@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+# Compile every QML file in the shell and report the ones that fail.
+#
+#   ./scripts/check-qml.sh
+#
+# Why this exists: qmllint is close to useless here. It does not resolve
+# Quickshell types, and it does not resolve this shell's own components
+# either, so it stays silent when an import is missing or a type name is
+# wrong. Both were verified: removing a needed `import Quickshell.Io` from
+# a file using StdioCollector, and renaming a local type to something that
+# does not exist, each drew no complaint at all.
+#
+# Qt.createComponent does resolve types, and it compiles without
+# instantiating anything, so nothing here touches the running session.
+# A singleton that is already registered cannot be built this way; those
+# errors are the harness's own and are filtered out.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+SHELL_DIR="$ROOT/quickshell/nothing"
+WORK="$(mktemp -d)"
+trap 'rm -rf "$WORK"' EXIT
+
+command -v qs >/dev/null 2>&1 || { echo "qs (quickshell) not found" >&2; exit 1; }
+
+python3 - "$SHELL_DIR" "$WORK/shell.qml" <<'PY'
+import json, sys
+from pathlib import Path
+
+shell_dir, out = Path(sys.argv[1]), Path(sys.argv[2])
+files = sorted(str(p) for p in shell_dir.rglob("*.qml") if p.name != "shell.qml")
+out.write_text('''import Quickshell
+import QtQuick
+
+ShellRoot {
+    Component.onCompleted: {
+        const files = %s;
+        let bad = 0;
+        for (const f of files) {
+            const c = Qt.createComponent("file://" + f, Component.PreferSynchronous);
+            if (c.status === Component.Error) {
+                const e = c.errorString().trim();
+                // A registered singleton cannot be instantiated as a
+                // component. That is this harness's limit, not a fault in
+                // the file being checked.
+                if (e.indexOf("non composite singleton") < 0) {
+                    bad++;
+                    console.warn("FAIL " + f + "\\n    " + e);
+                }
+            }
+            c.destroy();
+        }
+        console.log("CHECKED " + files.length + " " + bad);
+        Qt.quit();
+    }
+}
+''' % json.dumps(files))
+PY
+
+LOG="$WORK/log.txt"
+timeout 120 qs -p "$WORK" > "$LOG" 2>&1 || true
+
+# Strip the colour codes quickshell writes even when redirected.
+clean() { sed 's/\x1b\[[0-9;]*m//g' "$LOG"; }
+
+clean | grep -E "^\s*WARN qml: FAIL" -A1 | sed 's/^\s*WARN qml: //' || true
+
+line="$(clean | grep -oE "CHECKED [0-9]+ [0-9]+" | tail -1 || true)"
+if [[ -z "$line" ]]; then
+    echo "the check did not run to completion; raw log:" >&2
+    clean >&2
+    exit 1
+fi
+
+read -r _ total bad <<< "$line"
+if [[ "$bad" -eq 0 ]]; then
+    printf '%s QML files, all compile.\n' "$total"
+else
+    printf '%s QML files, %s failed.\n' "$total" "$bad" >&2
+    exit 1
+fi

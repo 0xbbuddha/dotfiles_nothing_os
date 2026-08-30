@@ -12,9 +12,18 @@ Item {
     readonly property string artUrl: player?.trackArtUrl ?? ""
     readonly property bool hasArt: bg.status === Image.Ready
 
-    implicitHeight: Theme.px(54)
+    readonly property bool seekable: Player.lengthOf(root.player) > 0
+
+    // The row grows to make room for its own ruler. Each source keeps its
+    // own position and length, so a single shared band would show one
+    // track's progress under every other one's title.
+    implicitHeight: Theme.px(54) + (root.seekable ? Theme.px(13) : 0)
     Layout.fillWidth: true
     Layout.preferredHeight: implicitHeight
+
+    Behavior on implicitHeight {
+        NumberAnimation { duration: Theme.med; easing.type: Theme.ease }
+    }
 
     Rectangle {
         anchors.fill: parent
@@ -121,6 +130,18 @@ Item {
                     }
                     color: root.hasArt ? Theme.c.onArtDim : Theme.c.onDim
                     elide: Text.ElideRight
+                }
+
+                SeekBand {
+                    Layout.fillWidth: true
+                    Layout.topMargin: Theme.px(3)
+                    visible: root.seekable
+                    player: root.player
+                    tickHeight: Theme.px(5)
+                    inkOn:   root.hasArt ? Theme.c.onArt : Theme.c.on
+                    inkOff:  root.hasArt
+                        ? ColorUtils.applyAlpha(Theme.c.onArt, 0.28) : Theme.c.onFaint
+                    inkText: root.hasArt ? Theme.c.onArtDim : Theme.c.onDim
                 }
             }
 

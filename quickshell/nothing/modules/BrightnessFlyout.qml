@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import ".."
 import "../components"
+import "../components/panels"
 import "../services"
 
 // Light sliders, opened by clicking the Light pill.
@@ -22,60 +23,14 @@ Item {
     NCard {
         id: card
         width: root.implicitWidth
-        implicitHeight: col.implicitHeight + Theme.pad * 2
+        implicitHeight: panel.implicitHeight + Theme.pad * 2
 
-        ColumnLayout {
-            id: col
+        BrightnessPanel {
+            id: panel
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
             anchors.margins: Theme.pad
-            spacing: Theme.px(10)
-
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Theme.px(8)
-
-                NIcon {
-                    text: Brightness.extraDim
-                        ? "󰖔"
-                        : (Brightness.value > 0.5 ? "󰃠" : "󰃞")
-                    size: Theme.z.iconM
-                }
-
-                NText {
-                    Layout.fillWidth: true
-                    text: "Light"
-                    font.pixelSize: Theme.f.big
-                    font.weight: Font.Medium
-                }
-            }
-
-            NLabel { text: "Screen" }
-
-            LevelRow {
-                Layout.fillWidth: true
-                icon: Brightness.extraDim
-                    ? "󰖔"
-                    : (Brightness.value > 0.5 ? "󰃠" : "󰃞")
-                value: Brightness.combined
-                split: NightLight.available ? Brightness.split : -1
-                accent: Brightness.extraDim ? Theme.c.onDim : Theme.c.on
-                onMoved: (v) => Brightness.setCombined(v)
-            }
-
-            NLabel {
-                text: "Keyboard"
-                visible: Brightness.kbdAvailable
-            }
-
-            LevelRow {
-                Layout.fillWidth: true
-                visible: Brightness.kbdAvailable
-                icon: Brightness.kbdValue > 0 ? "󰌌" : "󰌐"
-                value: Brightness.kbdValue
-                onMoved: (v) => Brightness.setKbd(v)
-            }
         }
     }
 }

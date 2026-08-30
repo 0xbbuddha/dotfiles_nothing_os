@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import Quickshell
 import ".."
 import "../components"
+import "../components/panels"
 import "../components/widgets"
 import "../services"
 
@@ -11,6 +12,17 @@ Item {
     id: root
     property bool open: false
     property bool calOpen: false
+
+    // Which tile is expanded in place. Opening one from here used to fire
+    // a separate flyout, which closed the control centre and threw the
+    // panel to the other side of the screen: you lost your place to reach
+    // a control you were already looking at.
+    property string expanded: ""
+
+    function expand(k: string): void {
+        root.expanded = (root.expanded === k) ? "" : k;
+    }
+
     property real maxHeight: Theme.px(720)
     signal requestClose()
 
@@ -22,10 +34,12 @@ Item {
     y: open ? 0 : -Theme.px(10)
 
     onOpenChanged: {
-        if (!open)
+        if (!open) {
             calOpen = false;
-        else
+            root.expanded = "";
+        } else {
             Warp.refresh();
+        }
     }
     onCalOpenChanged: if (calOpen) cal.goToday()
 
@@ -132,7 +146,7 @@ Item {
                             subtitle: Net.name
                             active: Net.kind !== "none"
                             onToggled: if (Net.kind !== "ethernet") Net.toggleWifi()
-                            onSecondary: GlobalState.openNet("wifi")
+                            onSecondary: root.expand("wifi")
                         }
 
                         Toggle {
@@ -143,7 +157,7 @@ Item {
                             subtitle: Net.btLabel
                             active: Net.btPowered
                             onToggled: Net.toggleBt()
-                            onSecondary: GlobalState.openNet("bt")
+                            onSecondary: root.expand("bt")
                         }
 
                         Toggle {
@@ -155,6 +169,35 @@ Item {
                             subtitle: Warp.busy ? "…" : (Warp.connected ? "on" : "off")
                             active: Warp.connected
                             onToggled: Warp.toggle()
+                        }
+                    }
+
+                    // Wi-Fi and Bluetooth open here, under their own tile,
+                    // so the control you came from stays where you left it.
+                    Item {
+                        Layout.fillWidth: true
+                        clip: true
+                        readonly property bool on:
+                            root.expanded === "wifi" || root.expanded === "bt"
+                        implicitHeight: on ? netPanel.implicitHeight + Theme.px(10) : 0
+                        opacity: on ? 1 : 0
+
+                        Behavior on implicitHeight {
+                            NumberAnimation { duration: Theme.med; easing.type: Theme.ease }
+                        }
+                        Behavior on opacity { NumberAnimation { duration: Theme.fast } }
+
+                        NetPanel {
+                            id: netPanel
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+                            anchors.topMargin: Theme.px(10)
+                            kind: root.expanded === "bt" ? "bt" : "wifi"
+                            // Never scan for an expander nobody is looking
+                            // at: it would hold the Bluetooth radio while
+                            // the control centre is shut.
+                            active: parent.on && root.open
                         }
                     }
 
@@ -170,7 +213,7 @@ Item {
                             subtitle: Audio.muted ? "muted" : (Math.round(Audio.volume * 100) + "%")
                             active: !Audio.muted
                             onToggled: if (Audio.audio) Audio.audio.muted = !Audio.audio.muted
-                            onSecondary: GlobalState.openAudio()
+                            onSecondary: root.expand("audio")
                         }
 
                         Toggle {
@@ -183,10 +226,41 @@ Item {
                             title: "Light"
                             subtitle: Math.round(Brightness.combined * 100) + "%"
                             active: true
-                            onToggled: GlobalState.openLight()
-                            onSecondary: GlobalState.openLight()
+                            onToggled: root.expand("light")
+                            onSecondary: root.expand("light")
                         }
                     }
+
+                    Item {
+                        Layout.fillWidth: true
+                        clip: true
+                        readonly property bool on:
+                            root.expanded === "audio" || root.expanded === "light"
+                        implicitHeight: on ? avLoader.implicitHeight + Theme.px(10) : 0
+                        opacity: on ? 1 : 0
+
+                        Behavior on implicitHeight {
+                            NumberAnimation { duration: Theme.med; easing.type: Theme.ease }
+                        }
+                        Behavior on opacity { NumberAnimation { duration: Theme.fast } }
+
+                        // Loaded on demand: unlike the network one, these
+                        // two are different components, so a Loader is what
+                        // picks between them anyway.
+                        Loader {
+                            id: avLoader
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+                            anchors.topMargin: Theme.px(10)
+                            active: parent.on
+                            sourceComponent: root.expanded === "light"
+                                ? lightPanelC : audioPanelC
+                        }
+                    }
+
+                    Component { id: audioPanelC; AudioPanel {} }
+                    Component { id: lightPanelC; BrightnessPanel {} }
 
                     MediaCard { Layout.fillWidth: true }
 
@@ -235,21 +309,21 @@ Item {
                             anchors.margins: Theme.px(9)
                             spacing: Theme.px(7)
 
-                            Stat { label: "CPU"; icon: "󰻠"; value: Sys.cpu; temp: Sys.cpuTemp }
-                            Stat { label: "RAM"; icon: "󰍛"; value: Sys.ram }
+                            Stat { label: "CPU"; icon: "󰻠"; value: Sys.cpu; history: Sys.cpuHistory; temp: Sys.cpuTemp }
+                            Stat { label: "RAM"; icon: "󰍛"; value: Sys.ram; history: Sys.ramHistory }
                             Stat {
                                 label: "Zram"
                                 icon: "󰍛"
-                                value: Sys.zram
+                                value: Sys.zram; history: Sys.zramHistory
                                 visible: Sys.hasZram
                             }
                             Stat {
                                 label: "Swap"
                                 icon: "󰓡"
-                                value: Sys.diskSwap
+                                value: Sys.diskSwap; history: Sys.swapHistory
                                 visible: Sys.hasDiskSwap
                             }
-                            Stat { label: "GPU"; icon: "󰢮"; value: Sys.gpu; temp: Sys.gpuTemp; visible: Sys.gpuSeen }
+                            Stat { label: "GPU"; icon: "󰢮"; value: Sys.gpu; history: Sys.gpuHistory; temp: Sys.gpuTemp; visible: Sys.gpuSeen }
                         }
                     }
                 }
