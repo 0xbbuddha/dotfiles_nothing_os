@@ -50,10 +50,9 @@ Singleton {
     property bool essentialCatching: false
     property bool polkitOpen: false
 
-    // Arrange mode for the desktop widgets. While it is on the desktop
-    // layer takes input, shows its grid, and widgets are dragged and
-    // resized instead of used.
-    property bool widgetsEditing: false
+    // The Nothing Launcher: widgets and glyph surfaces in one place.
+    property bool launcherNothingOpen: false
+
     property string netPanel: ""
     property bool audioPanel: false
     property bool lightPanel: false
@@ -86,7 +85,7 @@ Singleton {
     }
 
     function closeAll(): void {
-        widgetsEditing = false;
+        launcherNothingOpen = false;
         settingsOpen = false;
         launcherOpen = false;
         sessionOpen = false;

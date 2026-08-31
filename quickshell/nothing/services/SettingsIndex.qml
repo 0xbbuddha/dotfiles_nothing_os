@@ -63,48 +63,41 @@ Singleton {
         { key: "appsLibrary",     label: "Essential Apps library", page: 2, words: "essential apps library mini app create prompt generate widget" },
 
         // ── Widgets ───────────────────────────────────────────────────
-        { key: "widgets",       label: "Desktop widgets",    page: 3, words: "widget clock date media calendar" },
-        { key: "widgetsShown",  label: "Show desktop widgets", page: 3, words: "widget hide desktop column" },
-        { key: "glyphEnabled",  label: "Glyph Matrix",        page: 3, words: "glyph matrix disc nothing phone toy" },
-        { key: "glyphSize",     label: "Glyph Matrix size",   page: 3, words: "glyph size diameter disc" },
-        { key: "glyphAbove",    label: "Glyph Matrix above windows", page: 3, words: "glyph layer overlay desktop" },
-        { key: "glyphPos",      label: "Glyph Matrix position", page: 3, words: "glyph move drag recenter" },
-        { key: "glyphToys",     label: "Glyph Matrix toys",   page: 3, words: "glyph clock battery dice timer visualizer cava pendulum counter" },
 
         // ── Dock ──────────────────────────────────────────────────────
-        { key: "dockShow",     label: "Show dock",         page: 4, words: "dock bottom launcher bar" },
-        { key: "dockAutoHide", label: "Dock auto hide",    page: 4, words: "dock hide reveal edge" },
-        { key: "dockDelay",    label: "Dock hide delay",   page: 4, words: "dock delay milliseconds" },
-        { key: "dockApps",     label: "Dock applications", page: 4, words: "dock apps pinned favourites" },
-        { key: "terminal",     label: "Terminal",          page: 4, words: "terminal kitty console shell" },
-        { key: "fileManager",  label: "File manager",      page: 4, words: "files dolphin nautilus explorer" },
-        { key: "launcher",     label: "External launcher", page: 4, words: "launcher rofi wofi run" },
+        { key: "dockShow",     label: "Show dock",         page: 3, words: "dock bottom launcher bar" },
+        { key: "dockAutoHide", label: "Dock auto hide",    page: 3, words: "dock hide reveal edge" },
+        { key: "dockDelay",    label: "Dock hide delay",   page: 3, words: "dock delay milliseconds" },
+        { key: "dockApps",     label: "Dock applications", page: 3, words: "dock apps pinned favourites" },
+        { key: "terminal",     label: "Terminal",          page: 3, words: "terminal kitty console shell" },
+        { key: "fileManager",  label: "File manager",      page: 3, words: "files dolphin nautilus explorer" },
+        { key: "launcher",     label: "External launcher", page: 3, words: "launcher rofi wofi run" },
 
         // ── Network ───────────────────────────────────────────────────
-        { key: "wifi",      label: "Wi-Fi",     page: 5, words: "wifi wireless network internet password mot passe" },
-        { key: "bluetooth", label: "Bluetooth", page: 5, words: "bluetooth bt headset pair" },
+        { key: "wifi",      label: "Wi-Fi",     page: 4, words: "wifi wireless network internet password mot passe" },
+        { key: "bluetooth", label: "Bluetooth", page: 4, words: "bluetooth bt headset pair" },
 
         // ── Game ──────────────────────────────────────────────────────
-        { key: "gameMode",        label: "Game mode",           page: 6, words: "game gaming performance" },
-        { key: "gameNoAnimations", label: "Disable animations in game", page: 6, words: "game animation latency" },
-        { key: "gameNoBlur",      label: "Disable blur in game", page: 6, words: "game blur gpu" },
-        { key: "gameNoShadow",    label: "Disable shadows in game", page: 6, words: "game shadow gpu" },
-        { key: "gameTearing",     label: "Allow tearing",       page: 6, words: "game tearing vsync latency" },
-        { key: "gameInhibitIdle", label: "Keep screen awake in game", page: 6, words: "game idle sleep lock" },
-        { key: "gameHideShell",   label: "Hide the shell in game", page: 6, words: "game bar dock hide fullscreen" },
-        { key: "gameUnfocusedFps", label: "Unfocused frame rate", page: 6, words: "game fps background alt tab" },
-        { key: "gameFpsLimit",    label: "Frame rate limit",    page: 6, words: "game fps cap mangohud limit" },
-        { key: "crosshair",       label: "Crosshair",           page: 6, words: "crosshair aim reticle overlay" },
-        { key: "crosshairStyle",  label: "Crosshair shape",     page: 6, words: "crosshair cross dot circle" },
-        { key: "crosshairSize",   label: "Crosshair size",      page: 6, words: "crosshair size aim" },
-        { key: "crosshairColor",  label: "Crosshair colour",    page: 6, words: "crosshair colour green" },
-        { key: "gameWidgets",     label: "Game overlay widgets", page: 6, words: "game widget overlay fps clock" },
+        { key: "gameMode",        label: "Game mode",           page: 5, words: "game gaming performance" },
+        { key: "gameNoAnimations", label: "Disable animations in game", page: 5, words: "game animation latency" },
+        { key: "gameNoBlur",      label: "Disable blur in game", page: 5, words: "game blur gpu" },
+        { key: "gameNoShadow",    label: "Disable shadows in game", page: 5, words: "game shadow gpu" },
+        { key: "gameTearing",     label: "Allow tearing",       page: 5, words: "game tearing vsync latency" },
+        { key: "gameInhibitIdle", label: "Keep screen awake in game", page: 5, words: "game idle sleep lock" },
+        { key: "gameHideShell",   label: "Hide the shell in game", page: 5, words: "game bar dock hide fullscreen" },
+        { key: "gameUnfocusedFps", label: "Unfocused frame rate", page: 5, words: "game fps background alt tab" },
+        { key: "gameFpsLimit",    label: "Frame rate limit",    page: 5, words: "game fps cap mangohud limit" },
+        { key: "crosshair",       label: "Crosshair",           page: 5, words: "crosshair aim reticle overlay" },
+        { key: "crosshairStyle",  label: "Crosshair shape",     page: 5, words: "crosshair cross dot circle" },
+        { key: "crosshairSize",   label: "Crosshair size",      page: 5, words: "crosshair size aim" },
+        { key: "crosshairColor",  label: "Crosshair colour",    page: 5, words: "crosshair colour green" },
+        { key: "gameWidgets",     label: "Game overlay widgets", page: 5, words: "game widget overlay fps clock" },
 
         // ── System ────────────────────────────────────────────────────
-        { key: "versions",  label: "Versions",         page: 7, words: "version hyprland quickshell about" },
-        { key: "configFile", label: "Configuration file", page: 7, words: "config json path file" },
-        { key: "reloadShell", label: "Reload the shell", page: 7, words: "reload restart quickshell" },
-        { key: "reset",     label: "Reset settings",   page: 7, words: "reset default factory erase" }
+        { key: "versions",  label: "Versions",         page: 6, words: "version hyprland quickshell about" },
+        { key: "configFile", label: "Configuration file", page: 6, words: "config json path file" },
+        { key: "reloadShell", label: "Reload the shell", page: 6, words: "reload restart quickshell" },
+        { key: "reset",     label: "Reset settings",   page: 6, words: "reset default factory erase" }
     ]
 
     // Filter on the label and keywords; every word of the query must

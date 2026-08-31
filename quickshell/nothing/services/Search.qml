@@ -221,6 +221,10 @@ Singleton {
     readonly property var actions: [
         { name: "settings",   label: "Open settings",        icon: "󰒓",
           run: () => GlobalState.settingsOpen = true },
+        // Widgets and the Glyph Matrix used to be a settings page, and
+        // seven search entries pointed at it. They point here now.
+        { name: "nothing", label: "Nothing Launcher", icon: "󰧵",
+          run: () => { GlobalState.closeAll(); GlobalState.launcherNothingOpen = true; } },
         { name: "shortcuts", label: "Keyboard shortcuts", icon: "󰌌",
           run: () => GlobalState.cheatsheetOpen = true },
         { name: "essential", label: "Essential Space", icon: "󰠮",
@@ -261,6 +265,8 @@ Singleton {
     // another Nothing tool tomorrow and it shows up here on its own,
     // without this file being edited.
     readonly property var nothingSurfaces: [
+        { label: "Nothing Launcher", icon: "󰧵", hint: "Widgets and the Glyph Matrix",
+          run: () => { GlobalState.closeAll(); GlobalState.launcherNothingOpen = true; } },
         { label: "Control centre", icon: "󰕾", hint: "Panel under the bar",
           run: () => { GlobalState.closeAll(); GlobalState.controlCenterOpen = true; } },
         { label: "Essential Space", icon: "󰠮", hint: "Captures and notes",

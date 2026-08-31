@@ -62,14 +62,6 @@ PanelWindow {
             "1100011",
             "0110110",
             "0011100"] },
-        { key: "widgets", label: "Widgets", glyph: [
-            "1110111",
-            "1110111",
-            "1110111",
-            "0000000",
-            "1110111",
-            "1110111",
-            "1110111"] },
         { key: "dock", label: "Dock", glyph: [
             "0000000",
             "0000000",
@@ -379,8 +371,7 @@ PanelWindow {
                             SettingsPageLook {}
                             SettingsPagePanel {}
                             SettingsPageEssential {}
-                            SettingsPageWidgets {}
-                            SettingsPageDock {}
+                                            SettingsPageDock {}
                             SettingsPageNet {}
                             SettingsPageGame {}
                             SettingsPageAbout {}

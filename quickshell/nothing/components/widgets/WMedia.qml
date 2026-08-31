@@ -1,44 +1,20 @@
 import QtQuick
-import QtQuick.Layouts
 import ".."
 import "../.."
 import "../../services"
 
-// Playback tile. One source: large cover. Several: one row each, so you
-// can pause YouTube without touching Spotify.
+// The artwork tile for whatever is playing.
+//
+// One source, one fixed size. An earlier version grew a row per player,
+// which meant the widget below it moved whenever a second tab started a
+// video. Several sources at once are the business of the control centre
+// and of "Playing, sources".
 Item {
     id: root
-    readonly property int n: (Player.players ?? []).length
-    implicitHeight: n === 0 ? 0 : (n === 1 ? Theme.px(124) : n * Theme.px(60) + Theme.px(8))
-    clip: true
-    opacity: n > 0 ? 1 : 0
-
-    Behavior on implicitHeight {
-        NumberAnimation { duration: Theme.med; easing.type: Theme.ease }
-    }
-    Behavior on opacity { NumberAnimation { duration: Theme.med } }
+    readonly property bool empty: !Player.active
 
     MediaWidget {
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.top: parent.top
-        height: Theme.px(124)
-        visible: root.n === 1
-    }
-
-    ColumnLayout {
         anchors.fill: parent
-        spacing: Theme.px(6)
-        visible: root.n > 1
-
-        Repeater {
-            model: Player.players ?? []
-
-            PlayerRow {
-                required property var modelData
-                player: modelData
-                Layout.fillWidth: true
-            }
-        }
+        visible: !root.empty
     }
 }

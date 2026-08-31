@@ -4,7 +4,8 @@ import ".."
 import "../.."
 import "../../services"
 
-// Large day number, full date and week number.
+// Large day number, full date and week number. The one-line version is
+// WDateCompact, a widget of its own rather than a setting on this one.
 // Height is owned by an Item: a RowLayout would derive its own from its
 // children, which are all fillHeight, and the widget would collapse to zero.
 Item {

@@ -146,56 +146,60 @@ Singleton {
     property alias glyphToy: a.glyphToy
     property alias glyphToys: a.glyphToys
 
-    function widgetCell(id: string): var {
-        return (a.widgets ?? []).find(w => w?.id === id) ?? null;
-    }
-
-    function hasWidget(id: string): bool { return root.widgetCell(id) !== null; }
-
-    // A new widget goes below everything already placed.
-    //
-    // The first version looked for the lowest row number nobody had taken,
-    // which with rows at 0, 2, 4, 6 handed back 1: one grid row down, and
-    // straight on top of the first widget. Rows are much finer than a
-    // widget is tall, so "unused row number" says nothing about free space.
-    function freeRow(): int {
-        const list = a.widgets ?? [];
-        if (list.length === 0)
-            return 0;
-        const lowest = Math.max(...list.map(w => w?.row ?? 0));
-        // Twelve rows is 240px at the current row height: clear of any
-        // widget in the catalogue. Dragging settles it exactly afterwards.
-        return lowest + 12;
+    function hasWidget(id: string): bool {
+        return (a.widgets ?? []).includes(id);
     }
 
     function addWidget(id: string): void {
         if (!id || root.hasWidget(id)) return;
-        a.widgets = a.widgets.concat([
-            { id: id, col: 0, row: root.freeRow(), w: WidgetRegistry.defaultWidth }
-        ]);
+        a.widgets = (a.widgets ?? []).concat([id]);
         root.save();
     }
 
     function removeWidget(id: string): void {
-        a.widgets = (a.widgets ?? []).filter(w => w?.id !== id);
-        root.save();
-    }
-
-    // Position and width come back from the desktop after a drag. The
-    // whole list is reassigned rather than mutated in place: QML does not
-    // see a change inside an existing object, so the widgets would move
-    // on screen and then snap back on the next reload.
-    function placeWidget(id: string, col: int, row: int, w: int): void {
-        const list = (a.widgets ?? []).map(x => x?.id === id
-            ? { id: id, col: col, row: row, w: w }
-            : x);
-        a.widgets = list;
+        a.widgets = (a.widgets ?? []).filter(x => x !== id);
         root.save();
     }
 
     function toggleWidget(id: string): void {
         if (root.hasWidget(id)) root.removeWidget(id);
         else root.addWidget(id);
+    }
+
+    // Picking a face swaps it in, it does not stack a second one.
+    //
+    // Choosing "Clock, dial" when the Ndot clock was already there used to
+    // leave you with two clocks, which is never what picking a different
+    // face means. Only one widget of a family sits on the desktop, and the
+    // replacement takes the place the old one held, so the column does not
+    // reshuffle under a change of mind.
+    function chooseWidget(id: string): void {
+        if (!id) return;
+        if (root.hasWidget(id)) {
+            root.removeWidget(id);
+            return;
+        }
+        const group = WidgetRegistry.group(id);
+        const list = (a.widgets ?? []).slice();
+        const at = group === ""
+            ? -1
+            : list.findIndex(x => WidgetRegistry.group(x) === group);
+        if (at >= 0)
+            list[at] = id;
+        else
+            list.push(id);
+        a.widgets = list;
+        root.save();
+    }
+
+    function moveWidget(index: int, delta: int): void {
+        const list = (a.widgets ?? []).slice();
+        const to = index + delta;
+        if (to < 0 || to >= list.length) return;
+        const [item] = list.splice(index, 1);
+        list.splice(to, 0, item);
+        a.widgets = list;
+        root.save();
     }
 
     function recenterGlyph(): void {
@@ -320,12 +324,7 @@ Singleton {
 
         a.showDock = true;
         a.showDesktopWidgets = true;
-        a.widgets = [
-            { id: "date",    col: 0, row: 0,  w: 2 },
-            { id: "weather", col: 0, row: 6,  w: 2 },
-            { id: "clock",   col: 0, row: 12, w: 2 },
-            { id: "media",   col: 0, row: 20, w: 2 }
-        ];
+        a.widgets = ["date", "weather", "clock", "media"];
         a.showTray = true;
         a.showBattery = true;
         a.showWorkspaces = true;
@@ -427,21 +426,17 @@ Singleton {
             console.info("Config: glyph widget moved to Glyph Matrix");
         }
 
-        // Widgets used to be a bare list of identifiers stacked down the
-        // left edge. Rebuild that same column as grid cells, so an
-        // existing desktop comes back looking exactly as it did.
-        if (widgets.length > 0 && typeof widgets[0] === "string") {
-            let row = 0;
-            a.widgets = widgets.map(id => {
-                const cell = { id: id, col: 0, row: row, w: 2 };
-                // The old column stacked by natural height. Nine rows of
-                // the fine grid is roughly what that spacing came out to,
-                // and it keeps the taller tiles off each other.
-                row += 9;
-                return cell;
-            });
+        // Widgets were briefly cells on a free grid. That is undone:
+        // they stack in a column again, so only the order survives, taken
+        // from how far down the screen each one had been dropped.
+        if (widgets.length > 0 && typeof widgets[0] === "object") {
+            a.widgets = widgets
+                .slice()
+                .sort((x, y) => (x?.row ?? 0) - (y?.row ?? 0))
+                .map(w => w?.id ?? "")
+                .filter(id => id !== "");
             root.save();
-            console.info("Config: widgets migrated to grid cells");
+            console.info("Config: widgets back to an ordered column");
         }
     }
 
@@ -501,12 +496,7 @@ Singleton {
             // system tile with zram and swap, so only the anchor and the
             // width in columns are stored.
             // Known identifiers: date, weather, clock, media, system, calendar.
-            property var widgets: [
-                { id: "date",    col: 0, row: 0,  w: 2 },
-                { id: "weather", col: 0, row: 6,  w: 2 },
-                { id: "clock",   col: 0, row: 12, w: 2 },
-                { id: "media",   col: 0, row: 20, w: 2 }
-            ]
+            property var widgets: ["date", "weather", "clock", "media"]
 
             // Essential Apps pinned to the right column, in display order.
             property var deskApps: []

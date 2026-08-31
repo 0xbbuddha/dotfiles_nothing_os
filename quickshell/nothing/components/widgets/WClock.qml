@@ -3,9 +3,9 @@ import ".."
 import "../.."
 import "../../services"
 
-// Large matrix clock.
+// The Ndot face. One clock, one look: the dial and the plain numerals are
+// separate widgets, so adding one never changes the size of another.
 NCard {
-    implicitHeight: Theme.px(72)
     radius: Theme.r.pill
 
     DisplayText {

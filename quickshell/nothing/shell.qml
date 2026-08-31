@@ -78,6 +78,7 @@ ShellRoot {
     }
 
     Variants { model: Quickshell.screens; Settings {} }
+    Variants { model: Quickshell.screens; NothingLauncher {} }
     Variants { model: Quickshell.screens; Launcher {} }
     Variants { model: Quickshell.screens; Session {} }
     Variants { model: Quickshell.screens; Screenshot {} }
@@ -112,12 +113,12 @@ ShellRoot {
     }
 
     IpcHandler {
-        target: "widgets"
-        function arrange(): void { GlobalState.widgetsEditing = true; }
-        function done(): void { GlobalState.widgetsEditing = false; }
+        target: "nothing"
         function toggle(): void {
-            GlobalState.widgetsEditing = !GlobalState.widgetsEditing;
+            GlobalState.launcherNothingOpen = !GlobalState.launcherNothingOpen;
         }
+        function open(): void { GlobalState.launcherNothingOpen = true; }
+        function hide(): void { GlobalState.launcherNothingOpen = false; }
     }
 
     IpcHandler {

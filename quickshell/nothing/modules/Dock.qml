@@ -21,7 +21,20 @@ PanelWindow {
     anchors { bottom: true; left: true; right: true }
     // Height must leave room for the tooltip, which draws above the dock:
     // otherwise it leaves the window and gets clipped.
-    implicitHeight: Theme.z.dock + Theme.px(64)
+    // Room for the tooltip above the dock, plus the Nothing shelf when it
+    // is out. Reserved permanently rather than grown on demand: resizing a
+    // layer surface mid-hover makes the whole dock jump.
+    implicitHeight: Theme.z.dock + Theme.px(64) + win.shelfH
+
+    // The Nothing shelf: a second pill above the dock, holding the parts
+    // of this desktop that are ours rather than the system's.
+    readonly property real shelfH: Theme.z.dock + Theme.px(10)
+    property bool shelfOpen: false
+    Timer {
+        id: shelfHide
+        interval: 260
+        onTriggered: win.shelfOpen = false
+    }
     exclusionMode: ExclusionMode.Ignore
 
     readonly property bool autoHide: Config.dockAutoHide
@@ -86,6 +99,9 @@ PanelWindow {
 
     readonly property bool revealed: !autoHide || !win.workspaceOccupied
         || dockArea.containsMouse || win.armed || hold.running
+        // The shelf hangs off the dock: letting the dock slide away while
+        // its own shelf is open would take the shelf with it.
+        || win.shelfOpen
 
     Timer {
         id: toplevelRefresh
@@ -159,10 +175,14 @@ PanelWindow {
     // Revealed: the dock is added so hovering icons keeps it out.
     Region { id: hotzoneRegion; item: hotzone }
     Region { id: dockRegion; item: dockArea }
+    Region { id: shelfRegion; item: shelfArea }
 
     mask: Region {
         intersection: Intersection.Combine
-        regions: win.revealed ? [hotzoneRegion, dockRegion] : [hotzoneRegion]
+        regions: win.revealed
+            ? (win.shelfOpen ? [hotzoneRegion, dockRegion, shelfRegion]
+                             : [hotzoneRegion, dockRegion])
+            : [hotzoneRegion]
     }
 
     NProcess { id: sh; function run(cmd) { command = ["sh", "-c", cmd]; running = true; } }
@@ -195,13 +215,181 @@ PanelWindow {
     }
 
     // ── The dock ──────────────────────────────────────────────────────
+    // ── The Nothing shelf ─────────────────────────────────────────────
+    // A sibling of the dock area, never a child: the dock's hover region
+    // feeds both `revealed` and the input mask, so anything that resizes
+    // it makes the dock shiver. This one carries its own hover area, tall
+    // enough to cover the gap down to the dock so the pointer never falls
+    // between the two on its way up.
+    MouseArea {
+        id: shelfArea
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: shelf.width + Theme.px(16)
+        height: win.shelfH + Theme.px(14)
+        y: dockArea.y - height + Theme.px(6)
+        hoverEnabled: true
+        acceptedButtons: Qt.NoButton
+
+        // Driven by the state, never by the child. Item.visible reports the
+        // EFFECTIVE visibility, ancestors included, so "parent visible when
+        // child is" and "child visible when it has opacity" locked each other
+        // at false and the shelf never appeared at all.
+        visible: win.shelfOpen || shelf.opacity > 0.01
+
+        onContainsMouseChanged: {
+            if (containsMouse) shelfHide.stop();
+            else shelfHide.restart();
+        }
+
+    NCard {
+        id: shelf
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        radius: Theme.r.chip
+        height: Theme.z.dock
+        width: shelfRow.implicitWidth + Theme.px(16)
+
+        opacity: win.shelfOpen ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: Theme.fast } }
+
+        readonly property var items: [
+            { key: "launcher", label: "Nothing Launcher", glyph: "" },
+            { key: "x",        label: "Nothing X",        glyph: "" },
+            { key: "space",    label: "Essential Space",  glyph: "󰠮" },
+            { key: "apps",     label: "Essential Apps",   glyph: "󰀻" },
+            { key: "search",   label: "Essential Search", glyph: "󰍉" }
+        ]
+
+        function open(key: string): void {
+            win.shelfOpen = false;
+            switch (key) {
+            case "launcher":
+                GlobalState.closeAll();
+                GlobalState.launcherNothingOpen = true;
+                break;
+            // The only real application of the five: it gets launched,
+            // not toggled, and it carries its own icon.
+            case "x":      Apps.launch("nothing-x"); break;
+            case "space":
+                GlobalState.closeAll();
+                GlobalState.essentialOpen = true;
+                break;
+            case "apps":
+                GlobalState.closeAll();
+                GlobalState.appsOpen = true;
+                break;
+            case "search": GlobalState.toggleLauncher(); break;
+            }
+        }
+
+        RowLayout {
+            id: shelfRow
+            anchors.centerIn: parent
+            spacing: Theme.px(2)
+
+            Repeater {
+                model: shelf.items
+
+                Item {
+                    id: tile
+                    required property var modelData
+
+                    Layout.preferredWidth: Theme.z.dockSlot
+                    Layout.preferredHeight: Theme.z.dockSlot
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: Theme.r.tiny
+                        color: tma.containsMouse ? Theme.c.surface3 : "transparent"
+                        Behavior on color { ColorAnimation { duration: Theme.fast } }
+                    }
+
+                    AppIcon {
+                        anchors.centerIn: parent
+                        anchors.verticalCenterOffset: -Theme.px(2)
+                        visible: tile.modelData.key === "x"
+                        appId: "nothing-x"
+                        size: Theme.z.dockIcon
+                        opacity: tma.containsMouse ? 1 : 0.9
+                    }
+
+                    // The launcher gets the same dot mark as the dock
+                    // button that opened this shelf. The icon font had
+                    // nothing for it: the nearest glyph drew a crossed
+                    // out circle, which reads as "unavailable".
+                    Grid {
+                        anchors.centerIn: parent
+                        anchors.verticalCenterOffset: -Theme.px(2)
+                        visible: tile.modelData.key === "launcher"
+                        columns: 3
+                        spacing: Theme.px(2)
+
+                        Repeater {
+                            model: 9
+                            Rectangle {
+                                required property int index
+                                readonly property bool lit:
+                                    [0, 2, 4, 6, 8].indexOf(index) >= 0
+                                width: Theme.px(3)
+                                height: width
+                                radius: width / 2
+                                color: lit
+                                    ? (tma.containsMouse ? Theme.c.on : Theme.c.onDim)
+                                    : Theme.c.onFaint
+                                Behavior on color { ColorAnimation { duration: Theme.fast } }
+                            }
+                        }
+                    }
+
+                    NIcon {
+                        anchors.centerIn: parent
+                        anchors.verticalCenterOffset: -Theme.px(2)
+                        visible: tile.modelData.key !== "x"
+                            && tile.modelData.key !== "launcher"
+                        text: tile.modelData.glyph
+                        size: Theme.z.dockIcon
+                        color: tma.containsMouse ? Theme.c.on : Theme.c.onDim
+                        Behavior on color { ColorAnimation { duration: Theme.fast } }
+                    }
+
+                    MouseArea {
+                        id: tma
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onEntered: shelfHide.stop()
+                        onClicked: shelf.open(tile.modelData.key)
+                    }
+
+                    scale: tma.pressed ? 0.88 : (tma.containsMouse ? 1.08 : 1)
+                    Behavior on scale { NumberAnimation { duration: Theme.fast; easing.type: Easing.OutQuad } }
+
+                    Tooltip {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.bottom: parent.top
+                        anchors.bottomMargin: Theme.px(6)
+                        text: tile.modelData.label
+                        shown: tma.containsMouse
+                    }
+                }
+            }
+        }
+    }
+    }
+
     MouseArea {
         id: dockArea
         anchors.horizontalCenter: parent.horizontalCenter
         width: dock.width + Theme.px(16)
+        // Fixed. An earlier version grew this area to hold the shelf, and
+        // that was a mistake: `revealed` reads containsMouse from here and
+        // the input mask is built from it, so animating its geometry made
+        // the region change every frame, the pointer fall in and out, and
+        // the whole dock shiver. The shelf lives outside it now.
         height: Theme.z.dock + Theme.px(12)
         hoverEnabled: true
         acceptedButtons: Qt.NoButton
+        onContainsMouseChanged: if (containsMouse) shelfHide.stop()
 
         // Position via y, without anchors.bottom: both at once cancel
         // out, and the dock stayed in the mask even when hidden.
@@ -270,6 +458,69 @@ PanelWindow {
                         anchors.bottomMargin: Theme.px(6)
                         text: "Session  ·  right click: settings"
                         shown: oma.containsMouse
+                    }
+                }
+
+                // The Nothing button. Hovering it brings out the shelf,
+                // because these are surfaces you glance at and dismiss,
+                // not applications you commit to launching.
+                Item {
+                    id: nothingSlot
+                    Layout.preferredWidth: Theme.z.dockSlot
+                    Layout.preferredHeight: Theme.z.dockSlot
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: Theme.r.tiny
+                        color: win.shelfOpen || nma.containsMouse
+                            ? Theme.c.surface3 : "transparent"
+                        Behavior on color { ColorAnimation { duration: Theme.fast } }
+                    }
+
+                    // Drawn as a dot grid rather than taken from an icon
+                    // font: it keeps the pitch of the Glyph Matrix and the
+                    // settings rail, and it is the mark of the house.
+                    Grid {
+                        anchors.centerIn: parent
+                        anchors.verticalCenterOffset: -Theme.px(2)
+                        columns: 3
+                        spacing: Theme.px(2)
+
+                        Repeater {
+                            model: 9
+                            Rectangle {
+                                required property int index
+                                readonly property bool lit:
+                                    [0, 2, 4, 6, 8].indexOf(index) >= 0
+                                width: Theme.px(3)
+                                height: width
+                                radius: width / 2
+                                color: lit
+                                    ? (win.shelfOpen ? Theme.c.red : Theme.c.on)
+                                    : Theme.c.onFaint
+                                Behavior on color { ColorAnimation { duration: Theme.fast } }
+                            }
+                        }
+                    }
+
+                    MouseArea {
+                        id: nma
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onEntered: { shelfHide.stop(); win.shelfOpen = true; }
+                        onClicked: win.shelfOpen = !win.shelfOpen
+                    }
+
+                    scale: nma.pressed ? 0.88 : (nma.containsMouse ? 1.08 : 1)
+                    Behavior on scale { NumberAnimation { duration: Theme.fast; easing.type: Easing.OutQuad } }
+
+                    Tooltip {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.bottom: parent.top
+                        anchors.bottomMargin: Theme.px(6)
+                        text: "Nothing"
+                        shown: nma.containsMouse && !win.shelfOpen
                     }
                 }
 
