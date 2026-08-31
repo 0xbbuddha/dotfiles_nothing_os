@@ -189,21 +189,9 @@ PanelWindow {
         return false;
     }
 
+    // One implementation, in the service: see Essentials.whenPretty.
     function whenPretty(iso: string): string {
-        const raw = (iso ?? "").trim();
-        if (raw === "")
-            return "";
-        const d = new Date(raw);
-        if (isNaN(d.getTime()))
-            return raw.replace("T", " ").slice(0, 16);
-        const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
-                        "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
-        const dd = d.getDate();
-        const hh = d.getHours();
-        const mm = d.getMinutes();
-        const h = hh < 10 ? "0" + hh : "" + hh;
-        const m = mm < 10 ? "0" + mm : "" + mm;
-        return dd + " " + months[d.getMonth()] + "  " + h + ":" + m;
+        return Essentials.whenPretty(iso);
     }
 
     function atLong(iso: string): string {

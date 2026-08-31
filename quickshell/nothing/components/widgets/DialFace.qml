@@ -18,12 +18,20 @@ Item {
     // "dots"  = twelve dots, the hours only.
     property string face: "ticks"
 
+    // Nothing ships its analogue clock with two sets of hands and no other
+    // difference: "bold" is thick with rounded ends, "scale" is a pair of
+    // hairlines with square ones. Compared side by side in their own
+    // artwork that is the whole of it, and it changes the character of the
+    // face completely.
+    property string hands: "bold"
+
     readonly property int hh: parseInt(Time.hhmm.slice(0, 2)) || 0
     readonly property int mm: parseInt(Time.hhmm.slice(3, 5)) || 0
 
     onHhChanged: canvas.requestPaint()
     onMmChanged: canvas.requestPaint()
     onFaceChanged: canvas.requestPaint()
+    onHandsChanged: canvas.requestPaint()
 
     Canvas {
         id: canvas
@@ -75,13 +83,14 @@ Item {
                 }
             }
 
+            const bold = root.hands !== "scale";
             const hand = (deg, len, wide, colour) => {
                 const [x, y] = at(deg, len);
                 ctx.beginPath();
                 ctx.moveTo(cx, cy);
                 ctx.lineTo(x, y);
                 ctx.lineWidth = wide;
-                ctx.lineCap = "round";
+                ctx.lineCap = bold ? "round" : "butt";
                 ctx.strokeStyle = colour;
                 ctx.stroke();
             };
@@ -89,14 +98,19 @@ Item {
             // The hour hand carries the minutes too, so it creeps between
             // the marks the way a real one does.
             hand((root.hh % 12) * 30 + root.mm * 0.5, r * 0.5,
-                 Theme.px(4), Theme.c.on);
-            hand(root.mm * 6, r * 0.76, Theme.px(3),
+                 bold ? Theme.px(6) : Theme.px(2), Theme.c.on);
+            hand(root.mm * 6, r * 0.76,
+                 bold ? Theme.px(4) : Theme.px(2),
                  root.face === "dots" ? Theme.c.red : Theme.c.on);
 
-            ctx.beginPath();
-            ctx.arc(cx, cy, Theme.px(3.5), 0, Math.PI * 2);
-            ctx.fillStyle = Theme.c.red;
-            ctx.fill();
+            // The scale face has no cap: a disc at the centre would be the
+            // heaviest thing on a dial made of hairlines.
+            if (bold) {
+                ctx.beginPath();
+                ctx.arc(cx, cy, Theme.px(3.5), 0, Math.PI * 2);
+                ctx.fillStyle = Theme.c.red;
+                ctx.fill();
+            }
         }
     }
 }

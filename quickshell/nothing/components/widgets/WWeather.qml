@@ -7,6 +7,9 @@ import "../../services"
 // Weather: large card on the left, summary and extremes on the right.
 Item {
     id: root
+    // Reduced version: no high and low.
+    property bool simple: false
+
     implicitHeight: Theme.z.cardS
     opacity: Weather.ready ? 1 : 0
     Behavior on opacity { NumberAnimation { duration: Theme.med } }
@@ -100,6 +103,7 @@ Item {
                 NCard {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
+                    visible: !root.simple
                     radius: Theme.r.card
 
                     ColumnLayout {

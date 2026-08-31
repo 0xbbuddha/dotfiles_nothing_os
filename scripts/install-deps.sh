@@ -146,6 +146,94 @@ offer_ear_native() {
     ok "Nothing X is ready. Find it in the launcher, or type # for the lot."
 }
 
+# The three ROG userspace tools from asus-linux.org: fan curves and power
+# profiles (asusd), the hybrid graphics switch (supergfxd), and the panel
+# that drives both.
+#
+# Deliberately no kernel. The guide also offers linux-g14; swapping
+# someone's kernel is not something a desktop rice gets to do, and this
+# machine is fine without it.
+#
+# No third-party repository is added either. These live in the official
+# repos on some setups, in chaotic-aur or the g14 repo on others, and in
+# the AUR everywhere; the installer uses whichever is already reachable
+# rather than editing pacman.conf behind your back.
+offer_rog() {
+    # Anything else would be guessing at hardware we cannot see.
+    local vendor=""
+    [[ -r /sys/class/dmi/id/sys_vendor ]] \
+        && vendor="$(tr -d '\0' < /sys/class/dmi/id/sys_vendor)"
+    # "ASUSTeK COMPUTER INC." already contains ASUS, one pattern is enough.
+    case "$vendor" in
+        *ASUS*) ;;
+        *) return ;;
+    esac
+
+    if have asusctl && have supergfxctl; then
+        ok "ROG tools already present (asusctl, supergfxctl)"
+        return
+    fi
+
+    log "ASUS ROG"
+    printf '%s\n' \
+        "  This looks like an ASUS machine. asus-linux.org ships three" \
+        "  userspace tools: asusctl for fan curves and power profiles," \
+        "  supergfxctl for the hybrid graphics switch, and" \
+        "  rog-control-center to drive both. No kernel is touched."
+
+    if ! ask_yn "Install the ASUS ROG tools?" y; then
+        warn "Skipped. See https://asus-linux.org/guides/arch-guide/"
+        return
+    fi
+
+    local from_repo=() from_aur=() p
+    for p in asusctl supergfxctl rog-control-center; do
+        if pacman -Si "$p" >/dev/null 2>&1; then
+            from_repo+=("$p")
+        else
+            from_aur+=("$p")
+        fi
+    done
+
+    # Tracked, because a run that failed every step used to finish by
+    # announcing the tools were ready.
+    local failed=0
+    if ((${#from_repo[@]})); then
+        run sudo pacman -S --needed --noconfirm "${from_repo[@]}" \
+            || { warn "could not install ${from_repo[*]}"; failed=1; }
+    fi
+    if ((${#from_aur[@]})); then
+        if have yay; then
+            run yay -S --needed --noconfirm "${from_aur[@]}" \
+                || { warn "could not install ${from_aur[*]}"; failed=1; }
+        else
+            warn "not in your repos and yay is missing: ${from_aur[*]}"
+            warn "add the g14 repo from asus-linux.org, or install yay"
+            failed=1
+        fi
+    fi
+
+    if (( failed )); then
+        warn "ROG tools not installed. See https://asus-linux.org/guides/arch-guide/"
+        return
+    fi
+
+    # Enabled only when the unit really exists: these are the names
+    # asus-linux documents, but a rename should leave a note here rather
+    # than a failed command.
+    local svc
+    for svc in asusd supergfxd; do
+        if systemctl list-unit-files 2>/dev/null | grep -q "^$svc\.service"; then
+            run sudo systemctl enable --now "$svc.service" \
+                || warn "could not start $svc"
+        else
+            warn "$svc.service not found; enable it by hand if the tool needs it"
+        fi
+    done
+
+    ok "ROG tools are ready. rog-control-center is in the launcher."
+}
+
 offer_warp() {
     if have warp-cli; then
         ok "warp-cli already present (WARP tile in the control centre)"
@@ -173,6 +261,7 @@ offer_warp() {
 }
 
 offer_ear_native
+offer_rog
 offer_warp
 
 ok "Dependencies are in place."

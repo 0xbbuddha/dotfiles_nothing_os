@@ -97,6 +97,51 @@ PanelWindow {
                 onPicked: (v) => win.tab = v
             }
 
+            // Twelve families is nearly three thousand pixels of shelf in
+            // a panel six hundred tall. Scrolling five screens to find out
+            // whether a family exists is not browsing, it is searching
+            // blind, so the families are named up front and each name
+            // jumps to its shelf.
+            Flickable {
+                id: index
+                Layout.fillWidth: true
+                implicitHeight: Theme.px(30)
+                visible: win.tab === "widgets"
+                contentWidth: indexRow.width
+                contentHeight: height
+                flickableDirection: Flickable.HorizontalFlick
+                boundsBehavior: Flickable.StopAtBounds
+                clip: true
+
+                Row {
+                    id: indexRow
+                    height: index.height
+                    spacing: Theme.px(6)
+
+                    Repeater {
+                        model: WidgetRegistry.groups
+
+                        NPillButton {
+                            required property string modelData
+                            required property int index
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: modelData + "  "
+                                + WidgetRegistry.inGroup(modelData).length
+                            onActivated: {
+                                const it = shelves.itemAt(index);
+                                if (!it)
+                                    return;
+                                // Clamped, or jumping to the last family
+                                // scrolls past the end and springs back.
+                                flick.contentY = Math.max(0, Math.min(
+                                    it.y - Theme.px(8),
+                                    flick.contentHeight - flick.height));
+                            }
+                        }
+                    }
+                }
+            }
+
             Flickable {
                 id: flick
                 Layout.fillWidth: true
@@ -155,6 +200,7 @@ PanelWindow {
                     // the panel a wall; a shelf keeps the alternatives of
                     // one thing side by side, which is how you choose.
                     Repeater {
+                        id: shelves
                         model: WidgetRegistry.groups
 
                         ColumnLayout {
@@ -192,6 +238,8 @@ PanelWindow {
                             }
                         }
                     }
+
+                    WidgetTuning { Layout.fillWidth: true }
 
                     // Order matters again, so it has to be editable. The
                     // column stacks top to bottom in exactly this order.
@@ -258,6 +306,22 @@ PanelWindow {
                             }
                         }
                     }
+                }
+
+                // How far down this is, and how far there is to go. The
+                // list gave no sign of its own length, which is what made
+                // it feel like widgets were missing rather than below.
+                Rectangle {
+                    x: flick.width - width - Theme.px(2)
+                    y: flick.contentY
+                        + (flick.contentY / Math.max(1, flick.contentHeight - flick.height))
+                        * (flick.height - height)
+                    width: Theme.px(3)
+                    height: Math.max(Theme.px(28),
+                        flick.height * flick.height / Math.max(1, flick.contentHeight))
+                    radius: width / 2
+                    color: Theme.c.onFaint
+                    visible: flick.contentHeight > flick.height
                 }
 
                 // ── Glyph ─────────────────────────────────────────────

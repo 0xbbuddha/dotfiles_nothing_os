@@ -10,6 +10,8 @@ import "../../services"
 // children, which are all fillHeight, and the widget would collapse to zero.
 Item {
     id: root
+    // Reduced version: no week number.
+    property bool simple: false
     implicitHeight: Theme.z.cardS
 
     RowLayout {
@@ -66,6 +68,7 @@ Item {
                 NLabel {
                     Layout.alignment: Qt.AlignHCenter
                     Layout.topMargin: Theme.px(4)
+                    visible: !root.simple
                     text: "Week " + Time.weekNumber
                 }
             }

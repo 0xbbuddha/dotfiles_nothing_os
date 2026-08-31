@@ -13,6 +13,36 @@ Singleton {
 
     property var items: []
     property int stamp: 0
+
+    // What is coming up, newest deadline first.
+    //
+    // The panel had its own copy of this and of the date formatting. Two
+    // copies of "what counts as upcoming" is how a widget and the space it
+    // summarises end up disagreeing, so both read this one now.
+    function whenPretty(iso: string): string {
+        const raw = (iso ?? "").trim();
+        if (raw === "")
+            return "";
+        const d = new Date(raw);
+        if (isNaN(d.getTime()))
+            return raw.replace("T", " ").slice(0, 16);
+        const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+                        "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+        const p2 = n => n < 10 ? "0" + n : "" + n;
+        return d.getDate() + " " + months[d.getMonth()]
+            + "  " + p2(d.getHours()) + ":" + p2(d.getMinutes());
+    }
+
+    function hasWhen(it: var): bool {
+        const w = (it?.when ?? "").trim();
+        return w !== "" && w.toLowerCase() !== "null";
+    }
+
+    function upcoming(limit: int): var {
+        const out = (root.items ?? []).filter(it => root.hasWhen(it));
+        out.sort((a, b) => String(a.when ?? "").localeCompare(String(b.when ?? "")));
+        return limit > 0 ? out.slice(0, limit) : out;
+    }
     property bool busy: false
     property string status: ""
     property bool catchRecord: false

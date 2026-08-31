@@ -23,6 +23,30 @@ trap 'rm -rf "$WORK"' EXIT
 
 command -v qs >/dev/null 2>&1 || { echo "qs (quickshell) not found" >&2; exit 1; }
 
+# A type name is global across every directory the shell imports, so two
+# files with the same basename are one type and the loser is unreachable.
+# A services/Battery.qml quietly displaced components/glyph/Battery.qml and
+# took the whole shell down with "Composite Singleton Type Battery is not
+# creatable" from a file that had never heard of the new one. Compiling
+# each file on its own cannot see this: the clash only bites on
+# instantiation, so it is checked by name here instead.
+python3 - "$SHELL_DIR" <<'DUP'
+import collections, os, sys
+seen = collections.defaultdict(list)
+for dp, dn, fn in os.walk(sys.argv[1]):
+    for f in fn:
+        if f.endswith(".qml"):
+            seen[f].append(os.path.relpath(os.path.join(dp, f), sys.argv[1]))
+bad = {k: v for k, v in seen.items() if len(v) > 1}
+for k, v in sorted(bad.items()):
+    print("DUPLICATE TYPE %s: %s" % (k[:-4], ", ".join(sorted(v))), file=sys.stderr)
+sys.exit(1 if bad else 0)
+DUP
+if [[ $? -ne 0 ]]; then
+    echo "two files share a type name; rename one." >&2
+    exit 1
+fi
+
 python3 - "$SHELL_DIR" "$WORK/shell.qml" <<'PY'
 import json, sys
 from pathlib import Path

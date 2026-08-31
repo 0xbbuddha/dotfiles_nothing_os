@@ -129,6 +129,16 @@ Singleton {
     // ── Desktop widgets ───────────────────────────────────────────────
     property alias widgets: a.widgets
 
+    // Falls back to the standard picture folder rather than storing that
+    // path: a config written on one machine then read on another with a
+    // different locale would point at a folder that does not exist.
+    readonly property string photoDir: a.photoDir !== ""
+        ? a.photoDir
+        : `${Quickshell.env("HOME")}/Pictures`
+
+    property alias worldClocks: a.worldClocks
+    property alias screenTimeLimit: a.screenTimeLimit
+
     // ── Essential Apps ────────────────────────────────────────────────
     property alias deskApps: a.deskApps
     property alias showDeskApps: a.showDeskApps
@@ -189,6 +199,48 @@ Singleton {
         else
             list.push(id);
         a.widgets = list;
+        root.save();
+    }
+
+    // What you are counting to. One countdown, not a list: the widget
+    // system keys on the id, so a second countdown would be a second
+    // widget, and Nothing's own is one per placed card too.
+    property alias countdownLabel: a.countdownLabel
+    property alias countdownDate: a.countdownDate
+    property alias countdownShape: a.countdownShape
+
+    // Cities on the world clock. Ordered, because the widget reads them
+    // top to bottom, and capped at four because that is what the card can
+    // hold without the rows closing up.
+    readonly property int worldClockMax: 4
+
+    function hasCity(zone: string): bool {
+        return (a.worldClocks ?? []).indexOf(zone) >= 0;
+    }
+
+    function toggleCity(zone: string): void {
+        if (!zone) return;
+        const list = (a.worldClocks ?? []).slice();
+        const at = list.indexOf(zone);
+        if (at >= 0)
+            list.splice(at, 1);
+        else if (list.length < root.worldClockMax)
+            list.push(zone);
+        else
+            return;             // full: drop one first, silently doing it
+                                // for them would lose a city they chose.
+        a.worldClocks = list;
+        root.save();
+    }
+
+    function moveCity(index: int, by: int): void {
+        const list = (a.worldClocks ?? []).slice();
+        const to = index + by;
+        if (index < 0 || index >= list.length || to < 0 || to >= list.length)
+            return;
+        const [it] = list.splice(index, 1);
+        list.splice(to, 0, it);
+        a.worldClocks = list;
         root.save();
     }
 
@@ -497,6 +549,20 @@ Singleton {
             // width in columns are stored.
             // Known identifiers: date, weather, clock, media, system, calendar.
             property var widgets: ["date", "weather", "clock", "media"]
+
+            // Minutes at the machine before the screen-time face frowns.
+            property int screenTimeLimit: 240
+
+            // Cities for the world clock, as tz database zone names.
+            property string countdownLabel: "New year"
+            property string countdownDate: ""
+            property int countdownShape: 0
+
+            property var worldClocks: ["Europe/Paris", "America/New_York",
+                                       "Asia/Tokyo", "Australia/Sydney"]
+
+            // Where the photo widget looks. Empty means the usual place.
+            property string photoDir: ""
 
             // Essential Apps pinned to the right column, in display order.
             property var deskApps: []

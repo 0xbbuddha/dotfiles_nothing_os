@@ -4,6 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import ".."
+import "../components"
 
 // Weather via wttr.in (can be disabled in Config.qml).
 Singleton {
@@ -14,7 +15,19 @@ Singleton {
     property int    lo: 0
     property string desc: "-"
     property string city: "-"
-    property string glyph: "󰖐"
+    // The sky, named. The font glyph is one rendering of it and Nothing's
+    // dot icon is another, so the name is what the service publishes and
+    // each widget picks its own way of drawing it.
+    property string kind: "cloud"
+    readonly property string glyph: root.icons[root.kind] ?? "󰖐"
+
+    // Their dot set has a night pair for a clear and a clouded sky. wttr
+    // does not say which side of dusk you are on, so the clock does.
+    readonly property bool night: {
+        const h = Time.now.getHours();
+        return h < 7 || h >= 20;
+    }
+    readonly property string dotKind: DotIcons.nightly(root.kind, root.night)
     property bool   ready: false
 
     readonly property var icons: ({
@@ -61,7 +74,7 @@ Singleton {
                     root.city = typed.length > 0
                         ? typed
                         : (j.nearest_area?.[0]?.areaName?.[0]?.value ?? "");
-                    root.glyph = root.pick(parseInt(cur.weatherCode));
+                    root.kind = root.pick(parseInt(cur.weatherCode));
                     root.ready = true;
                 } catch (e) {
                     console.warn("weather: unreadable response", e);
@@ -87,13 +100,13 @@ Singleton {
     }
 
     function pick(code: int): string {
-        if (code === 113) return icons.sun;
-        if ([116, 119].includes(code)) return icons.partly;
-        if ([122, 143, 248, 260].includes(code)) return icons.fog;
-        if (code >= 200 && code < 400) return icons.storm;
-        if ([386, 389, 392, 395].includes(code)) return icons.storm;
-        if ([227, 230, 320, 323, 326, 329, 332, 335, 338, 368, 371].includes(code)) return icons.snow;
-        if (code >= 176) return icons.rain;
-        return icons.cloud;
+        if (code === 113) return "sun";
+        if ([116, 119].includes(code)) return "partly";
+        if ([122, 143, 248, 260].includes(code)) return "fog";
+        if (code >= 200 && code < 400) return "storm";
+        if ([386, 389, 392, 395].includes(code)) return "storm";
+        if ([227, 230, 320, 323, 326, 329, 332, 335, 338, 368, 371].includes(code)) return "snow";
+        if (code >= 176) return "rain";
+        return "cloud";
     }
 }
