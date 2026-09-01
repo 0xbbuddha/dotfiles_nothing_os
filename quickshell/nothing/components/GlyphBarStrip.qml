@@ -25,8 +25,8 @@ Item {
     readonly property int segments: GlyphBar.segments
 
     property color onColor: "#ffffff"
-    property real onOpacity: GlyphBar.level.on
-    property real offOpacity: GlyphBar.level.off
+    property real onOpacity: GlyphEvents.level.on
+    property real offOpacity: GlyphEvents.level.off
 
 
     property bool demo: false
@@ -45,7 +45,7 @@ Item {
             return out;
         }
 
-        const ev = GlyphBar.event;
+        const ev = GlyphEvents.event;
 
         // Dark at rest. Not a dim reading: an earlier version kept every
         // segment on a live value, and CPU and network move on every tick,
@@ -56,12 +56,35 @@ Item {
         // A held snapshot, so the second and a half it is up does not
         // jitter under the reader.
         if (ev === "reveal")
-            return GlyphBar.snapshot;
+            return GlyphEvents.snapshot;
+
+        const out = [];
+
+        // Exactly these groups, expanded onto the six segments.
+        if (GlyphEvents.frameKind === "zones") {
+            for (let i = 0; i < root.segments; i++)
+                out.push(0);
+            for (const g of GlyphEvents.frameZones) {
+                const r = GlyphEvents.groupRange(
+                    g, GlyphEvents.frameGroups, root.segments);
+                for (let i = r.from; i < r.to; i++)
+                    out[i] = 1;
+            }
+            return out;
+        }
+
+        // A running point rather than a level: one segment lit, the rest
+        // out. Fractional, so it slides between segments.
+        if (GlyphEvents.frameKind === "point") {
+            const at = GlyphEvents.eventValue * (root.segments - 1);
+            for (let i = 0; i < root.segments; i++)
+                out.push(Math.max(0, 1 - Math.abs(i - at)));
+            return out;
+        }
 
         // Everything else spans the whole bar: six squares read as one
         // gauge, which is the precision the coarse segmentation hides.
-        const out = [];
-        const lit = GlyphBar.eventValue * root.segments;
+        const lit = GlyphEvents.eventValue * root.segments;
         for (let i = 0; i < root.segments; i++)
             out.push(Math.max(0, Math.min(1, lit - i)));
         return out;
@@ -85,10 +108,12 @@ Item {
     }
 
     Connections {
-        target: GlyphBar
+        target: GlyphEvents
         enabled: !root.demo
         function onEventChanged(): void { root.fills = root.compute(); }
         function onEventValueChanged(): void { root.fills = root.compute(); }
+        function onFrameKindChanged(): void { root.fills = root.compute(); }
+        function onFrameZonesChanged(): void { root.fills = root.compute(); }
         function onSnapshotChanged(): void { root.fills = root.compute(); }
     }
 
@@ -157,17 +182,17 @@ Item {
 
             property real beat: root.onOpacity
 
-            color: GlyphBar.recording
+            color: GlyphEvents.recording
                 ? root.lamp(Theme.c.red, cam.beat)
                 : root.lamp(Theme.c.red, 0.06)
 
             Behavior on color {
-                enabled: !GlyphBar.recording
+                enabled: !GlyphEvents.recording
                 ColorAnimation { duration: Theme.med }
             }
 
             SequentialAnimation {
-                running: GlyphBar.recording
+                running: GlyphEvents.recording
                 loops: Animation.Infinite
                 // Reset on stop, or the light freezes wherever in the
                 // pulse the recording happened to end.

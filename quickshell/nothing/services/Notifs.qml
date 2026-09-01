@@ -53,9 +53,9 @@ Singleton {
 
             root.history = [entry].concat(root.history).slice(0, 100);
             // The Glyph Bar can stand in for the card: see
-            // GlyphBar.replaces. History is kept either way, so nothing is
+            // GlyphEvents.replaces. History is kept either way, so nothing is
             // lost, it just does not interrupt.
-            if (!root.doNotDisturb && !GlyphBar.replaces("notify"))
+            if (!root.doNotDisturb && !GlyphEvents.replaces("notify"))
                 root.popups = [entry].concat(root.popups).slice(0, 5);
         }
     }

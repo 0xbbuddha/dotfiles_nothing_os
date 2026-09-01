@@ -44,7 +44,7 @@ Singleton {
         // The Glyph Bar shows the volume as a gauge across its segments,
         // so the pill in the middle of the screen is the same reading
         // twice.
-        if (which === "volume" && GlyphBar.replaces("volume"))
+        if (which === "volume" && GlyphEvents.replaces("volume"))
             return;
         root.mode = which;
         root.shown = true;

@@ -13,6 +13,19 @@ ShellRoot {
 
     readonly property bool shellHidden: Config.gameMode && Config.gameHideShell
 
+    // Deferred: the surface has only just been switched on, so its window
+    // does not exist yet this frame and a pulse would play to nothing.
+    function announceGlyph(which: string): void {
+        if (which === "bar" || which === "strip")
+            glyphHello.restart();
+    }
+
+    Timer {
+        id: glyphHello
+        interval: 180
+        onTriggered: GlyphEvents.pulse("notify")
+    }
+
     // ── Per screen ────────────────────────────────────────────────────
     Variants {
         model: Config.drawWallpaper ? Quickshell.screens : []
@@ -83,6 +96,18 @@ ShellRoot {
         GlyphBarWidget { above: true }
     }
 
+    Variants {
+        model: (Config.glyphStripEnabled && !root.shellHidden)
+            ? Quickshell.screens : []
+        GlyphStripWidget { above: false }
+    }
+
+    Variants {
+        model: (Config.glyphStripEnabled && !root.shellHidden)
+            ? Quickshell.screens : []
+        GlyphStripWidget { above: true }
+    }
+
     // Panels exist on every screen and only show on the focused one:
     // opening settings from the secondary display shows them there, not
     // on the primary.
@@ -133,6 +158,23 @@ ShellRoot {
         }
         function open(): void { GlobalState.launcherNothingOpen = true; }
         function hide(): void { GlobalState.launcherNothingOpen = false; }
+    }
+
+    IpcHandler {
+        target: "glyph"
+
+        // Walks off, Matrix, Bar, Strip and back to off. The surface that
+        // comes up announces itself with its own notification rhythm, so
+        // the shortcut tells you where you landed without a toast: on a
+        // Glyph, the Glyph is the feedback.
+        function next(): void { root.announceGlyph(Config.cycleGlyph(1)); }
+        function prev(): void { root.announceGlyph(Config.cycleGlyph(-1)); }
+        function off(): void {
+            Config.enableGlyph(Config.activeGlyph(), false);
+        }
+        function matrix(): void { Config.enableGlyph("matrix", true); }
+        function bar(): void { root.announceGlyph("bar"); Config.enableGlyph("bar", true); }
+        function strip(): void { root.announceGlyph("strip"); Config.enableGlyph("strip", true); }
     }
 
     IpcHandler {

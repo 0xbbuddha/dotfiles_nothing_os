@@ -34,7 +34,7 @@ PanelWindow {
     // desktop, out of the way. The moment it has something to say, a
     // maximised window in front of it must not be able to swallow it.
     readonly property bool lifted: Config.glyphBarAbove
-        || (GlyphBar.event !== "" && !GlyphBar.dragging)
+        || (GlyphEvents.event !== "" && !GlyphEvents.dragging)
 
     // Whether this surface, of the two, is the one showing.
     readonly property bool showing: win.above ? win.lifted : !win.lifted
@@ -103,8 +103,8 @@ PanelWindow {
     }
 
     function stepLevel(delta: int): void {
-        Config.glyphBarLevel =
-            Math.max(0, Math.min(2, Config.glyphBarLevel + delta));
+        Config.glyphLevel =
+            Math.max(0, Math.min(2, Config.glyphLevel + delta));
         Config.save();
     }
 
@@ -155,7 +155,7 @@ PanelWindow {
             }
 
             Binding {
-                target: GlyphBar
+                target: GlyphEvents
                 property: "dragging"
                 value: true
                 when: grip.drag.active
@@ -170,8 +170,8 @@ PanelWindow {
                 // The bar is dark, so a click is the only way to consult
                 // it. Off by default for anyone who wants it dark full
                 // stop.
-                if (m.button === Qt.LeftButton && GlyphBar.wants("reveal"))
-                    GlyphBar.reveal();
+                if (m.button === Qt.LeftButton && GlyphEvents.wants("reveal"))
+                    GlyphEvents.reveal();
             }
 
             // Three levels, as the hardware has, on the wheel.

@@ -25,6 +25,12 @@ Singleton {
             label: "Glyph Bar",
             hint: "Six readings and the camera light",
             glyph: "󰕾"
+        },
+        {
+            id: "strip",
+            label: "Glyph Strip",
+            hint: "Three arcs, a broken ring",
+            glyph: "󰑟"
         }
     ]
 

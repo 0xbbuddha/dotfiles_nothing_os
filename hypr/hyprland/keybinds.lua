@@ -23,6 +23,10 @@ hl.bind(mainMod .. " + ALT + A",    ipc("apps", "toggle"))
 hl.bind(mainMod .. " + G",          ipc("game", "toggle"))
 hl.bind(mainMod .. " + Slash",      ipc("cheatsheet", "toggle"))
 hl.bind(mainMod .. " + ALT + G",    ipc("game", "mode"))
+-- Walks off, Matrix, Bar, Strip. The surface that comes up plays its own
+-- notification rhythm, so you can see where you landed without looking.
+hl.bind(mainMod .. " + SHIFT + G",  ipc("glyph", "next"))
+hl.bind(mainMod .. " + ALT + L",    ipc("nothing", "toggle"))
 hl.bind(mainMod .. " + ALT + X",    ipc("game", "crosshair"))
 hl.bind("CTRL + ALT + Delete",      ipc("session", "toggle"))
 hl.bind(mainMod .. " + Escape",     ipc("session", "toggle"))

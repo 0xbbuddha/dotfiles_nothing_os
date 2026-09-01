@@ -11,6 +11,11 @@ Rectangle {
     required property var meta
     readonly property string sid: meta?.id ?? ""
 
+    // The launcher pane names the section above this card, so repeating
+    // the name and the hint inside it says everything twice. The switch
+    // stays either way: it is the one control that has nowhere else to go.
+    property bool titled: true
+
     Layout.fillWidth: true
     implicitHeight: col.implicitHeight + Theme.px(24)
     radius: Theme.r.card
@@ -29,13 +34,24 @@ Rectangle {
             spacing: Theme.px(12)
 
             NIcon {
+                visible: root.titled
                 text: root.meta?.glyph ?? "󰧵"
                 size: Theme.z.iconM
                 Layout.preferredWidth: Theme.px(20)
             }
 
+            // Without the name above it the switch was a pair of dots
+            // floating in a corner, attached to nothing.
+            NText {
+                visible: !root.titled
+                text: "Enabled"
+            }
+
+            Item { Layout.fillWidth: true; visible: !root.titled }
+
             ColumnLayout {
                 Layout.fillWidth: true
+                visible: root.titled
                 spacing: 0
                 NText {
                     Layout.fillWidth: true
@@ -62,6 +78,12 @@ Rectangle {
                 visible: root.sid === "bar"
                 checked: Config.glyphBarEnabled
                 onToggled: (v) => Config.enableGlyph("bar", v)
+            }
+
+            DotSwitch {
+                visible: root.sid === "strip"
+                checked: Config.glyphStripEnabled
+                onToggled: (v) => Config.enableGlyph("strip", v)
             }
         }
 
@@ -102,13 +124,14 @@ Rectangle {
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: GlyphBar.reveal()
+                    onClicked: GlyphEvents.reveal()
                 }
             }
 
             ColumnLayout {
                 Layout.fillWidth: true
-                Layout.alignment: Qt.AlignTop
+                Layout.maximumWidth: Theme.px(520)
+                Layout.alignment: Qt.AlignVCenter
                 spacing: Theme.px(8)
 
                 RowLayout {
@@ -138,9 +161,9 @@ Rectangle {
                             { label: "Medium", value: "1" },
                             { label: "High",   value: "2" }
                         ]
-                        current: String(Config.glyphBarLevel)
+                        current: String(Config.glyphLevel)
                         onPicked: (v) => {
-                            Config.glyphBarLevel = parseInt(v);
+                            Config.glyphLevel = parseInt(v);
                             Config.save();
                         }
                     }
@@ -177,6 +200,120 @@ Rectangle {
                     }
                 }
 
+            }
+        }
+
+        // ── Strip ─────────────────────────────────────────────────────
+        RowLayout {
+            Layout.fillWidth: true
+            visible: root.sid === "strip" && Config.glyphStripEnabled
+            spacing: Theme.px(14)
+
+            // The ring itself, in the state it is in on the desktop.
+            GlyphStripRing {
+                Layout.alignment: Qt.AlignTop
+                Layout.preferredWidth: Theme.px(150)
+                Layout.preferredHeight: Theme.px(150)
+                onColor: "#ffffff"
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: GlyphEvents.reveal()
+                }
+            }
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                // Capped: a twelve-dot slider stretched across the whole
+                // pane spreads its dots so far apart that it stops reading
+                // as one control.
+                Layout.maximumWidth: Theme.px(520)
+                Layout.alignment: Qt.AlignVCenter
+                spacing: Theme.px(8)
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Theme.px(10)
+                    NLabel { text: "Size"; Layout.preferredWidth: Theme.px(58) }
+                    DotSlider {
+                        Layout.fillWidth: true
+                        count: 12
+                        value: (Config.glyphStripSize - 140) / 220
+                        display: Config.glyphStripSize + " px"
+                        onMoved: (v) => {
+                            Config.glyphStripSize = Math.round(140 + v * 220);
+                            Config.save();
+                        }
+                    }
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Theme.px(10)
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 0
+                        NText { text: "Always above windows" }
+                        NText {
+                            Layout.fillWidth: true
+                            text: "It rises for an event either way"
+                            color: Theme.c.onDim
+                            elide: Text.ElideRight
+                        }
+                    }
+                    DotSwitch {
+                        checked: Config.glyphStripAbove
+                        onToggled: (v) => {
+                            Config.glyphStripAbove = v;
+                            Config.save();
+                        }
+                    }
+                    NPillButton {
+                        text: "Recenter"
+                        onActivated: {
+                            Config.glyphStripX = -1;
+                            Config.glyphStripY = -1;
+                            Config.save();
+                        }
+                    }
+                }
+            }
+        }
+
+        // ── Shared by every event-driven surface ──────────────────────
+        //
+        // Only one Glyph is ever lit, so which sources you care about and
+        // how bright they are belong to you, not to the shape. Keeping a
+        // copy per surface would have meant setting them twice and finding
+        // out later that they had drifted.
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.maximumWidth: Theme.px(640)
+            spacing: Theme.px(10)
+            visible: (root.sid === "bar" && Config.glyphBarEnabled)
+                || (root.sid === "strip" && Config.glyphStripEnabled)
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Theme.px(10)
+                NLabel { text: "Brightness"; Layout.preferredWidth: Theme.px(58) }
+                SegmentedControl {
+                    Layout.fillWidth: true
+                    Layout.maximumWidth: Theme.px(320)
+                    options: [
+                        { label: "Low",    value: "0" },
+                        { label: "Medium", value: "1" },
+                        { label: "High",   value: "2" }
+                    ]
+                    current: String(Config.glyphLevel)
+                    onPicked: (v) => {
+                        Config.glyphLevel = parseInt(v);
+                        Config.save();
+                    }
+                }
+            }
+
                 NLabel { text: "What lights it"; Layout.topMargin: Theme.px(4) }
                 NText {
                     Layout.fillWidth: true
@@ -188,7 +325,7 @@ Rectangle {
                 }
 
                 Repeater {
-                    model: GlyphBar.sources
+                    model: GlyphEvents.sources
 
                     // Named, not reached through parent. Counting parents
                     // up from a nested delegate breaks the moment anything
@@ -197,6 +334,9 @@ Rectangle {
                     RowLayout {
                         id: source
                         required property var modelData
+
+                        readonly property bool on: (Config.glyphEvents ?? [])
+                            .indexOf(modelData.id) >= 0
 
                         Layout.fillWidth: true
                         spacing: Theme.px(8)
@@ -214,9 +354,31 @@ Rectangle {
                             }
                         }
 
+                        // The rhythm this event plays. Cycles rather than
+                        // opening a menu: nine is short enough to walk,
+                        // and a popover inside a popover is two
+                        // dismissals to get wrong.
+                        //
+                        // Picking one plays it on the real surface. A list
+                        // of names is meaningless for something whose
+                        // entire content is timing, so choosing it is
+                        // also how you hear it.
+                        NPillButton {
+                            visible: source.modelData.rhythm === true
+                                && source.on
+                            maxWidth: Theme.px(132)
+                            text: GlyphEvents.patternLabel(
+                                Config.glyphPattern(source.modelData.id))
+                            onActivated: {
+                                Config.stepGlyphPattern(
+                                    source.modelData.id, 1);
+                                GlyphEvents.preview(Config.glyphPattern(
+                                    source.modelData.id));
+                            }
+                        }
+
                         DotSwitch {
-                            checked: (Config.glyphBarEvents ?? [])
-                                .indexOf(source.modelData.id) >= 0
+                            checked: source.on
                             onToggled: Config.toggleGlyphEvent(
                                 source.modelData.id)
                         }
@@ -243,23 +405,25 @@ Rectangle {
                     }
 
                     DotSwitch {
-                        checked: Config.glyphBarQuiet
+                        checked: Config.glyphQuiet
                         onToggled: (v) => {
-                            Config.glyphBarQuiet = v;
+                            Config.glyphQuiet = v;
                             Config.save();
                         }
                     }
                 }
 
+                GlyphComposer { Layout.fillWidth: true }
+
                 // Only the reveal reads these, so they are hidden with it.
                 NLabel {
                     text: "Segments"
                     Layout.topMargin: Theme.px(4)
-                    visible: (Config.glyphBarEvents ?? []).indexOf("reveal") >= 0
+                    visible: (Config.glyphEvents ?? []).indexOf("reveal") >= 0
                 }
                 NText {
                     Layout.fillWidth: true
-                    visible: (Config.glyphBarEvents ?? []).indexOf("reveal") >= 0
+                    visible: (Config.glyphEvents ?? []).indexOf("reveal") >= 0
                     text: "Top to bottom, as they sit on the strip"
                     color: Theme.c.onFaint
                     font.pixelSize: Theme.f.tiny
@@ -267,7 +431,10 @@ Rectangle {
                 }
 
                 Repeater {
-                    model: GlyphBar.segments
+                    // How many readings the lit surface can show: six on
+                    // the bar, three on the strip, which has three arcs
+                    // and no honest place to put a fourth.
+                    model: GlyphEvents.slots
 
                     RowLayout {
                         id: slot
@@ -275,7 +442,7 @@ Rectangle {
 
                         Layout.fillWidth: true
                         spacing: Theme.px(8)
-                        visible: (Config.glyphBarEvents ?? [])
+                        visible: (Config.glyphEvents ?? [])
                             .indexOf("reveal") >= 0
 
                         NLabel {
@@ -289,21 +456,20 @@ Rectangle {
                         NPillButton {
                             Layout.fillWidth: true
                             maxWidth: Theme.px(150)
-                            text: GlyphBar.channelLabel(
-                                (Config.glyphBarChannels ?? [])[slot.index] ?? "off")
+                            text: GlyphEvents.channelLabel(
+                                (Config.glyphChannels ?? [])[slot.index] ?? "off")
                             onActivated: {
-                                const list = GlyphBar.channels;
-                                const cur = (Config.glyphBarChannels ?? [])[slot.index] ?? "off";
+                                const list = GlyphEvents.channels;
+                                const cur = (Config.glyphChannels ?? [])[slot.index] ?? "off";
                                 let at = list.findIndex(c => c.id === cur);
                                 if (at < 0)
                                     at = 0;
-                                Config.setBarChannel(slot.index,
+                                Config.setGlyphChannel(slot.index,
                                     list[(at + 1) % list.length].id);
                             }
                         }
                     }
                 }
-            }
         }
 
         // ── Matrix ────────────────────────────────────────────────────
