@@ -58,7 +58,7 @@ hl.layer_rule({
         -- above-windows one to rise for its event. Both sit on the same
         -- pixels, so the swap should be invisible; with layersIn set to
         -- popin it read as the bar jumping out at you every time.
-        namespace = "^nothing-(wallpaper|widgets|glyph|glyph-top|glyphbar|glyphbar-top|glyph-osd|essential|essential-fly)$"
+        namespace = "^nothing-(wallpaper|widgets|glyph|glyph-top|glyphbar|glyphbar-over|glyph-osd|essential|essential-fly)$"
     },
     no_anim = true,
 })

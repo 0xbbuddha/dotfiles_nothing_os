@@ -41,8 +41,14 @@ PanelWindow {
 
     screen: modelData
     color: "transparent"
-    WlrLayershell.layer: win.above ? WlrLayer.Top : WlrLayer.Bottom
-    WlrLayershell.namespace: win.above ? "nothing-glyphbar-top" : "nothing-glyphbar"
+
+    // Overlay, not Top, for the raised one. A fullscreen window under
+    // Hyprland covers the Top layer, which is exactly why the bar and the
+    // dock live there and the OSD does not. An event light a fullscreen
+    // video can swallow is not an event light: a notification arriving
+    // during a film is the case it exists for.
+    WlrLayershell.layer: win.above ? WlrLayer.Overlay : WlrLayer.Bottom
+    WlrLayershell.namespace: win.above ? "nothing-glyphbar-over" : "nothing-glyphbar"
     exclusionMode: ExclusionMode.Ignore
 
     anchors { top: true; bottom: true; left: true; right: true }
