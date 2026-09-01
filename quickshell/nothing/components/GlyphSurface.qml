@@ -190,18 +190,24 @@ Rectangle {
                 Repeater {
                     model: GlyphBar.sources
 
+                    // Named, not reached through parent. Counting parents
+                    // up from a nested delegate breaks the moment anything
+                    // is wrapped, and it broke here: one of these read the
+                    // label off the ColumnLayout, which has no model.
                     RowLayout {
+                        id: source
                         required property var modelData
+
                         Layout.fillWidth: true
                         spacing: Theme.px(8)
 
                         ColumnLayout {
                             Layout.fillWidth: true
                             spacing: 0
-                            NText { text: parent.modelData.label }
+                            NText { text: source.modelData.label }
                             NText {
                                 Layout.fillWidth: true
-                                text: parent.parent.modelData.hint
+                                text: source.modelData.hint
                                 color: Theme.c.onDim
                                 font.pixelSize: Theme.f.tiny
                                 elide: Text.ElideRight
@@ -210,9 +216,37 @@ Rectangle {
 
                         DotSwitch {
                             checked: (Config.glyphBarEvents ?? [])
-                                .indexOf(parent.modelData.id) >= 0
+                                .indexOf(source.modelData.id) >= 0
                             onToggled: Config.toggleGlyphEvent(
-                                parent.modelData.id)
+                                source.modelData.id)
+                        }
+                    }
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.topMargin: Theme.px(4)
+                    spacing: Theme.px(8)
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 0
+                        NText { text: "Instead of the popups" }
+                        NText {
+                            Layout.fillWidth: true
+                            text: "No notification card, no volume pill: the "
+                                + "bar has already said it"
+                            color: Theme.c.onDim
+                            font.pixelSize: Theme.f.tiny
+                            wrapMode: Text.WordWrap
+                        }
+                    }
+
+                    DotSwitch {
+                        checked: Config.glyphBarQuiet
+                        onToggled: (v) => {
+                            Config.glyphBarQuiet = v;
+                            Config.save();
                         }
                     }
                 }
@@ -236,7 +270,9 @@ Rectangle {
                     model: GlyphBar.segments
 
                     RowLayout {
+                        id: slot
                         required property int index
+
                         Layout.fillWidth: true
                         spacing: Theme.px(8)
                         visible: (Config.glyphBarEvents ?? [])
@@ -244,7 +280,7 @@ Rectangle {
 
                         NLabel {
                             Layout.preferredWidth: Theme.px(16)
-                            text: String(parent.index + 1)
+                            text: String(slot.index + 1)
                         }
 
                         // Cycles rather than opening a menu: eight
@@ -254,14 +290,14 @@ Rectangle {
                             Layout.fillWidth: true
                             maxWidth: Theme.px(150)
                             text: GlyphBar.channelLabel(
-                                (Config.glyphBarChannels ?? [])[parent.index] ?? "off")
+                                (Config.glyphBarChannels ?? [])[slot.index] ?? "off")
                             onActivated: {
                                 const list = GlyphBar.channels;
-                                const cur = (Config.glyphBarChannels ?? [])[parent.index] ?? "off";
+                                const cur = (Config.glyphBarChannels ?? [])[slot.index] ?? "off";
                                 let at = list.findIndex(c => c.id === cur);
                                 if (at < 0)
                                     at = 0;
-                                Config.setBarChannel(parent.index,
+                                Config.setBarChannel(slot.index,
                                     list[(at + 1) % list.length].id);
                             }
                         }

@@ -41,6 +41,11 @@ Singleton {
     function flash(which: string): void {
         if (!root.armed || !Config.osdEnabled)
             return;
+        // The Glyph Bar shows the volume as a gauge across its segments,
+        // so the pill in the middle of the screen is the same reading
+        // twice.
+        if (which === "volume" && GlyphBar.replaces("volume"))
+            return;
         root.mode = which;
         root.shown = true;
         if (which === "charge") {

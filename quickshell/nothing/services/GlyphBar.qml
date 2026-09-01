@@ -64,6 +64,17 @@ Singleton {
             && (Config.glyphBarEvents ?? []).indexOf(id) >= 0;
     }
 
+    // Whether the bar has taken over telling you about something, so the
+    // on-screen version can stand down.
+    //
+    // Tied to the individual source, not to the bar as a whole. Switch off
+    // Volume and the OSD comes back, because otherwise turning a source
+    // off would leave you with nothing telling you at all, which is a
+    // strange thing for a switch labelled "Volume" to do.
+    function replaces(id: string): bool {
+        return Config.glyphBarQuiet && root.wants(id);
+    }
+
     // ── What a segment shows during a reveal ──────────────────────────
     readonly property var channels: [
         { id: "battery", label: "Battery",  hint: "Charge remaining" },

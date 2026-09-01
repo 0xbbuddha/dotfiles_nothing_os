@@ -167,6 +167,7 @@ Singleton {
     property alias glyphBarLevel: a.glyphBarLevel
     property alias glyphBarChannels: a.glyphBarChannels
     property alias glyphBarEvents: a.glyphBarEvents
+    property alias glyphBarQuiet: a.glyphBarQuiet
 
     function toggleGlyphEvent(id: string): void {
         const list = (a.glyphBarEvents ?? []).slice();
@@ -502,6 +503,7 @@ Singleton {
         a.glyphBarChannels = ["battery", "volume", "cpu",
                               "ram", "net", "notifs"];
         a.glyphBarEvents = ["volume", "notify", "recording", "reveal"];
+        a.glyphBarQuiet = true;
         a.glyphToys = [
             "clock", "battery", "system", "notices", "counter",
             "dice", "timer", "pendulum", "visualizer"
@@ -725,6 +727,9 @@ Singleton {
             // that it is dark until it matters.
             property var glyphBarEvents: ["volume", "notify",
                                           "recording", "reveal"]
+            // On by default: if the bar is saying it, the card and the OSD
+            // are saying it a second time, louder, over your work.
+            property bool glyphBarQuiet: true
             property var    glyphToys: [
                 "clock", "battery", "system", "notices", "counter",
                 "dice", "timer", "pendulum", "visualizer"
