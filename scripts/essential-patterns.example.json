@@ -1,0 +1,23 @@
+{
+  "_note": "Copy to ~/.config/nothing/essential-patterns.json and edit. Any key you leave out keeps its English default. Values under 'task' are plain substrings; the rest are regular expressions, except 'weekdays', which maps a name to its index with Monday at 0. This example adds French to the English defaults.",
+
+  "task": ["todo", "to-do", "to do", "remind", "reminder", "deadline",
+           "appointment", "meeting", "follow up", "don't forget",
+           "dont forget", "need to", "must ", "chase",
+           "rappel", "rappelle", "n'oublie", "oublie pas", "il faut",
+           "faut que", "a faire", "tache", "rdv", "rendez-vous",
+           "reunion", "echeance", "pense a"],
+
+  "today": "\\b(today|aujourd['’]?hui)\\b",
+  "tomorrow": "\\b(tomorrow|demain)\\b",
+  "overmorrow": "\\b(day after tomorrow|apr[eè]s[-\\s]?demain)\\b",
+  "evening": "\\b(tonight|this evening|ce soir)\\b",
+  "morning": "\\b(this morning|ce matin)\\b",
+
+  "weekdays": {
+    "monday": 0, "tuesday": 1, "wednesday": 2, "thursday": 3,
+    "friday": 4, "saturday": 5, "sunday": 6,
+    "lundi": 0, "mardi": 1, "mercredi": 2, "jeudi": 3,
+    "vendredi": 4, "samedi": 5, "dimanche": 6
+  }
+}

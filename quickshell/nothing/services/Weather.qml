@@ -38,7 +38,10 @@ Singleton {
     readonly property string endpoint: {
         const c = (Config.weatherCity || "").trim();
         const path = encodeURIComponent(c).replace(/%20/g, "+");
-        return "https://wttr.in/" + path + "?format=j1&lang=fr";
+        // English, because every other string in this shell is. wttr
+        // was answering in French, so the widgets read "PLUIE EPARSE A
+        // PROXIMITE" beside labels that said HIGH and LOW.
+        return "https://wttr.in/" + path + "?format=j1&lang=en";
     }
 
     function refresh(): void {
@@ -69,7 +72,7 @@ Singleton {
                     root.temp = parseInt(cur.temp_C);
                     root.hi = parseInt(day.maxtempC);
                     root.lo = parseInt(day.mintempC);
-                    root.desc = cur.lang_fr?.[0]?.value ?? cur.weatherDesc?.[0]?.value ?? "";
+                    root.desc = cur.weatherDesc?.[0]?.value ?? "";
                     const typed = (Config.weatherCity || "").trim();
                     root.city = typed.length > 0
                         ? typed

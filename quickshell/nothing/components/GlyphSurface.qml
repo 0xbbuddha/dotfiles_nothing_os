@@ -50,10 +50,223 @@ Rectangle {
                 }
             }
 
+            // Exclusive: turning one on turns the other off. Turning one
+            // off leaves both off, which is allowed.
             DotSwitch {
                 visible: root.sid === "matrix"
                 checked: Config.glyphEnabled
-                onToggled: (v) => { Config.glyphEnabled = v; Config.save(); }
+                onToggled: (v) => Config.enableGlyph("matrix", v)
+            }
+
+            DotSwitch {
+                visible: root.sid === "bar"
+                checked: Config.glyphBarEnabled
+                onToggled: (v) => Config.enableGlyph("bar", v)
+            }
+        }
+
+        // ── Bar ───────────────────────────────────────────────────────
+        RowLayout {
+            Layout.fillWidth: true
+            visible: root.sid === "bar" && Config.glyphBarEnabled
+            spacing: Theme.px(14)
+
+            // The strip itself, live, at the size it fits. A row of names
+            // would not tell you what any of it looks like, and this is
+            // the one setting whose result is entirely visual.
+            // The bar itself, in the state it is in on the desktop, at the
+            // proportions it has there. It ran a looping demonstration at
+            // first, which made the panel livelier and was a lie: the
+            // desktop bar is dark, and a preview that is never dark is not
+            // a preview. Clicking it fires a reveal, which lights this and
+            // the real one together.
+            Item {
+                readonly property real pad: Theme.px(5)
+
+                Layout.preferredHeight: Theme.px(190)
+                Layout.preferredWidth: Math.round(
+                    (height - 2 * pad) / GlyphBar.aspect + 2 * pad)
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: Theme.px(4)
+                    color: "#0b0b0b"
+                }
+
+                GlyphBarStrip {
+                    anchors.fill: parent
+                    anchors.margins: parent.pad
+                    onColor: "#ffffff"
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: GlyphBar.reveal()
+                }
+            }
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignTop
+                spacing: Theme.px(8)
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Theme.px(10)
+                    NLabel { text: "Length"; Layout.preferredWidth: Theme.px(58) }
+                    DotSlider {
+                        Layout.fillWidth: true
+                        count: 12
+                        value: (Config.glyphBarLength - 180) / 320
+                        display: Config.glyphBarLength + " px"
+                        onMoved: (v) => {
+                            Config.glyphBarLength = Math.round(180 + v * 320);
+                            Config.save();
+                        }
+                    }
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Theme.px(10)
+                    NLabel { text: "Brightness"; Layout.preferredWidth: Theme.px(58) }
+                    SegmentedControl {
+                        Layout.fillWidth: true
+                        options: [
+                            { label: "Low",    value: "0" },
+                            { label: "Medium", value: "1" },
+                            { label: "High",   value: "2" }
+                        ]
+                        current: String(Config.glyphBarLevel)
+                        onPicked: (v) => {
+                            Config.glyphBarLevel = parseInt(v);
+                            Config.save();
+                        }
+                    }
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Theme.px(10)
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 0
+                        NText { text: "Always above windows" }
+                        NText {
+                            Layout.fillWidth: true
+                            text: "It rises for an event either way"
+                            color: Theme.c.onDim
+                            elide: Text.ElideRight
+                        }
+                    }
+                    DotSwitch {
+                        checked: Config.glyphBarAbove
+                        onToggled: (v) => {
+                            Config.glyphBarAbove = v;
+                            Config.save();
+                        }
+                    }
+                    NPillButton {
+                        text: "Recenter"
+                        onActivated: {
+                            Config.glyphBarX = -1;
+                            Config.glyphBarY = -1;
+                            Config.save();
+                        }
+                    }
+                }
+
+                NLabel { text: "What lights it"; Layout.topMargin: Theme.px(4) }
+                NText {
+                    Layout.fillWidth: true
+                    text: "The bar is dark otherwise. Switch off anything you "
+                        + "would rather not be told about."
+                    color: Theme.c.onFaint
+                    font.pixelSize: Theme.f.tiny
+                    wrapMode: Text.WordWrap
+                }
+
+                Repeater {
+                    model: GlyphBar.sources
+
+                    RowLayout {
+                        required property var modelData
+                        Layout.fillWidth: true
+                        spacing: Theme.px(8)
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 0
+                            NText { text: parent.modelData.label }
+                            NText {
+                                Layout.fillWidth: true
+                                text: parent.parent.modelData.hint
+                                color: Theme.c.onDim
+                                font.pixelSize: Theme.f.tiny
+                                elide: Text.ElideRight
+                            }
+                        }
+
+                        DotSwitch {
+                            checked: (Config.glyphBarEvents ?? [])
+                                .indexOf(parent.modelData.id) >= 0
+                            onToggled: Config.toggleGlyphEvent(
+                                parent.modelData.id)
+                        }
+                    }
+                }
+
+                // Only the reveal reads these, so they are hidden with it.
+                NLabel {
+                    text: "Segments"
+                    Layout.topMargin: Theme.px(4)
+                    visible: (Config.glyphBarEvents ?? []).indexOf("reveal") >= 0
+                }
+                NText {
+                    Layout.fillWidth: true
+                    visible: (Config.glyphBarEvents ?? []).indexOf("reveal") >= 0
+                    text: "Top to bottom, as they sit on the strip"
+                    color: Theme.c.onFaint
+                    font.pixelSize: Theme.f.tiny
+                    wrapMode: Text.WordWrap
+                }
+
+                Repeater {
+                    model: GlyphBar.segments
+
+                    RowLayout {
+                        required property int index
+                        Layout.fillWidth: true
+                        spacing: Theme.px(8)
+                        visible: (Config.glyphBarEvents ?? [])
+                            .indexOf("reveal") >= 0
+
+                        NLabel {
+                            Layout.preferredWidth: Theme.px(16)
+                            text: String(parent.index + 1)
+                        }
+
+                        // Cycles rather than opening a menu: eight
+                        // choices is short enough to walk, and a popover
+                        // inside a popover is two dismissals to get wrong.
+                        NPillButton {
+                            Layout.fillWidth: true
+                            maxWidth: Theme.px(150)
+                            text: GlyphBar.channelLabel(
+                                (Config.glyphBarChannels ?? [])[parent.index] ?? "off")
+                            onActivated: {
+                                const list = GlyphBar.channels;
+                                const cur = (Config.glyphBarChannels ?? [])[parent.index] ?? "off";
+                                let at = list.findIndex(c => c.id === cur);
+                                if (at < 0)
+                                    at = 0;
+                                Config.setBarChannel(parent.index,
+                                    list[(at + 1) % list.length].id);
+                            }
+                        }
+                    }
+                }
             }
         }
 

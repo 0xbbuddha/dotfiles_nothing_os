@@ -74,7 +74,7 @@ Singleton {
         { key: "launcher",     label: "External launcher", page: 3, words: "launcher rofi wofi run" },
 
         // ── Network ───────────────────────────────────────────────────
-        { key: "wifi",      label: "Wi-Fi",     page: 4, words: "wifi wireless network internet password mot passe" },
+        { key: "wifi",      label: "Wi-Fi",     page: 4, words: "wifi wireless network internet password" },
         { key: "bluetooth", label: "Bluetooth", page: 4, words: "bluetooth bt headset pair" },
 
         // ── Game ──────────────────────────────────────────────────────

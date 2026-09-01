@@ -69,6 +69,20 @@ ShellRoot {
         GlyphWidget { above: true }
     }
 
+    // Both layers, always, and both stay mapped. The widget decides which
+    // of the two paints and takes input: see GlyphBarWidget.showing.
+    Variants {
+        model: (Config.glyphBarEnabled && !root.shellHidden)
+            ? Quickshell.screens : []
+        GlyphBarWidget { above: false }
+    }
+
+    Variants {
+        model: (Config.glyphBarEnabled && !root.shellHidden)
+            ? Quickshell.screens : []
+        GlyphBarWidget { above: true }
+    }
+
     // Panels exist on every screen and only show on the focused one:
     // opening settings from the secondary display shows them there, not
     // on the primary.

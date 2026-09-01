@@ -107,7 +107,7 @@ PanelWindow {
 
                             NText {
                                 Layout.alignment: Qt.AlignHCenter
-                                text: btn.waiting ? "Confirmer ?" : btn.modelData.label
+                                text: btn.waiting ? "Confirm?" : btn.modelData.label
                                 color: btn.waiting ? Theme.c.on : Theme.c.onDim
                                 font.pixelSize: Theme.f.tiny
                             }

@@ -19,6 +19,12 @@ Singleton {
             label: "Glyph Matrix",
             hint: "The disc, and the toys it carries",
             glyph: "󰧵"
+        },
+        {
+            id: "bar",
+            label: "Glyph Bar",
+            hint: "Six readings and the camera light",
+            glyph: "󰕾"
         }
     ]
 

@@ -101,6 +101,13 @@ Singleton {
     }
     function remove(id: string): void { root.run(["remove", id]); }
     function mind(id: string): void { root.run(["mind", id, Config.mindBackend]); }
+
+    // Set when a capture has just been written and a real backend is
+    // configured. The model reads a note in whatever language it was
+    // written in, which the local patterns cannot; leaving it on a button
+    // meant that in practice it almost never ran, and every capture was
+    // dated by keyword matching or not at all.
+    property bool mindPending: false
     function wipe(): void { root.run(["wipe"]); }
 
     function probeKey(): void {
@@ -327,6 +334,19 @@ Singleton {
                     root.items = [];
                 }
                 root.stamp++;
+
+                if (root.mindPending) {
+                    root.mindPending = false;
+                    // The newest capture the model has not seen. Picking
+                    // by timestamp rather than by list position, because
+                    // the order is the caller's business, not this one's.
+                    const fresh = root.items
+                        .filter(it => (it?.mind ?? "stub") === "stub")
+                        .sort((a, b) => String(b.at ?? "")
+                            .localeCompare(String(a.at ?? "")))[0];
+                    if (fresh)
+                        root.mind(fresh.id);
+                }
             }
         }
     }
@@ -337,6 +357,12 @@ Singleton {
             onStreamFinished: {
                 root.busy = false;
                 root.status = text.trim();
+                // Only after a capture, and only with a backend that can
+                // answer. "mind" itself prints Mind, so this cannot arm
+                // itself in a loop.
+                if (root.status.startsWith("Saved")
+                        && Config.mindBackend !== "stub")
+                    root.mindPending = true;
                 root.refresh();
                 if (root.reopen && (root.status.startsWith("Saved")
                         || root.status === "Mind")) {

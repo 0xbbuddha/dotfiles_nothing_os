@@ -22,8 +22,8 @@ SettingsPage {
         stdout: StdioCollector {
             onStreamFinished: {
                 const l = text.trim().split("\n");
-                page.hyprVersion = l[0] ?? "inconnu";
-                page.qsVersion = (l[1] ?? "").replace(/\s*\(.*$/, "") || "inconnu";
+                page.hyprVersion = l[0] ?? "Unknown";
+                page.qsVersion = (l[1] ?? "").replace(/\s*\(.*$/, "") || "Unknown";
             }
         }
     }

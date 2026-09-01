@@ -156,6 +156,57 @@ Singleton {
     property alias glyphToy: a.glyphToy
     property alias glyphToys: a.glyphToys
 
+    // The Glyph Bar: its own placement, because it is a different shape
+    // from the Matrix and sharing one position would put a tall strip
+    // where a round disc used to be.
+    property alias glyphBarEnabled: a.glyphBarEnabled
+    property alias glyphBarX: a.glyphBarX
+    property alias glyphBarY: a.glyphBarY
+    property alias glyphBarLength: a.glyphBarLength
+    property alias glyphBarAbove: a.glyphBarAbove
+    property alias glyphBarLevel: a.glyphBarLevel
+    property alias glyphBarChannels: a.glyphBarChannels
+    property alias glyphBarEvents: a.glyphBarEvents
+
+    function toggleGlyphEvent(id: string): void {
+        const list = (a.glyphBarEvents ?? []).slice();
+        const at = list.indexOf(id);
+        if (at >= 0)
+            list.splice(at, 1);
+        else
+            list.push(id);
+        a.glyphBarEvents = list;
+        root.save();
+    }
+
+    // One Glyph surface at a time. They are the same object on the phone,
+    // a Matrix or a Bar depending on which one you own, and two of them
+    // lit on one desktop is two things claiming to be the Glyph. Turning
+    // one off is still just off: this only forbids having both.
+    function enableGlyph(id: string, on: bool): void {
+        if (id === "matrix") {
+            a.glyphEnabled = on;
+            if (on)
+                a.glyphBarEnabled = false;
+        } else if (id === "bar") {
+            a.glyphBarEnabled = on;
+            if (on)
+                a.glyphEnabled = false;
+        }
+        root.save();
+    }
+
+    function setBarChannel(index: int, id: string): void {
+        const list = (a.glyphBarChannels ?? []).slice();
+        while (list.length < 6)
+            list.push("off");
+        if (index < 0 || index >= 6)
+            return;
+        list[index] = id;
+        a.glyphBarChannels = list;
+        root.save();
+    }
+
     function hasWidget(id: string): bool {
         return (a.widgets ?? []).includes(id);
     }
@@ -442,6 +493,15 @@ Singleton {
         a.glyphSize = 220;
         a.glyphAbove = false;
         a.glyphToy = "clock";
+        a.glyphBarEnabled = false;
+        a.glyphBarX = -1;
+        a.glyphBarY = -1;
+        a.glyphBarLength = 300;
+        a.glyphBarAbove = false;
+        a.glyphBarLevel = 1;
+        a.glyphBarChannels = ["battery", "volume", "cpu",
+                              "ram", "net", "notifs"];
+        a.glyphBarEvents = ["volume", "notify", "recording", "reveal"];
         a.glyphToys = [
             "clock", "battery", "system", "notices", "counter",
             "dice", "timer", "pendulum", "visualizer"
@@ -652,6 +712,19 @@ Singleton {
             property int    glyphSize: 220
             property bool   glyphAbove: false
             property string glyphToy: "clock"
+            property bool glyphBarEnabled: false
+            property int glyphBarX: -1
+            property int glyphBarY: -1
+            property int glyphBarLength: 300
+            property bool glyphBarAbove: false
+            property int glyphBarLevel: 1
+            property var glyphBarChannels: ["battery", "volume", "cpu",
+                                            "ram", "net", "notifs"]
+            // Power and track change are off by default: they fire often
+            // enough to become wallpaper, and the point of this bar is
+            // that it is dark until it matters.
+            property var glyphBarEvents: ["volume", "notify",
+                                          "recording", "reveal"]
             property var    glyphToys: [
                 "clock", "battery", "system", "notices", "counter",
                 "dice", "timer", "pendulum", "visualizer"

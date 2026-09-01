@@ -44,6 +44,7 @@ FILES = DIR / "files"
 LAST_RECORD = Path(os.environ.get("XDG_RUNTIME_DIR") or "/tmp") / "nothing-record.last"
 LAST_VOICE = Path(os.environ.get("XDG_RUNTIME_DIR") or "/tmp") / "nothing-voice.last"
 MIND_ENV = Path.home() / ".config" / "nothing" / "mind.env"
+PATTERNS = Path.home() / ".config" / "nothing" / "essential-patterns.json"
 CAP = 80
 
 
@@ -204,7 +205,7 @@ def mind_rules() -> str:
         "to-do, reminder, deadline, event, appointment, or mentions any date "
         "or time; date-only tasks use 09:00; else empty string), "
         "forYou (true if Essential For You should surface it: any task, "
-        "reminder, deadline, date, rendez-vous or thing to follow up; "
+        "reminder, deadline, date, appointment or thing to follow up; "
         "false for a plain memo). "
         "Library stores every capture. For You only gets forYou true or a when. "
         "No markdown.\n"
@@ -230,17 +231,60 @@ def normalise_when(value) -> str:
         return ""
 
 
+# Words that mark a capture as something to act on, and the words that
+# place it in time.
+#
+# English in the source, because everything in this project is. The notes
+# themselves are whatever language you think in, so the patterns are
+# overridable: drop a JSON file at
+#
+#     ~/.config/nothing/essential-patterns.json
+#
+# with any of the keys below and yours replace these. That keeps another
+# language out of the source without taking it away from the person
+# writing the notes. A shipped example sits beside this script.
+#
+# The AI backend does all of this better and in any language, but it only
+# runs when one is configured; these are what a capture has to work with
+# in the second before that, and what it falls back to when the model
+# returns nothing.
+DEFAULT_PATTERNS = {
+    "task": [
+        "todo", "to-do", "to do", "remind", "reminder", "deadline",
+        "appointment", "meeting", "follow up", "don't forget",
+        "dont forget", "need to", "must ", "chase",
+    ],
+    "today": r"\b(today)\b",
+    "tomorrow": r"\b(tomorrow)\b",
+    "overmorrow": r"\b(day after tomorrow)\b",
+    "evening": r"\b(tonight|this evening)\b",
+    "morning": r"\b(this morning)\b",
+    "weekdays": {
+        "monday": 0, "tuesday": 1, "wednesday": 2, "thursday": 3,
+        "friday": 4, "saturday": 5, "sunday": 6,
+    },
+}
+
+
+def patterns() -> dict:
+    """DEFAULT_PATTERNS, with the user's file layered over it."""
+    out = dict(DEFAULT_PATTERNS)
+    try:
+        user = json.loads(PATTERNS.read_text(encoding="utf-8"))
+    except Exception:
+        # Missing is the normal case, and malformed must not stop a
+        # capture: a broken preferences file is not worth losing a note.
+        return out
+    if isinstance(user, dict):
+        for k, v in user.items():
+            if k in out and isinstance(v, type(out[k])):
+                out[k] = v
+    return out
+
+
 def task_intent(blob: str) -> bool:
     t = (blob or "").lower()
-    keys = (
-        "rappel", "rappelle", "n'oublie", "n oublie", "oublie pas",
-        "il faut", "faut que", "à faire", "a faire", "tache", "tâche",
-        "todo", "to-do", "to do", "remind", "reminder", "deadline",
-        "rdv", "rendez-vous", "rendez vous", "appointment", "meeting",
-        "réunion", "reunion", "échéance", "echeance", "follow up",
-        "n'oubliez", "pense à", "pense a",
-    )
-    return any(k in t for k in keys)
+    return any(k in t for k in patterns()["task"])
 
 
 def infer_when(blob: str) -> str:
@@ -250,22 +294,18 @@ def infer_when(blob: str) -> str:
     now = clock()
     day = now
     found_day = False
-    if re.search(r"\b(apr[eè]s[-\s]?demain|day after tomorrow)\b", t):
+    pat = patterns()
+    # Overmorrow first: "day after tomorrow" contains "tomorrow".
+    if re.search(pat["overmorrow"], t):
         day = now + timedelta(days=2)
         found_day = True
-    elif re.search(r"\b(demain|tomorrow)\b", t):
+    elif re.search(pat["tomorrow"], t):
         day = now + timedelta(days=1)
         found_day = True
-    elif re.search(r"\b(aujourd['’]?hui|today)\b", t):
+    elif re.search(pat["today"], t):
         found_day = True
     else:
-        week = {
-            "lundi": 0, "monday": 0, "mardi": 1, "tuesday": 1,
-            "mercredi": 2, "wednesday": 2, "jeudi": 3, "thursday": 3,
-            "vendredi": 4, "friday": 4, "samedi": 5, "saturday": 5,
-            "dimanche": 6, "sunday": 6,
-        }
-        for name, idx in week.items():
+        for name, idx in pat["weekdays"].items():
             if re.search(rf"\b{name}\b", t):
                 delta = (idx - now.weekday()) % 7
                 day = now + timedelta(days=delta)
@@ -288,9 +328,9 @@ def infer_when(blob: str) -> str:
             if ampm.group(2) == "pm":
                 hour += 12
             found_time = True
-    if re.search(r"\b(ce soir|tonight|this evening)\b", t) and not found_time:
+    if re.search(pat["evening"], t) and not found_time:
         hour, minute, found_time = 20, 0, True
-    if re.search(r"\b(ce matin|this morning)\b", t) and not found_time:
+    if re.search(pat["morning"], t) and not found_time:
         hour, minute, found_time = 9, 0, True
 
     if not found_day and not found_time:
@@ -373,8 +413,8 @@ def gemini_parts(entry: dict) -> list:
     if kind == "voice":
         prompt = (
             "This is a spoken voice note. Transcribe it fully, then organise it. "
-            "Spoken dates are often relative (demain, lundi, 15h, tomorrow, "
-            "next week) or tasks (il faut, n'oublie pas, remind me). Those "
+            "Spoken dates are often relative (tomorrow, monday, 3pm, "
+            "next week) or tasks (remind me, don't forget, I must). Those "
             "must set when and forYou true so they appear in For You.\n"
             + mind_rules()
             + f"Kind: {kind}\n"
