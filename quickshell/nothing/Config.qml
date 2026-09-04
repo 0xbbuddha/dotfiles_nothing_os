@@ -167,67 +167,20 @@ Singleton {
     property alias glyphBarAbove: a.glyphBarAbove
     // Shared by every event-driven Glyph surface: only one is ever lit, so
     // which sources you care about is a property of you, not of the shape.
-    property alias glyphEvents: a.glyphEvents
-    property alias glyphQuiet: a.glyphQuiet
-    property alias glyphLevel: a.glyphLevel
-    property alias glyphChannels: a.glyphChannels
-    property alias glyphPatterns: a.glyphPatterns
-    property alias glyphCustom: a.glyphCustom
-
-    function addGlyphCustom(label: string, steps: var): string {
-        const list = (a.glyphCustom ?? []).slice();
-        // Time-stamped rather than counted: deleting one and composing
-        // another must not hand out an id a source is still pointing at.
-        const id = "own-" + Date.now().toString(36);
-        list.push({ id: id, label: label, steps: steps });
-        a.glyphCustom = list;
-        root.save();
-        return id;
-    }
-
-    function removeGlyphCustom(id: string): void {
-        a.glyphCustom = (a.glyphCustom ?? []).filter(c => c.id !== id);
-        // Anything pointing at it falls back, or a deleted rhythm would
-        // leave a source silently doing nothing.
-        const map = {};
-        for (const k in (a.glyphPatterns ?? {}))
-            map[k] = a.glyphPatterns[k] === id ? "double" : a.glyphPatterns[k];
-        a.glyphPatterns = map;
-        root.save();
-    }
-
-    // Which rhythm a source plays. Per source, because that is the whole
-    // point of the Glyph Interface: two short flashes means one thing and
-    // a long one means another, and you choose which is which.
-    // Validated where it is played, not here: a composed pattern lives in
-    // this file, so asking the built-in library whether it exists would
-    // have thrown every custom rhythm away on the next read.
-    function glyphPattern(source: string): string {
-        const p = (a.glyphPatterns ?? {})[source];
-        return (typeof p === "string" && p !== "") ? p : "double";
-    }
-
-    function setGlyphPattern(source: string, pattern: string): void {
-        const out = {};
-        // Rebuilt rather than mutated: assigning into the stored object
-        // does not mark the adapter dirty, so the change never reached
-        // disk.
-        for (const k in (a.glyphPatterns ?? {}))
-            out[k] = a.glyphPatterns[k];
-        out[source] = pattern;
-        a.glyphPatterns = out;
-        root.save();
-    }
-
-    function stepGlyphPattern(source: string, by: int): void {
-        const list = GlyphEvents.patterns;
-        const cur = root.glyphPattern(source);
-        let at = list.findIndex(p => p.id === cur);
-        if (at < 0)
-            at = 0;
-        root.setGlyphPattern(source,
-            list[(at + by + list.length) % list.length].id);
-    }
+    // Per surface. Shared at first, on the reasoning that only one Glyph
+    // is on at a time so the settings belong to you rather than the shape.
+    // Two things were wrong with that: switching surface carried over
+    // choices made for a different one, and the channel list cannot be
+    // shared at all, because the Strip has three sectors and the Bar six.
+    //
+    // Composed rhythms stay common: a rhythm addresses zone groups, so it
+    // plays on any of the three.
+    // What you are counting to. One countdown, not a list: the widget
+    // system keys on the id, so a second countdown would be a second
+    // widget, and Nothing's own is one per placed card too.
+    property alias countdownLabel: a.countdownLabel
+    property alias countdownDate: a.countdownDate
+    property alias countdownShape: a.countdownShape
 
     // The Glyph Strip: the ring of arcs around the camera, Phone (3a).
     property alias glyphStripEnabled: a.glyphStripEnabled
@@ -236,24 +189,160 @@ Singleton {
     property alias glyphStripSize: a.glyphStripSize
     property alias glyphStripAbove: a.glyphStripAbove
 
-    function toggleGlyphEvent(id: string): void {
-        const list = (a.glyphEvents ?? []).slice();
+    property alias glyphCustom: a.glyphCustom
+
+    readonly property var glyphSurfaces: ["matrix", "bar", "strip"]
+
+    // Only these three sources have a rhythm to choose. The others are not
+    // events with a shape: a level, a state that lasts, a snapshot.
+    readonly property var glyphRhythmSources: ["notify", "battery", "media"]
+
+    // Spelled out rather than reached by name. Building the property name
+    // and indexing the adapter with it read every value as its default:
+    // bracket access does not resolve these. Verbose, and it works.
+    function _list(v: var): var {
+        if (!v || typeof v !== "object" || v.length === undefined)
+            return null;
+        const out = [];
+        for (let i = 0; i < v.length; i++)
+            out.push(v[i]);
+        return out;
+    }
+
+    function glyphEventsOf(surface: string): var {
+        switch (surface) {
+        case "matrix": return root._list(a.glyphEventsMatrix) ?? [];
+        case "strip":  return root._list(a.glyphEventsStrip) ?? [];
+        default:       return root._list(a.glyphEventsBar) ?? [];
+        }
+    }
+
+    function toggleGlyphEvent(surface: string, id: string): void {
+        const list = root.glyphEventsOf(surface);
         const at = list.indexOf(id);
         if (at >= 0)
             list.splice(at, 1);
         else
             list.push(id);
-        a.glyphEvents = list;
+        switch (surface) {
+        case "matrix": a.glyphEventsMatrix = list; break;
+        case "strip":  a.glyphEventsStrip = list; break;
+        default:       a.glyphEventsBar = list; break;
+        }
         root.save();
     }
 
-    // One Glyph surface at a time. They are the same object on the phone,
-    // a Matrix or a Bar depending on which one you own, and two of them
-    // lit on one desktop is two things claiming to be the Glyph. Turning
-    // one off is still just off: this only forbids having both.
-    // The surfaces in the order a shortcut walks them. "" is all off,
-    // which has to be one of the stops: cycling that cannot reach silence
-    // is a cycle you have to open a panel to escape.
+    function glyphQuietOf(surface: string): bool {
+        switch (surface) {
+        case "matrix": return a.glyphQuietMatrix;
+        case "strip":  return a.glyphQuietStrip;
+        default:       return a.glyphQuietBar;
+        }
+    }
+
+    function setGlyphQuiet(surface: string, on: bool): void {
+        switch (surface) {
+        case "matrix": a.glyphQuietMatrix = on; break;
+        case "strip":  a.glyphQuietStrip = on; break;
+        default:       a.glyphQuietBar = on; break;
+        }
+        root.save();
+    }
+
+    function glyphLevelOf(surface: string): int {
+        switch (surface) {
+        case "matrix": return a.glyphLevelMatrix;
+        case "strip":  return a.glyphLevelStrip;
+        default:       return a.glyphLevelBar;
+        }
+    }
+
+    function setGlyphLevel(surface: string, level: int): void {
+        const v = Math.max(0, Math.min(2, level));
+        switch (surface) {
+        case "matrix": a.glyphLevelMatrix = v; break;
+        case "strip":  a.glyphLevelStrip = v; break;
+        default:       a.glyphLevelBar = v; break;
+        }
+        root.save();
+    }
+
+    function glyphChannelsOf(surface: string): var {
+        switch (surface) {
+        case "matrix": return root._list(a.glyphChannelsMatrix) ?? [];
+        case "strip":  return root._list(a.glyphChannelsStrip) ?? [];
+        default:       return root._list(a.glyphChannelsBar) ?? [];
+        }
+    }
+
+    function setGlyphChannel(surface: string, index: int, id: string): void {
+        const list = root.glyphChannelsOf(surface);
+        while (list.length < 6)
+            list.push("off");
+        if (index < 0 || index >= 6)
+            return;
+        list[index] = id;
+        switch (surface) {
+        case "matrix": a.glyphChannelsMatrix = list; break;
+        case "strip":  a.glyphChannelsStrip = list; break;
+        default:       a.glyphChannelsBar = list; break;
+        }
+        root.save();
+    }
+
+    // Validated where it is played, not here: a composed pattern lives in
+    // this file, so asking the built-in library whether it exists would
+    // have thrown every custom rhythm away on the next read.
+    function glyphPattern(surface: string, source: string): string {
+        let p = "";
+        if (surface === "matrix")
+            p = source === "battery" ? a.glyphPatternMatrixBattery
+              : source === "media"   ? a.glyphPatternMatrixMedia
+              :                        a.glyphPatternMatrixNotify;
+        else if (surface === "strip")
+            p = source === "battery" ? a.glyphPatternStripBattery
+              : source === "media"   ? a.glyphPatternStripMedia
+              :                        a.glyphPatternStripNotify;
+        else
+            p = source === "battery" ? a.glyphPatternBarBattery
+              : source === "media"   ? a.glyphPatternBarMedia
+              :                        a.glyphPatternBarNotify;
+        return (typeof p === "string" && p !== "") ? p : "double";
+    }
+
+    function setGlyphPattern(surface: string, source: string,
+                             pattern: string): void {
+        if (surface === "matrix") {
+            if (source === "battery")   a.glyphPatternMatrixBattery = pattern;
+            else if (source === "media") a.glyphPatternMatrixMedia = pattern;
+            else                         a.glyphPatternMatrixNotify = pattern;
+        } else if (surface === "strip") {
+            if (source === "battery")   a.glyphPatternStripBattery = pattern;
+            else if (source === "media") a.glyphPatternStripMedia = pattern;
+            else                         a.glyphPatternStripNotify = pattern;
+        } else {
+            if (source === "battery")   a.glyphPatternBarBattery = pattern;
+            else if (source === "media") a.glyphPatternBarMedia = pattern;
+            else                         a.glyphPatternBarNotify = pattern;
+        }
+        root.save();
+    }
+
+    function stepGlyphPattern(surface: string, source: string, by: int): void {
+        const list = GlyphEvents.patterns;
+        const cur = root.glyphPattern(surface, source);
+        let at = list.findIndex(p => p.id === cur);
+        if (at < 0)
+            at = 0;
+        root.setGlyphPattern(surface, source,
+            list[(at + by + list.length) % list.length].id);
+    }
+
+    // ── Which Glyph is on ─────────────────────────────────────────────
+    //
+    // The order a shortcut walks them. "" is all off, and it has to be one
+    // of the stops: a cycle that cannot reach silence is one you have to
+    // open a panel to escape.
     readonly property var glyphOrder: ["", "matrix", "bar", "strip"]
 
     function activeGlyph(): string {
@@ -275,6 +364,9 @@ Singleton {
         return next;
     }
 
+    // One at a time: they are the same object on the phone, a Matrix or a
+    // Bar or a ring depending which you own. Turning one off leaves them
+    // all off, which is allowed; this only forbids having two.
     function enableGlyph(id: string, on: bool): void {
         if (id === "matrix")
             a.glyphEnabled = on;
@@ -285,8 +377,6 @@ Singleton {
         else
             return;
 
-        // Turning one on turns the rest off. Turning one off leaves them
-        // all off, which is allowed.
         if (on) {
             if (id !== "matrix") a.glyphEnabled = false;
             if (id !== "bar")    a.glyphBarEnabled = false;
@@ -295,14 +385,60 @@ Singleton {
         root.save();
     }
 
-    function setGlyphChannel(index: int, id: string): void {
-        const list = (a.glyphChannels ?? []).slice();
-        while (list.length < 6)
-            list.push("off");
-        if (index < 0 || index >= 6)
+    function addGlyphCustom(label: string, steps: var): string {
+        const list = (a.glyphCustom ?? []).slice();
+        // Time-stamped rather than counted: deleting one and composing
+        // another must not hand out an id a source is still pointing at.
+        const id = "own-" + Date.now().toString(36);
+        list.push({ id: id, label: label, steps: steps });
+        a.glyphCustom = list;
+        root.save();
+        return id;
+    }
+
+    function removeGlyphCustom(id: string): void {
+        a.glyphCustom = (a.glyphCustom ?? []).filter(c => c.id !== id);
+        // Anything pointing at it falls back, on every surface, or a
+        // deleted rhythm would leave a source silently doing nothing.
+        for (const surface of root.glyphSurfaces)
+            for (const source of root.glyphRhythmSources)
+                if (root.glyphPattern(surface, source) === id)
+                    root.setGlyphPattern(surface, source, "double");
+        root.save();
+    }
+
+    // Cities on the world clock. Ordered, because the widget reads them
+    // top to bottom, and capped at four because that is what the card can
+    // hold without the rows closing up.
+    readonly property int worldClockMax: 4
+
+    function hasCity(zone: string): bool {
+        return (a.worldClocks ?? []).indexOf(zone) >= 0;
+    }
+
+    function toggleCity(zone: string): void {
+        if (!zone) return;
+        const list = (a.worldClocks ?? []).slice();
+        const at = list.indexOf(zone);
+        if (at >= 0)
+            list.splice(at, 1);
+        else if (list.length < root.worldClockMax)
+            list.push(zone);
+        else
+            return;             // full: drop one first, silently doing it
+                                // for them would lose a city they chose.
+        a.worldClocks = list;
+        root.save();
+    }
+
+    function moveCity(index: int, by: int): void {
+        const list = (a.worldClocks ?? []).slice();
+        const to = index + by;
+        if (index < 0 || index >= list.length || to < 0 || to >= list.length)
             return;
-        list[index] = id;
-        a.glyphChannels = list;
+        const [it] = list.splice(index, 1);
+        list.splice(to, 0, it);
+        a.worldClocks = list;
         root.save();
     }
 
@@ -349,48 +485,6 @@ Singleton {
         else
             list.push(id);
         a.widgets = list;
-        root.save();
-    }
-
-    // What you are counting to. One countdown, not a list: the widget
-    // system keys on the id, so a second countdown would be a second
-    // widget, and Nothing's own is one per placed card too.
-    property alias countdownLabel: a.countdownLabel
-    property alias countdownDate: a.countdownDate
-    property alias countdownShape: a.countdownShape
-
-    // Cities on the world clock. Ordered, because the widget reads them
-    // top to bottom, and capped at four because that is what the card can
-    // hold without the rows closing up.
-    readonly property int worldClockMax: 4
-
-    function hasCity(zone: string): bool {
-        return (a.worldClocks ?? []).indexOf(zone) >= 0;
-    }
-
-    function toggleCity(zone: string): void {
-        if (!zone) return;
-        const list = (a.worldClocks ?? []).slice();
-        const at = list.indexOf(zone);
-        if (at >= 0)
-            list.splice(at, 1);
-        else if (list.length < root.worldClockMax)
-            list.push(zone);
-        else
-            return;             // full: drop one first, silently doing it
-                                // for them would lose a city they chose.
-        a.worldClocks = list;
-        root.save();
-    }
-
-    function moveCity(index: int, by: int): void {
-        const list = (a.worldClocks ?? []).slice();
-        const to = index + by;
-        if (index < 0 || index >= list.length || to < 0 || to >= list.length)
-            return;
-        const [it] = list.splice(index, 1);
-        list.splice(to, 0, it);
-        a.worldClocks = list;
         root.save();
     }
 
@@ -597,14 +691,15 @@ Singleton {
         a.glyphBarY = -1;
         a.glyphBarLength = 300;
         a.glyphBarAbove = false;
-        a.glyphEvents = ["volume", "notify", "recording", "reveal"];
-        a.glyphQuiet = true;
-        a.glyphPatterns = ({ notify: "double", battery: "blink",
-                             media: "blink" });
+        for (const surface of root.glyphSurfaces) {
+            root.toggleGlyphEvent(surface, "");   // no-op, keeps the shape
+            root.setGlyphQuiet(surface, true);
+            root.setGlyphLevel(surface, 1);
+            root.setGlyphPattern(surface, "notify", "double");
+            root.setGlyphPattern(surface, "battery", "blink");
+            root.setGlyphPattern(surface, "media", "blink");
+        }
         a.glyphCustom = [];
-        a.glyphLevel = 1;
-        a.glyphChannels = ["battery", "volume", "cpu",
-                           "ram", "net", "notifs"];
         a.glyphStripEnabled = false;
         a.glyphStripX = -1;
         a.glyphStripY = -1;
@@ -636,21 +731,9 @@ Singleton {
             console.info("Config: dockApps migrated to .desktop identifiers");
         }
 
-        // The Bar owned the event settings before the Strip existed, and
-        // only one surface is ever lit, so they are shared now. Carry the
-        // old keys over rather than silently resetting someone's choices.
-        if (a.glyphBarEvents !== undefined && (a.glyphBarEvents ?? []).length > 0) {
-            a.glyphEvents = a.glyphBarEvents;
-            a.glyphBarEvents = [];
-            root.save();
-            console.info("Config: glyphBarEvents is now glyphEvents");
-        }
-        if (a.glyphBarChannels !== undefined && (a.glyphBarChannels ?? []).length > 0) {
-            a.glyphChannels = a.glyphBarChannels;
-            a.glyphBarChannels = [];
-            root.save();
-            console.info("Config: glyphBarChannels is now glyphChannels");
-        }
+        // These were one flat set shared by every surface. Per surface
+        // now, so the same values become each one's starting point rather
+        // than being reset: nobody loses what they had chosen.
 
         // The old column widget "glyph" is now a disc toy.
         let widgets = a.widgets ?? [];
@@ -841,30 +924,45 @@ Singleton {
             property int glyphBarY: -1
             property int glyphBarLength: 300
             property bool glyphBarAbove: false
-            property var glyphChannels: ["battery", "volume", "cpu",
-                                         "ram", "net", "notifs"]
-            // Power and track change are off by default: they fire often
-            // enough to become wallpaper, and the point of these surfaces
-            // is that they are dark until it matters.
-            property var glyphEvents: ["volume", "notify",
-                                       "recording", "reveal"]
-            // On by default: if the Glyph is saying it, the card and the
-            // OSD are saying it a second time, louder, over your work.
-            property bool glyphQuiet: true
-            // Nothing's own default for a notification is two short
-            // flashes; power and media get one, because they happen
-            // often and do not need a signature.
-            property var glyphPatterns: ({ notify: "double",
-                                           battery: "blink",
-                                           media: "blink" })
+            // Per surface, one property each, spelled out.
+            //
+            // Not a map keyed by surface: a JsonAdapter property declared
+            // with an empty object default never loads anything from the
+            // file, so every nested map read back as {} and every setting
+            // silently fell to its default. The properties that do work
+            // here all have a concrete default, so these do too.
+            property var glyphEventsMatrix: ["volume", "notify", "recording", "reveal"]
+            property var glyphEventsBar:    ["volume", "notify", "recording", "reveal"]
+            property var glyphEventsStrip:  ["volume", "notify", "recording", "reveal"]
+
+            property var glyphChannelsMatrix: ["battery", "volume", "cpu", "ram", "net", "notifs"]
+            property var glyphChannelsBar:    ["battery", "volume", "cpu", "ram", "net", "notifs"]
+            property var glyphChannelsStrip:  ["battery", "volume", "cpu", "ram", "net", "notifs"]
+
+            // One string per surface per source, not a map. A JsonAdapter
+            // var declared with an object default never loads from the
+            // file; one declared with a list does. Strings always do.
+            property string glyphPatternMatrixNotify:  "double"
+            property string glyphPatternMatrixBattery: "blink"
+            property string glyphPatternMatrixMedia:   "blink"
+            property string glyphPatternBarNotify:     "double"
+            property string glyphPatternBarBattery:    "blink"
+            property string glyphPatternBarMedia:      "blink"
+            property string glyphPatternStripNotify:   "double"
+            property string glyphPatternStripBattery:  "blink"
+            property string glyphPatternStripMedia:    "blink"
+
+            property bool glyphQuietMatrix: true
+            property bool glyphQuietBar: true
+            property bool glyphQuietStrip: true
+
+            property int glyphLevelMatrix: 1
+            property int glyphLevelBar: 1
+            property int glyphLevelStrip: 1
+
             // Composed in the launcher. { id, label, steps }.
             property var glyphCustom: []
-            property int glyphLevel: 1
 
-            // Legacy, read once by migrate() then left empty. Kept so an
-            // older config still hands its settings over.
-            property var glyphBarEvents: []
-            property var glyphBarChannels: []
 
             property bool glyphStripEnabled: false
             property int glyphStripX: -1

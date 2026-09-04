@@ -17,6 +17,40 @@ Singleton {
     property bool gpuSeen: false
     property string kernel: ""
 
+    // Which distribution this is, from os-release. Its ID_LIKE matters as
+    // much as its name: EndeavourOS is Arch underneath, and the mark worth
+    // showing is the one the system actually descends from.
+    property string distro: ""
+    property string distroId: ""
+    property string distroLike: ""
+    property string host: ""
+
+    // Seconds since boot at the moment it was read, plus when that was, so
+    // the figure stays live without a process polling for it.
+    property real bootUptime: 0
+    property real bootReadAt: 0
+
+    readonly property real uptime: {
+        void Time.now;
+        return root.bootUptime > 0
+            ? root.bootUptime + (Date.now() / 1000 - root.bootReadAt) : 0;
+    }
+
+    function prettyUptime(): string {
+        const s = Math.max(0, Math.floor(root.uptime));
+        const d = Math.floor(s / 86400);
+        const h = Math.floor((s % 86400) / 3600);
+        const m = Math.floor((s % 3600) / 60);
+        if (d > 0) return d + "d " + h + "h";
+        if (h > 0) return h + "h " + m + "m";
+        return m + "m";
+    }
+
+    readonly property string distroMark: {
+        const all = (root.distroId + " " + root.distroLike).toLowerCase();
+        return all.indexOf("arch") >= 0 ? "archLinux" : "";
+    }
+
     // Memory in KiB, like /proc/meminfo. The recap shows used/free/total.
     property real ramTotalKb: 1
     property real ramFreeKb: 0
@@ -72,6 +106,29 @@ Singleton {
 
     property int _prevTotal: 0
     property int _prevIdle: 0
+
+    // Read once. None of it changes while the session runs, so polling it
+    // beside the CPU would be four processes an hour for nothing.
+    NProcess {
+        running: true
+        command: ["sh", "-c",
+            ". /etc/os-release 2>/dev/null;"
+            + " printf '%s\\n%s\\n%s\\n%s\\n'"
+            + " \"${PRETTY_NAME:-$NAME}\" \"$ID\" \"$ID_LIKE\" \"$(uname -r)\";"
+            + " uname -n; cut -d. -f1 /proc/uptime"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const l = text.split("\n");
+                root.distro = (l[0] ?? "").trim();
+                root.distroId = (l[1] ?? "").trim();
+                root.distroLike = (l[2] ?? "").trim();
+                root.kernel = (l[3] ?? "").trim();
+                root.host = (l[4] ?? "").trim();
+                root.bootUptime = parseFloat(l[5] ?? "0") || 0;
+                root.bootReadAt = Date.now() / 1000;
+            }
+        }
+    }
 
     NProcess {
         id: probe

@@ -153,8 +153,12 @@ PanelWindow {
         NCard {
             id: sheet
             anchors.centerIn: parent
-            width: Math.min(parent.width - Theme.px(60), Theme.px(790))
-            height: Math.min(parent.height - Theme.px(60), Theme.px(560))
+            // The same box as the Nothing Launcher. They are the two
+            // panels this desktop is configured from, and a settings sheet
+            // two thirds the size of the launcher read as the lesser of
+            // the two rather than its equal.
+            width: Math.min(Theme.px(1240), parent.width - Theme.px(96))
+            height: Math.min(Theme.px(860), parent.height - Theme.px(80))
             clip: true
 
             scale: win.visible ? 1 : 0.97
@@ -179,16 +183,23 @@ PanelWindow {
                     Layout.bottomMargin: Theme.px(10)
                     spacing: Theme.px(14)
 
-                    DisplayText {
-                        text: "SETTINGS"
-                        size: Theme.px(22)
+                    ColumnLayout {
+                        spacing: Theme.px(2)
+                        NLabel { text: "N O T H I N G" }
+                        NText {
+                            text: "Settings"
+                            font.pixelSize: Theme.px(30)
+                            font.family: Theme.f.display
+                        }
                     }
+
+                    Item { Layout.preferredWidth: Theme.px(8) }
 
                     // ── Search ────────────────────────────────────────
                     Rectangle {
                         Layout.fillWidth: true
-                        Layout.maximumWidth: Theme.px(280)
-                        implicitHeight: Theme.px(28)
+                        Layout.maximumWidth: Theme.px(380)
+                        implicitHeight: Theme.px(34)
                         radius: Theme.r.pill
                         color: Theme.c.surface2
                         border.width: 1
@@ -211,7 +222,7 @@ PanelWindow {
                                 id: search
                                 Layout.fillWidth: true
                                 implicitWidth: 0
-                                implicitHeight: Theme.px(24)
+                                implicitHeight: Theme.px(30)
                                 color: "transparent"
                                 border.width: 0
                                 placeholder: "Search every setting"
@@ -254,11 +265,11 @@ PanelWindow {
                         // maximumWidth is required: without it the rail eats
                         // all space, the page stack having no implicit width
                         // (its children are Flickables).
-                        Layout.preferredWidth: Theme.px(108)
-                        Layout.maximumWidth: Theme.px(108)
+                        Layout.preferredWidth: Theme.px(232)
+                        Layout.maximumWidth: Theme.px(232)
                         Layout.fillHeight: true
-                        Layout.margins: Theme.px(9)
-                        spacing: Theme.px(2)
+                        Layout.margins: Theme.px(14)
+                        spacing: Theme.px(3)
 
                         opacity: win.searching ? 0.35 : 1
                         Behavior on opacity { NumberAnimation { duration: Theme.fast } }
@@ -273,41 +284,41 @@ PanelWindow {
                                 readonly property bool active: stack.currentIndex === index
 
                                 Layout.fillWidth: true
-                                implicitHeight: Theme.px(56)
-                                radius: Theme.r.chip
+                                implicitHeight: Theme.px(50)
+                                radius: Theme.px(4)
                                 color: nav.active ? Theme.c.surface2
                                      : (nma.containsMouse ? Theme.c.surface2 : "transparent")
                                 Behavior on color { ColorAnimation { duration: Theme.fast } }
 
-                                // Witness dot for the current section: it
-                                // breathes, the only continuously animated
-                                // thing on the panel.
+                                // A red rule down the edge, the same mark
+                                // the launcher's rail uses. It replaced a
+                                // breathing dot: with the rail three times
+                                // wider the dot floated in space, and two
+                                // panels marking the same idea two
+                                // different ways is one idea too many.
                                 Rectangle {
                                     anchors.left: parent.left
-                                    anchors.leftMargin: Theme.px(6)
                                     anchors.verticalCenter: parent.verticalCenter
-                                    width: Theme.px(4)
-                                    height: width
-                                    radius: width / 2
+                                    width: Theme.px(2)
+                                    height: nav.active ? Theme.px(24) : 0
+                                    radius: 1
                                     color: Theme.c.red
-                                    opacity: nav.active ? 1 : 0
-                                    Behavior on opacity { NumberAnimation { duration: Theme.fast } }
-
-                                    SequentialAnimation on scale {
-                                        running: nav.active
-                                        loops: Animation.Infinite
-                                        NumberAnimation { to: 1.6; duration: 900; easing.type: Easing.InOutQuad }
-                                        NumberAnimation { to: 1.0; duration: 900; easing.type: Easing.InOutQuad }
+                                    Behavior on height {
+                                        NumberAnimation {
+                                            duration: Theme.fast
+                                            easing.type: Theme.ease
+                                        }
                                     }
                                 }
 
-                                ColumnLayout {
-                                    anchors.centerIn: parent
-                                    anchors.horizontalCenterOffset: Theme.px(4)
-                                    spacing: Theme.px(6)
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.leftMargin: Theme.px(16)
+                                    anchors.rightMargin: Theme.px(14)
+                                    spacing: Theme.px(12)
 
                                     DotMatrix {
-                                        Layout.alignment: Qt.AlignHCenter
+                                        Layout.alignment: Qt.AlignVCenter
                                         pattern: nav.modelData.glyph
                                         dot: Theme.px(2.5)
                                         gap: Theme.px(2)
@@ -316,10 +327,11 @@ PanelWindow {
                                         offOpacity: 0.22
                                     }
 
-                                    NLabel {
-                                        Layout.alignment: Qt.AlignHCenter
+                                    NText {
+                                        Layout.fillWidth: true
                                         text: nav.modelData.label
                                         color: nav.active ? Theme.c.on : Theme.c.onDim
+                                        elide: Text.ElideRight
                                     }
                                 }
 

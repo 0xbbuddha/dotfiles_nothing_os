@@ -128,9 +128,8 @@ PanelWindow {
 
             onWheel: (w) => {
                 w.accepted = true;
-                Config.glyphLevel = Math.max(0, Math.min(2,
-                    Config.glyphLevel + (w.angleDelta.y > 0 ? 1 : -1)));
-                Config.save();
+                Config.setGlyphLevel("strip", Config.glyphLevelOf("strip")
+                    + (w.angleDelta.y > 0 ? 1 : -1));
             }
         }
     }

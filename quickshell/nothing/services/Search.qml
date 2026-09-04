@@ -265,13 +265,18 @@ Singleton {
     // another Nothing tool tomorrow and it shows up here on its own,
     // without this file being edited.
     readonly property var nothingSurfaces: [
-        { label: "Nothing Launcher", icon: "󰧵", hint: "Widgets and the Glyph Matrix",
+        // vector, where Nothing has an icon of its own: see NothingIcons.
+        // The font glyph stays as the fallback for everything else.
+        { label: "Nothing Launcher", icon: "󰧵", vector: "nothingLauncher",
+          hint: "Widgets and the Glyph Matrix",
           run: () => { GlobalState.closeAll(); GlobalState.launcherNothingOpen = true; } },
         { label: "Control centre", icon: "󰕾", hint: "Panel under the bar",
           run: () => { GlobalState.closeAll(); GlobalState.controlCenterOpen = true; } },
-        { label: "Essential Space", icon: "󰠮", hint: "Captures and notes",
+        { label: "Essential Space", icon: "󰠮", vector: "essentialSpace",
+          hint: "Captures and notes",
           run: () => { GlobalState.closeAll(); GlobalState.essentialOpen = true; } },
-        { label: "Essential Apps", icon: "󰀻", hint: "Your mini apps",
+        { label: "Essential Apps", icon: "󰀻", vector: "essentialApps",
+          hint: "Your mini apps",
           run: () => { GlobalState.closeAll(); GlobalState.appsOpen = true; } },
         { label: "Glyph settings", icon: "󰍹", hint: "Matrix and light effects",
           run: () => GlobalState.settingsOpen = true },
@@ -356,7 +361,7 @@ Singleton {
                     continue;
                 out.push({
                     kind: "action", title: s.label, subtitle: s.hint,
-                    icon: s.icon, run: s.run
+                    icon: s.icon, vector: s.vector ?? "", run: s.run
                 });
             }
             return out;

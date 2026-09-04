@@ -23,6 +23,58 @@ trap 'rm -rf "$WORK"' EXIT
 
 command -v qs >/dev/null 2>&1 || { echo "qs (quickshell) not found" >&2; exit 1; }
 
+# Calls into a singleton are resolved at run time, so deleting a function
+# still compiles and only fails when someone clicks the thing. That has now
+# happened twice: a block edit took Config.enableGlyph with it, and later
+# every widget function, leaving the launcher's switches inert. Checked by
+# name here instead.
+python3 - "$SHELL_DIR" <<'MEMBERS'
+import collections, os, re, sys
+
+root = sys.argv[1]
+decl = {}
+for dp, dn, fn in os.walk(root):
+    for f in fn:
+        if not f.endswith(".qml"):
+            continue
+        src = open(os.path.join(dp, f), encoding="utf-8").read()
+        if "pragma Singleton" not in src:
+            continue
+        # Only what the singleton declares at its own indent. A property
+        # inside its JsonAdapter is not reachable as Config.x without an
+        # alias, and counting those hid exactly that bug: the Strip lost
+        # all five of its aliases and nothing noticed.
+        names = set(re.findall(r"^    function\s+(\w+)\s*\(", src, re.M))
+        names |= set(re.findall(r"^    (?:readonly\s+)?property\s+(?:alias\s+)?[\w<>.]+\s+(\w+)\s*[:{]", src, re.M))
+        names |= set(re.findall(r"^    signal\s+(\w+)", src, re.M))
+        decl[f[:-4]] = names
+
+bad = collections.defaultdict(set)
+for dp, dn, fn in os.walk(root):
+    for f in fn:
+        if not f.endswith(".qml"):
+            continue
+        p = os.path.join(dp, f)
+        src = open(p, encoding="utf-8").read()
+        for sing, names in decl.items():
+            if f == sing + ".qml":
+                continue
+            for m in re.finditer(r"\b%s\.(\w+)" % sing, src):
+                # "Config.qml" in a comment is not a member reference
+                if m.group(1) not in names and m.group(1) != "qml":
+                    bad[sing].add((m.group(1), os.path.relpath(p, root)))
+
+for sing in sorted(bad):
+    for member, where in sorted(bad[sing]):
+        print("MISSING %s.%s referenced by %s" % (sing, member, where),
+              file=sys.stderr)
+sys.exit(1 if bad else 0)
+MEMBERS
+if [[ $? -ne 0 ]]; then
+    echo "a singleton member is referenced but not declared." >&2
+    exit 1
+fi
+
 # A type name is global across every directory the shell imports, so two
 # files with the same basename are one type and the loser is unreachable.
 # A services/Battery.qml quietly displaced components/glyph/Battery.qml and

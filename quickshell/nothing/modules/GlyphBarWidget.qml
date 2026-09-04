@@ -103,9 +103,8 @@ PanelWindow {
     }
 
     function stepLevel(delta: int): void {
-        Config.glyphLevel =
-            Math.max(0, Math.min(2, Config.glyphLevel + delta));
-        Config.save();
+        Config.setGlyphLevel("bar",
+            Config.glyphLevelOf("bar") + delta);
     }
 
     Item {

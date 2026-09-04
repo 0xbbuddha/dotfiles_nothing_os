@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import ".."
 import "../services"
+import "glyph"
 
 // One Glyph surface in the launcher. Today that is the Matrix; the strip
 // and the progress bar will be further entries in GlyphRegistry, and this
@@ -150,24 +151,6 @@ Rectangle {
                     }
                 }
 
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: Theme.px(10)
-                    NLabel { text: "Brightness"; Layout.preferredWidth: Theme.px(58) }
-                    SegmentedControl {
-                        Layout.fillWidth: true
-                        options: [
-                            { label: "Low",    value: "0" },
-                            { label: "Medium", value: "1" },
-                            { label: "High",   value: "2" }
-                        ]
-                        current: String(Config.glyphLevel)
-                        onPicked: (v) => {
-                            Config.glyphLevel = parseInt(v);
-                            Config.save();
-                        }
-                    }
-                }
 
                 RowLayout {
                     Layout.fillWidth: true
@@ -281,201 +264,55 @@ Rectangle {
             }
         }
 
-        // ── Shared by every event-driven surface ──────────────────────
-        //
-        // Only one Glyph is ever lit, so which sources you care about and
-        // how bright they are belong to you, not to the shape. Keeping a
-        // copy per surface would have meant setting them twice and finding
-        // out later that they had drifted.
-        ColumnLayout {
+        // ── Matrix ────────────────────────────────────────────────────
+        RowLayout {
             Layout.fillWidth: true
-            Layout.maximumWidth: Theme.px(640)
-            spacing: Theme.px(10)
-            visible: (root.sid === "bar" && Config.glyphBarEnabled)
-                || (root.sid === "strip" && Config.glyphStripEnabled)
+            visible: root.sid === "matrix" && Config.glyphEnabled
+            spacing: Theme.px(14)
 
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Theme.px(10)
-                NLabel { text: "Brightness"; Layout.preferredWidth: Theme.px(58) }
-                SegmentedControl {
-                    Layout.fillWidth: true
-                    Layout.maximumWidth: Theme.px(320)
-                    options: [
-                        { label: "Low",    value: "0" },
-                        { label: "Medium", value: "1" },
-                        { label: "High",   value: "2" }
-                    ]
-                    current: String(Config.glyphLevel)
-                    onPicked: (v) => {
-                        Config.glyphLevel = parseInt(v);
-                        Config.save();
-                    }
+            // The disc itself, running the toy you have chosen, at the
+            // proportions it has on the desktop. It had no preview at all
+            // while the Bar and the Strip both did, so this was the one
+            // page that described a thing without ever showing it.
+            Item {
+                Layout.alignment: Qt.AlignTop
+                Layout.preferredWidth: Theme.px(150)
+                Layout.preferredHeight: Theme.px(150)
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: width / 2
+                    color: "#0b0b0b"
+                }
+
+                GlyphMatrix {
+                    anchors.fill: parent
+                    anchors.margins: Theme.px(8)
+                    toy: matrixPreview.toy
+                    // Always white on the black plate, whatever the theme:
+                    // following Theme.c.on painted the dots black on black.
+                    onColor: "#ffffff"
+                }
+
+                // The same toy the desktop disc runs, so the preview
+                // cannot show something the real one does not.
+                QtObject {
+                    id: matrixPreview
+                    readonly property var toy: previewClock
+                }
+                Clock { id: previewClock }
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: GlyphEvents.reveal()
                 }
             }
 
-                NLabel { text: "What lights it"; Layout.topMargin: Theme.px(4) }
-                NText {
-                    Layout.fillWidth: true
-                    text: "The bar is dark otherwise. Switch off anything you "
-                        + "would rather not be told about."
-                    color: Theme.c.onFaint
-                    font.pixelSize: Theme.f.tiny
-                    wrapMode: Text.WordWrap
-                }
-
-                Repeater {
-                    model: GlyphEvents.sources
-
-                    // Named, not reached through parent. Counting parents
-                    // up from a nested delegate breaks the moment anything
-                    // is wrapped, and it broke here: one of these read the
-                    // label off the ColumnLayout, which has no model.
-                    RowLayout {
-                        id: source
-                        required property var modelData
-
-                        readonly property bool on: (Config.glyphEvents ?? [])
-                            .indexOf(modelData.id) >= 0
-
-                        Layout.fillWidth: true
-                        spacing: Theme.px(8)
-
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            spacing: 0
-                            NText { text: source.modelData.label }
-                            NText {
-                                Layout.fillWidth: true
-                                text: source.modelData.hint
-                                color: Theme.c.onDim
-                                font.pixelSize: Theme.f.tiny
-                                elide: Text.ElideRight
-                            }
-                        }
-
-                        // The rhythm this event plays. Cycles rather than
-                        // opening a menu: nine is short enough to walk,
-                        // and a popover inside a popover is two
-                        // dismissals to get wrong.
-                        //
-                        // Picking one plays it on the real surface. A list
-                        // of names is meaningless for something whose
-                        // entire content is timing, so choosing it is
-                        // also how you hear it.
-                        NPillButton {
-                            visible: source.modelData.rhythm === true
-                                && source.on
-                            maxWidth: Theme.px(132)
-                            text: GlyphEvents.patternLabel(
-                                Config.glyphPattern(source.modelData.id))
-                            onActivated: {
-                                Config.stepGlyphPattern(
-                                    source.modelData.id, 1);
-                                GlyphEvents.preview(Config.glyphPattern(
-                                    source.modelData.id));
-                            }
-                        }
-
-                        DotSwitch {
-                            checked: source.on
-                            onToggled: Config.toggleGlyphEvent(
-                                source.modelData.id)
-                        }
-                    }
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    Layout.topMargin: Theme.px(4)
-                    spacing: Theme.px(8)
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 0
-                        NText { text: "Instead of the popups" }
-                        NText {
-                            Layout.fillWidth: true
-                            text: "No notification card, no volume pill: the "
-                                + "bar has already said it"
-                            color: Theme.c.onDim
-                            font.pixelSize: Theme.f.tiny
-                            wrapMode: Text.WordWrap
-                        }
-                    }
-
-                    DotSwitch {
-                        checked: Config.glyphQuiet
-                        onToggled: (v) => {
-                            Config.glyphQuiet = v;
-                            Config.save();
-                        }
-                    }
-                }
-
-                GlyphComposer { Layout.fillWidth: true }
-
-                // Only the reveal reads these, so they are hidden with it.
-                NLabel {
-                    text: "Segments"
-                    Layout.topMargin: Theme.px(4)
-                    visible: (Config.glyphEvents ?? []).indexOf("reveal") >= 0
-                }
-                NText {
-                    Layout.fillWidth: true
-                    visible: (Config.glyphEvents ?? []).indexOf("reveal") >= 0
-                    text: "Top to bottom, as they sit on the strip"
-                    color: Theme.c.onFaint
-                    font.pixelSize: Theme.f.tiny
-                    wrapMode: Text.WordWrap
-                }
-
-                Repeater {
-                    // How many readings the lit surface can show: six on
-                    // the bar, three on the strip, which has three arcs
-                    // and no honest place to put a fourth.
-                    model: GlyphEvents.slots
-
-                    RowLayout {
-                        id: slot
-                        required property int index
-
-                        Layout.fillWidth: true
-                        spacing: Theme.px(8)
-                        visible: (Config.glyphEvents ?? [])
-                            .indexOf("reveal") >= 0
-
-                        NLabel {
-                            Layout.preferredWidth: Theme.px(16)
-                            text: String(slot.index + 1)
-                        }
-
-                        // Cycles rather than opening a menu: eight
-                        // choices is short enough to walk, and a popover
-                        // inside a popover is two dismissals to get wrong.
-                        NPillButton {
-                            Layout.fillWidth: true
-                            maxWidth: Theme.px(150)
-                            text: GlyphEvents.channelLabel(
-                                (Config.glyphChannels ?? [])[slot.index] ?? "off")
-                            onActivated: {
-                                const list = GlyphEvents.channels;
-                                const cur = (Config.glyphChannels ?? [])[slot.index] ?? "off";
-                                let at = list.findIndex(c => c.id === cur);
-                                if (at < 0)
-                                    at = 0;
-                                Config.setGlyphChannel(slot.index,
-                                    list[(at + 1) % list.length].id);
-                            }
-                        }
-                    }
-                }
-        }
-
-        // ── Matrix ────────────────────────────────────────────────────
         ColumnLayout {
             Layout.fillWidth: true
-            visible: root.sid === "matrix" && Config.glyphEnabled
+            Layout.maximumWidth: Theme.px(520)
+            Layout.alignment: Qt.AlignVCenter
             spacing: Theme.px(10)
 
             RowLayout {
@@ -600,6 +437,20 @@ Rectangle {
                     }
                 }
             }
+        }
+        }
+
+        // How this Glyph behaves. Back on the surface page, where it was
+        // to begin with, but the settings behind it are per surface now:
+        // the block was only a duplicate while the storage was shared.
+        GlyphBehaviour {
+            Layout.fillWidth: true
+            surface: root.sid
+            // Not the Matrix: it runs toys, it does not light on events,
+            // so a composer and a list of segments would be settings for
+            // something it does not do.
+            visible: (root.sid === "bar" && Config.glyphBarEnabled)
+                || (root.sid === "strip" && Config.glyphStripEnabled)
         }
     }
 }

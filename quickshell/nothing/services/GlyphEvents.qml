@@ -29,8 +29,11 @@ Singleton {
         : (Config.glyphStripEnabled ? "strip"
         : (Config.glyphEnabled ? "matrix" : ""))
 
-    // Only the two event-driven surfaces listen to any of this. The Matrix
-    // runs its own toys and has no use for it.
+    // The Bar and the Strip only. The Matrix was wired in here for a
+    // while and taken back out: it is a display that runs toys, not a
+    // notification light, which is the split Nothing's own hardware has.
+    // Its page carried six event switches, a rhythm composer and a list of
+    // segments that described a bar it does not have.
     readonly property bool live:
         root.surface === "bar" || root.surface === "strip"
 
@@ -63,7 +66,8 @@ Singleton {
     }
 
     function wants(id: string): bool {
-        return root.live && (Config.glyphEvents ?? []).indexOf(id) >= 0;
+        return root.live
+            && Config.glyphEventsOf(root.surface).indexOf(id) >= 0;
     }
 
     // Whether the Glyph has taken over telling you about something, so the
@@ -74,7 +78,8 @@ Singleton {
     // off would leave you with nothing telling you at all, which is a
     // strange thing for a switch labelled "Volume" to do.
     function replaces(id: string): bool {
-        return Config.glyphQuiet && root.wants(id);
+        return root.live && Config.glyphQuietOf(root.surface)
+            && root.wants(id);
     }
 
     // ── What a segment shows during a reveal ──────────────────────────
@@ -144,7 +149,7 @@ Singleton {
     function pulse(source: string): void {
         fall.stop();
         root.event = source;
-        root.play(Config.glyphPattern(source));
+        root.play(Config.glyphPattern(root.surface, source));
     }
 
     // ── Composed patterns ─────────────────────────────────────────────
@@ -219,6 +224,7 @@ Singleton {
     // see the effect of.
     readonly property int slots: root.surface === "strip" ? 3 : 6
 
+
     // Expand a group index onto a surface of `total` zones. Groups rather
     // than zones is what lets a rhythm composed on one surface play on
     // the other.
@@ -229,7 +235,7 @@ Singleton {
     }
 
     function reveal(): void {
-        const list = Config.glyphChannels ?? [];
+        const list = Config.glyphChannelsOf(root.surface);
         const out = [];
         for (let i = 0; i < root.slots; i++)
             out.push(root.reading(list[i] ?? "off"));
@@ -308,5 +314,5 @@ Singleton {
         { on: 1.00, off: 0.10 }
     ]
     readonly property var level:
-        root.levels[Math.max(0, Math.min(2, Config.glyphLevel))]
+        root.levels[Config.glyphLevelOf(root.surface)]
 }

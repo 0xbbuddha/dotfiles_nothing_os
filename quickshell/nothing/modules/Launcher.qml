@@ -572,7 +572,7 @@ PanelWindow {
                         anchors.rightMargin: Theme.px(12)
                         spacing: Theme.px(11)
 
-                        // Three possible renders depending on the result kind
+                        // Four possible renders depending on the result kind
                         Item {
                             Layout.preferredWidth: Theme.px(24)
                             Layout.preferredHeight: Theme.px(24)
@@ -591,6 +591,18 @@ PanelWindow {
                                 visible: row.modelData.kind === "emoji"
                             }
 
+                            // Nothing's own icon where there is one, so a
+                            // result for Essential Space carries the same
+                            // mark here as it does in the dock.
+                            NVectorIcon {
+                                anchors.centerIn: parent
+                                width: Theme.px(22)
+                                height: Theme.px(22)
+                                icon: row.modelData.vector ?? ""
+                                color: Theme.c.onDim
+                                visible: (row.modelData.vector ?? "") !== ""
+                            }
+
                             NIcon {
                                 anchors.centerIn: parent
                                 text: row.modelData.icon ?? ""
@@ -598,6 +610,7 @@ PanelWindow {
                                 color: row.modelData.kind === "math" ? Theme.c.red : Theme.c.onDim
                                 visible: row.modelData.kind !== "app"
                                        && row.modelData.kind !== "emoji"
+                                       && (row.modelData.vector ?? "") === ""
                             }
                         }
 

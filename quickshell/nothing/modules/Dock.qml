@@ -253,11 +253,15 @@ PanelWindow {
         Behavior on opacity { NumberAnimation { duration: Theme.fast } }
 
         readonly property var items: [
-            { key: "launcher", label: "Nothing Launcher", glyph: "" },
-            { key: "x",        label: "Nothing X",        glyph: "" },
-            { key: "space",    label: "Essential Space",  glyph: "󰠮" },
-            { key: "apps",     label: "Essential Apps",   glyph: "󰀻" },
-            { key: "search",   label: "Essential Search", glyph: "󰍉" }
+            { key: "launcher", label: "Nothing Launcher", vector: "nothingLauncher" },
+            { key: "x",        label: "Nothing X",        vector: "nothingX" },
+            // Nothing's own icons rather than a font glyph standing in for
+            // them: see NothingIcons. A Nerd Font magnifier where the real
+            // Essential Search mark belongs is the tell that gives away
+            // every reproduction of this desktop.
+            { key: "space",    label: "Essential Space",  vector: "essentialSpace" },
+            { key: "apps",     label: "Essential Apps",   vector: "essentialApps" },
+            { key: "search",   label: "Essential Search", vector: "essentialSearch" }
         ]
 
         function open(key: string): void {
@@ -304,50 +308,27 @@ PanelWindow {
                         Behavior on color { ColorAnimation { duration: Theme.fast } }
                     }
 
-                    AppIcon {
-                        anchors.centerIn: parent
-                        anchors.verticalCenterOffset: -Theme.px(2)
-                        visible: tile.modelData.key === "x"
-                        appId: "nothing-x"
-                        size: Theme.z.dockIcon
-                        opacity: tma.containsMouse ? 1 : 0.9
-                    }
-
-                    // The launcher gets the same dot mark as the dock
-                    // button that opened this shelf. The icon font had
-                    // nothing for it: the nearest glyph drew a crossed
-                    // out circle, which reads as "unavailable".
-                    Grid {
-                        anchors.centerIn: parent
-                        anchors.verticalCenterOffset: -Theme.px(2)
-                        visible: tile.modelData.key === "launcher"
-                        columns: 3
-                        spacing: Theme.px(2)
-
-                        Repeater {
-                            model: 9
-                            Rectangle {
-                                required property int index
-                                readonly property bool lit:
-                                    [0, 2, 4, 6, 8].indexOf(index) >= 0
-                                width: Theme.px(3)
-                                height: width
-                                radius: width / 2
-                                color: lit
-                                    ? (tma.containsMouse ? Theme.c.on : Theme.c.onDim)
-                                    : Theme.c.onFaint
-                                Behavior on color { ColorAnimation { duration: Theme.fast } }
-                            }
-                        }
-                    }
-
+                    // A font glyph for the entries that have no icon of
+                    // their own, Nothing's real vector for the three that
+                    // do. Both are centred the same, so a tile does not
+                    // shift when one replaces the other.
                     NIcon {
                         anchors.centerIn: parent
                         anchors.verticalCenterOffset: -Theme.px(2)
-                        visible: tile.modelData.key !== "x"
-                            && tile.modelData.key !== "launcher"
-                        text: tile.modelData.glyph
+                        visible: (tile.modelData.vector ?? "") === ""
+                        text: tile.modelData.glyph ?? ""
                         size: Theme.z.dockIcon
+                        color: tma.containsMouse ? Theme.c.on : Theme.c.onDim
+                        Behavior on color { ColorAnimation { duration: Theme.fast } }
+                    }
+
+                    NVectorIcon {
+                        anchors.centerIn: parent
+                        anchors.verticalCenterOffset: -Theme.px(2)
+                        visible: (tile.modelData.vector ?? "") !== ""
+                        icon: tile.modelData.vector ?? ""
+                        width: Theme.z.dockIcon
+                        height: Theme.z.dockIcon
                         color: tma.containsMouse ? Theme.c.on : Theme.c.onDim
                         Behavior on color { ColorAnimation { duration: Theme.fast } }
                     }

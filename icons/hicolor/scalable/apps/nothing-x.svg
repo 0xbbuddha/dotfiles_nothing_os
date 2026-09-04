@@ -1,12 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
-  <rect width="128" height="128" rx="28" fill="#0b0b0b"/>
-  <circle cx="28" cy="28" r="5.5" fill="#ffffff"/>
-  <circle cx="100" cy="28" r="5.5" fill="#ffffff"/>
-  <circle cx="46" cy="46" r="5.5" fill="#ffffff"/>
-  <circle cx="82" cy="46" r="5.5" fill="#ffffff"/>
-  <circle cx="64" cy="64" r="5.5" fill="#ffffff"/>
-  <circle cx="46" cy="82" r="5.5" fill="#ffffff"/>
-  <circle cx="82" cy="82" r="5.5" fill="#ffffff"/>
-  <circle cx="28" cy="100" r="5.5" fill="#ffffff"/>
-  <circle cx="100" cy="100" r="5.5" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Nothing X, measured off Nothing's own store render: two identical
+       capsules 359 long and 151 thick crossed at right angles on a white
+       plate, and the red disc exactly on the front bar's lower cap centre,
+       104 out along its axis. What was here before was nine dots in an X,
+       invented, which is the tell this desktop keeps trying not to give. -->
+  <rect width="512" height="512" rx="74" fill="#ffffff"/>
+  <rect x="76" y="180.5" width="359" height="151" rx="75.5"
+        transform="rotate(-45 255.5 255.5)" fill="#d1d2d2"/>
+  <rect x="76" y="180.5" width="359" height="151" rx="75.5"
+        transform="rotate(45 255.5 255.5)" fill="#1b1d1f"/>
+  <circle cx="329" cy="329" r="55.5" fill="#d71921"/>
 </svg>

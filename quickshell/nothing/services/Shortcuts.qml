@@ -24,6 +24,8 @@ Singleton {
                 { keys: ["SUPER", "I"],     label: "Settings" },
                 { keys: ["SUPER", "A"],     label: "Essential Space" },
                 { keys: ["SUPER", "ALT", "A"], label: "Essential Apps" },
+                { keys: ["SUPER", "ALT", "L"], label: "Nothing Launcher" },
+                { keys: ["SUPER", "SHIFT", "G"], label: "Next Glyph surface" },
                 { keys: ["SUPER", "/"],     label: "This cheatsheet" },
                 { keys: ["CTRL", "ALT", "Del"], label: "Session menu" }
             ]
