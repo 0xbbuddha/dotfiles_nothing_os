@@ -6,7 +6,7 @@ concrete grey, red `#d71921`, tight radii, Ndot, and a Glyph Matrix.
 Unofficial. Not affiliated with Nothing Technology Limited.
 
 Written for **Arch / EndeavourOS**, **Hyprland ≥ 0.56** (Lua config) and
-**Quickshell 0.2**.
+**Quickshell ≥ 0.3**.
 
 ## Screenshots
 
@@ -94,21 +94,39 @@ The host compositor eats `SUPER`. Optional passthrough: source
 ## What you get
 
 - **Bar, dock, control centre, settings** - one scale slider, one accent
-- **Launcher** (`SUPER`) - search on top, 10-workspace overview under it
+- **Desktop widgets** - 46 of them in 12 families: dot-matrix and dial
+  clocks, date and calendar, Quick Look, weather, photos, media, a
+  countdown on any of Nothing's twelve shapes, breathing exercises,
+  battery, network, screen time, world clock. A different look is a
+  separate widget, never a setting, so nothing changes size underneath you
+- **Nothing Launcher** (`SUPER+ALT+L`, or the dot button on the dock) -
+  where widgets and the Glyph are chosen. Every preview is the real widget
+  at its real size, not a drawing of one
+- **Glyph Interface** - three surfaces, one lit at a time:
+  - **Matrix**, the 489-dot disc, running toys (clock, battery, dice, cava…)
+  - **Bar**, six segments and the camera light, Phone (4a)
+  - **Strip**, three arcs around where the camera would be, Phone (3a)
+
+  The Bar and the Strip are dark until something happens. Which events may
+  light them, and the rhythm each one plays, is yours to set: nine rhythms
+  ship, and you can tap your own on the pads. `SUPER+SHIFT+G` cycles them
+- **Launcher** (`SUPER`) - search on top, 10-workspace overview under it.
+  `#` lists every Nothing app and surface
 - **Essential Apps** (`SUPER+ALT+A`, or the dot grid left of the clock) -
   a shelf on the opposite edge to Essential Space, mirroring the bar.
-  describe a widget in a sentence and the model writes it: a race
+  Describe a widget in a sentence and the model writes it: a race
   countdown, a tea timer, the anime airing this season with their
   posters. It reads any public JSON API, plus the desktop's own battery,
   volume, updates, notifications, workspace and Essential Space vault.
   Six are bundled, so it works with no API key. Yours sit in the right
   column of the desktop, the rice's widgets keep the left one
-- **Glyph Matrix** - 25×25 disc on the desktop (clock, battery, dice, cava…)
 - **Game bar** (`SUPER+G`) - overlay widgets you pin over a game
 - **Screenshots** - click a window, drag a rect, or click empty for the output
 - Notifications with an **Open message** action for Vesktop / Discord
 - Optional **WARP** (1.1.1.1) tile in the control centre if `warp-cli` is
   installed - `./install` offers the AUR package `cloudflare-warp-bin`
+- On an Asus ROG machine, `./install` offers the three asus-linux tools.
+  It never touches your kernel
 - Dolphin / GTK / Qt themed to match; file pickers go through xdg-desktop-portal
 - **kitty**, **fish** + starship, **fastfetch**, **mpv**, and **fontconfig** (which fonts apps pick, and greyscale anti-aliasing)
 
@@ -128,6 +146,8 @@ Settings live in `~/.config/nothing/config.json`.
 | `SUPER+I` | settings |
 | `SUPER+A` | Essential Space |
 | `SUPER+ALT+A` | Essential Apps |
+| `SUPER+ALT+L` | Nothing Launcher |
+| `SUPER+SHIFT+G` | next Glyph surface |
 | `SUPER+G` | game bar |
 | `SUPER+V` / `SUPER+.` | clipboard / emoji |
 | `SUPER+SHIFT+S` | region capture |
