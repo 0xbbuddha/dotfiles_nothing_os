@@ -9,8 +9,18 @@ hl.monitor({
 
 -- External display
 hl.monitor({
-    output   = "HDMI-A-1",
+   output   = "HDMI-A-1",
     mode     = "preferred",
     position = "auto",
     scale    = "auto",
 })
+
+-- A layout arranged in the shell's display manager (SUPER+P) and kept is
+-- written here as the same calls. It comes last so it wins over the
+-- defaults above, and the file simply does not exist until you press Keep.
+local kept = (os.getenv("HOME") or "") .. "/.config/hypr/displays.lua"
+local fh = io.open(kept)
+if fh then
+    fh:close()
+    dofile(kept)
+end

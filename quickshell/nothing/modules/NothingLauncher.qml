@@ -84,11 +84,46 @@ PanelWindow {
     }
 
     property string current: "desktop"
+
+    // ── Changing section ──────────────────────────────────────────────
+    //
+    // The pane used to swap with nothing in between, which made picking a
+    // family feel like a page reload rather than a move. It slides now, in
+    // the direction you moved in the rail: pick something lower and the
+    // new pane comes in from the right, higher and it comes from the left.
+    // The rail is the map, so the movement has to agree with it.
+    //
+    // 0 while it is arriving, 1 once it has settled. Everything else is
+    // derived from this, so there is one clock for the whole gesture.
+    property real enter: 1
+    property int enterFrom: 1
+
+    function goTo(id: string): void {
+        if (id === win.current)
+            return;
+        const from = win.shown.findIndex(s => s.id === win.current);
+        const to = win.shown.findIndex(s => s.id === id);
+        win.enterFrom = (to >= from) ? 1 : -1;
+        win.current = id;
+        arrive.restart();
+    }
+
+    NumberAnimation {
+        id: arrive
+        target: win
+        property: "enter"
+        from: 0
+        to: 1
+        duration: Theme.med
+        easing.type: Theme.ease
+    }
     readonly property var section:
         win.sections.find(s => s.id === win.current) ?? win.sections[0]
 
     // Never leave the pane on a section the filter has hidden.
     onShownChanged: {
+        // Assigned, not moved through goTo: the filter hiding your
+        // section is not a direction you chose, so it should not slide.
         if (win.shown.length > 0
                 && !win.shown.some(s => s.id === win.current))
             win.current = win.shown[0].id;
@@ -254,7 +289,7 @@ PanelWindow {
                                         MouseArea {
                                             anchors.fill: parent
                                             cursorShape: Qt.PointingHandCursor
-                                            onClicked: win.current = entry.modelData.id
+                                            onClicked: win.goTo(entry.modelData.id)
                                         }
                                     }
                                 }
@@ -329,6 +364,13 @@ PanelWindow {
                         ColumnLayout {
                             Layout.fillWidth: true
                             spacing: 0
+
+                            // The name travels with its pane. Leaving it
+                            // still while the content slid under it made
+                            // the two read as separate things.
+                            opacity: win.enter
+                            x: (1 - win.enter) * win.enterFrom * Theme.px(30)
+
                             NText {
                                 text: win.section?.label ?? ""
                                 font.pixelSize: Theme.px(26)
@@ -362,6 +404,12 @@ PanelWindow {
                             id: paneCol
                             width: pane.width
                             spacing: Theme.px(16)
+
+                            // Clipped by the Flickable, so it slides in
+                            // from beyond the edge rather than appearing
+                            // inside the panel.
+                            opacity: win.enter
+                            x: (1 - win.enter) * win.enterFrom * Theme.px(56)
 
                             // ── Desktop ───────────────────────────────
                             ColumnLayout {
@@ -466,13 +514,25 @@ PanelWindow {
                                 spacing: Theme.px(12)
 
                                 Repeater {
+                                    id: family
                                     model: (win.current ?? "").startsWith("w:")
                                         ? WidgetRegistry.inGroup(win.current.slice(2))
                                         : []
 
+                                    // Lit one after another along the same
+                                    // clock that carries the slide, so the
+                                    // family arrives as a run rather than
+                                    // all at once. The tail of the wave is
+                                    // longer than the count, or the last
+                                    // tile would still be dark when the
+                                    // movement has already stopped.
                                     WidgetChoice {
                                         required property var modelData
+                                        required property int index
+
                                         meta: modelData
+                                        opacity: Math.max(0, Math.min(1,
+                                            win.enter * (family.count + 3) - index))
                                     }
                                 }
                             }

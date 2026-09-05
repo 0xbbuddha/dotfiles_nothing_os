@@ -124,6 +124,10 @@ ShellRoot {
     Variants { model: Quickshell.screens; GameBar {} }
     Variants { model: Quickshell.screens; RegionPicker {} }
     Variants { model: Quickshell.screens; Cheatsheet {} }
+    Variants { model: Quickshell.screens; DisplayPanel {} }
+    // On every screen, deliberately: the one that went dark is the one
+    // that cannot show you the way back.
+    Variants { model: Quickshell.screens; DisplayConfirm {} }
     Variants { model: Quickshell.screens; Essential {} }
     Variants { model: Quickshell.screens; EssentialApps {} }
     Variants { model: Quickshell.screens; EssentialFly {} }
@@ -273,6 +277,27 @@ ShellRoot {
         function hide(): void { GlobalState.gameBarOpen = false; }
         function mode(): void { Game.toggle(); }
         function crosshair(): void { Config.crosshair = !Config.crosshair; Config.save(); }
+    }
+
+    IpcHandler {
+        target: "displays"
+        function toggle(): void {
+            if (GlobalState.displaysOpen) {
+                GlobalState.displaysOpen = false;
+                return;
+            }
+            GlobalState.closeAll();
+            GlobalState.displaysOpen = true;
+        }
+        function open(): void {
+            GlobalState.closeAll();
+            GlobalState.displaysOpen = true;
+        }
+        function hide(): void { GlobalState.displaysOpen = false; }
+        function refresh(): void { Displays.refresh(); }
+        function extend(): void { Displays.extend(); }
+        function duplicate(): void { Displays.duplicate(); }
+        function only(name: string): void { Displays.only(name); }
     }
 
     IpcHandler {

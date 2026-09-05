@@ -50,6 +50,9 @@ Singleton {
     property bool essentialCatching: false
     property bool polkitOpen: false
 
+    // The screens and how they are arranged: SUPER+P.
+    property bool displaysOpen: false
+
     // The Nothing Launcher: widgets and glyph surfaces in one place.
     property bool launcherNothingOpen: false
 
@@ -95,6 +98,7 @@ Singleton {
         cheatsheetOpen = false;
         essentialOpen = false;
         appsOpen = false;
+        displaysOpen = false;
         netPanel = "";
         audioPanel = false;
         lightPanel = false;

@@ -23,8 +23,8 @@ Written for **Arch / EndeavourOS**, **Hyprland ≥ 0.56** (Lua config) and
 | ![Essential Search](assets/essential-search.png) | ![Essential Space + Key](assets/essential-space-key.png) |
 | **Essential Apps** | **Game bar** |
 | ![Essential Apps](assets/essential-apps.png) | ![Game bar](assets/game-bar.png) |
-| **Dolphin** | |
-| ![File explorer](assets/file-explorer.png) | |
+| **Dolphin** | **Displays** |
+| ![File explorer](assets/file-explorer.png) | ![Displays](assets/displays.png) |
 
 ## Install
 
@@ -126,6 +126,13 @@ The host compositor eats `SUPER`. Optional passthrough: source
   volume, updates, notifications, workspace and Essential Space vault.
   Six are bundled, so it works with no API key. Yours sit in the right
   column of the desktop, the rice's widgets keep the left one
+- **Displays** (`SUPER+P`) - the arrangement Hyprland can do and never
+  offers: extend, duplicate, or one screen only, plus resolution, refresh,
+  scale and rotation per screen, and a map you drag a screen around on. It
+  snaps to its neighbours' edges. Anything that decides how a screen
+  displays is applied on approval and undoes itself after 15 seconds, so a
+  mode the panel cannot actually show does not strand you on a black
+  screen. Remember writes the layout back so it survives a reload
 - **Game bar** (`SUPER+G`) - overlay widgets you pin over a game
 - **Screenshots** - click a window, drag a rect, or click empty for the output
 - Notifications with an **Open message** action for Vesktop / Discord
@@ -153,6 +160,7 @@ Settings live in `~/.config/nothing/config.json`.
 | `SUPER+A` | Essential Space |
 | `SUPER+ALT+A` | Essential Apps |
 | `SUPER+ALT+L` | Nothing Launcher |
+| `SUPER+P` | displays: arrangement, resolution, scale, rotation |
 | `SUPER+SHIFT+G` | next Glyph surface |
 | `SUPER+G` | game bar |
 | `SUPER+V` / `SUPER+.` | clipboard / emoji |

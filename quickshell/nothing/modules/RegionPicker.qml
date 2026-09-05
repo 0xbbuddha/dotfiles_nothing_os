@@ -13,9 +13,26 @@ PanelWindow {
     id: win
     required property var modelData
 
-    readonly property var mon: {
-        Hyprland.monitors.values;
-        return Hyprland.monitorFor(modelData);
+    // Re-resolved when the monitor list changes: monitorFor() alone is a
+    // one-shot call and would keep a dead HyprlandMonitor after a hotplug.
+    //
+    // Resolved on the signal rather than by reading monitors.values inside
+    // the binding, which is what the dock and the workspace grid do. That
+    // form reads the list the call itself can extend, and Qt called it a
+    // binding loop here: this window is built at startup, while the list
+    // is still filling, where the other two are built later and never
+    // caught it. Same behaviour, no self-reference to race.
+    property var mon: null
+
+    function resolveMon(): void {
+        win.mon = Hyprland.monitorFor(win.modelData);
+    }
+
+    Component.onCompleted: win.resolveMon()
+
+    Connections {
+        target: Hyprland.monitors
+        function onValuesChanged(): void { win.resolveMon(); }
     }
     readonly property real offX: mon?.x ?? (modelData?.x ?? 0)
     readonly property real offY: mon?.y ?? (modelData?.y ?? 0)

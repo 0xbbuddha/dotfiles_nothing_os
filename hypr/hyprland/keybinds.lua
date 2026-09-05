@@ -22,6 +22,9 @@ hl.bind(mainMod .. " + A",          ipc("essential", "toggle"))
 hl.bind(mainMod .. " + ALT + A",    ipc("apps", "toggle"))
 hl.bind(mainMod .. " + G",          ipc("game", "toggle"))
 hl.bind(mainMod .. " + Slash",      ipc("cheatsheet", "toggle"))
+-- The screens: arrangement, resolution, scale, rotation, and a map
+-- you can drag them around on.
+hl.bind(mainMod .. " + P",          ipc("displays", "toggle"))
 hl.bind(mainMod .. " + ALT + G",    ipc("game", "mode"))
 -- Walks off, Matrix, Bar, Strip. The surface that comes up plays its own
 -- notification rhythm, so you can see where you landed without looking.
@@ -52,7 +55,10 @@ hl.bind(mainMod .. " + SHIFT + F",  hl.dsp.window.fullscreen({ mode = "maximized
 hl.bind(mainMod .. " + F",          hl.dsp.window.fullscreen({ mode = "fullscreen", action = "toggle" }))
 hl.bind(mainMod .. " + ALT + F",    hl.dsp.window.fullscreen_state({ internal = 0, client = 3, action = "toggle" }))
 hl.bind(mainMod .. " + ALT + Space", hl.dsp.window.float({ action = "toggle" }))
-hl.bind(mainMod .. " + P",          hl.dsp.window.pin())
+-- Pin moved off SUPER+P: that combination belongs to the screens, as
+-- it does on every other desktop. Not SUPER+ALT+P either, which
+-- hypr/passthrough.lua claims for the nested session.
+hl.bind(mainMod .. " + SHIFT + ALT + P", hl.dsp.window.pin())
 hl.bind(mainMod .. " + J",          hl.dsp.layout("togglesplit"))
 
 hl.bind(mainMod .. " + Semicolon",  hl.dsp.layout("splitratio -0.1"), { repeating = true })

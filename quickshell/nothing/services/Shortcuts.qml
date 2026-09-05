@@ -26,6 +26,7 @@ Singleton {
                 { keys: ["SUPER", "ALT", "A"], label: "Essential Apps" },
                 { keys: ["SUPER", "ALT", "L"], label: "Nothing Launcher" },
                 { keys: ["SUPER", "SHIFT", "G"], label: "Next Glyph surface" },
+                { keys: ["SUPER", "P"],     label: "Displays" },
                 { keys: ["SUPER", "/"],     label: "This cheatsheet" },
                 { keys: ["CTRL", "ALT", "Del"], label: "Session menu" }
             ]
@@ -65,7 +66,7 @@ Singleton {
                 { keys: ["SUPER", "SHIFT", "F"], label: "Maximise" },
                 { keys: ["SUPER", "D"],      label: "Vesktop" },
                 { keys: ["SUPER", "F"],      label: "Fullscreen" },
-                { keys: ["SUPER", "P"],      label: "Pin" },
+                { keys: ["SUPER", "SHIFT", "ALT", "P"], label: "Pin" },
                 { keys: ["SUPER", "J"],      label: "Toggle split" },
                 { keys: ["SUPER", "ALT", "Space"], label: "Floating" },
                 { keys: ["SUPER", "arrows"], label: "Move focus" },
