@@ -24,6 +24,7 @@ Singleton {
     property alias accent: a.accent
     property alias drawWallpaper: a.drawWallpaper
     property alias wallpaper: a.wallpaper
+    property alias wallpaperFormat: a.wallpaperFormat
 
     // ── Shown elements ────────────────────────────────────────────────
     property alias showDock: a.showDock
@@ -562,12 +563,26 @@ Singleton {
     // Shipped with the rice (clone: hypr/wallpaper.png, install: ~/.config/hypr/).
     readonly property string bundledWallpaper: Quickshell.shellPath("../../hypr/wallpaper.png")
 
+    // The bundled dot-matrix pair, chosen by name rather than by path.
+    // The same way an empty string already means hypr/wallpaper.png: what
+    // is being picked is "the shipped set", and which of its two files
+    // that is depends on the screen it lands on.
+    readonly property string dotWallpaperKey: "nothing-dots"
+    readonly property bool dotWallpaperOn:
+        (a.wallpaper ?? "").trim() === root.dotWallpaperKey
+
+    function dotWallpaperPath(wide: bool): string {
+        return Quickshell.shellPath("../../hypr/wallpapers/nothing-dots-"
+            + (wide ? "16-9" : "16-10") + ".png");
+    }
+
     // Absolute path, ~ allowed. Empty (and the old Documents path) = bundled.
-    readonly property url wallpaperUrl: {
+    readonly property url plainWallpaperUrl: {
         const w = (a.wallpaper ?? "").trim();
         const home = Quickshell.env("HOME");
         const fallback = root.bundledWallpaper;
         const isDefault = w === ""
+            || w === root.dotWallpaperKey
             || w === "~/Documents/wallpaper-nothing.png"
             || w === home + "/Documents/wallpaper-nothing.png";
         if (isDefault)
@@ -578,6 +593,31 @@ Singleton {
             return "file://" + w;
         return w;
     }
+
+    // Per screen. Wallpaper.qml is instantiated once per output, so each
+    // one can ask for the frame that fits its own shape: the 16:10 laptop
+    // and the 16:9 external stop sharing a picture cropped for neither.
+    function wallpaperUrlFor(w: real, h: real): url {
+        if (!root.dotWallpaperOn)
+            return root.plainWallpaperUrl;
+        let wide;
+        switch (a.wallpaperFormat) {
+        case "16-9":  wide = true; break;
+        case "16-10": wide = false; break;
+        // 16:10 is 1.600 and 16:9 is 1.778. The midpoint separates them,
+        // and anything wider than that (21:9, 32:9) is better served by
+        // the wider of the two.
+        default:      wide = (w / Math.max(1, h)) > 1.69; break;
+        }
+        return "file://" + root.dotWallpaperPath(wide);
+    }
+
+    // For the callers with no screen to hand (the settings preview, the
+    // workspace overview): answer for the first screen.
+    readonly property url wallpaperUrl: root.dotWallpaperOn
+        ? root.wallpaperUrlFor(Quickshell.screens[0]?.width ?? 1920,
+                               Quickshell.screens[0]?.height ?? 1200)
+        : root.plainWallpaperUrl
 
     function save(): void {
         if (!root.ready)
@@ -617,6 +657,7 @@ Singleton {
         a.accent = "#d71921";
         a.drawWallpaper = true;
         a.wallpaper = "";
+        a.wallpaperFormat = "auto";
 
         a.showDock = true;
         a.showDesktopWidgets = true;
@@ -803,8 +844,12 @@ Singleton {
             property string theme: "dark"
             property string accent: "#d71921"
             property bool   drawWallpaper: true
-            // Empty = hypr/wallpaper.png (see wallpaperUrl).
+            // Empty = hypr/wallpaper.png, "nothing-dots" = the pair in
+            // hypr/wallpapers/, anything else is a path (see wallpaperUrl).
             property string wallpaper: ""
+            // Which of the dot-matrix pair to use: "auto", "16-10" or
+            // "16-9". Only consulted when the pair is the chosen image.
+            property string wallpaperFormat: "auto"
 
             property bool showDock: true
             property bool showDesktopWidgets: true

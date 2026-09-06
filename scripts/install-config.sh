@@ -97,6 +97,9 @@ copy_file "$ROOT/hypr/hyprlock.conf"    "$CONF/hypr/hyprlock.conf"
 copy_file "$ROOT/hypr/lockstatus.sh"    "$CONF/hypr/lockstatus.sh"
 copy_file "$ROOT/hypr/passthrough.lua"  "$CONF/hypr/passthrough.lua"
 copy_file "$ROOT/hypr/wallpaper.png"    "$CONF/hypr/wallpaper.png"
+# The dot-matrix pair, one frame per screen shape. Settings picks between
+# them by name, so both have to be there.
+copy_tree "$ROOT/hypr/wallpapers"       "$CONF/hypr/wallpapers"
 
 if [[ ! -e "$CONF/hypr/custom.lua" ]]; then
     if [[ -f "$ROOT/hypr/custom.lua" ]]; then

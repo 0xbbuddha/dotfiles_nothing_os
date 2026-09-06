@@ -21,7 +21,11 @@ PanelWindow {
 
     Image {
         anchors.fill: parent
-        source: Config.wallpaperUrl
+        // Asked per screen, not once for all of them: the bundled pair
+        // has a 16:10 frame and a 16:9 one, and each output should get
+        // the one it was drawn for.
+        source: Config.wallpaperUrlFor(win.modelData?.width ?? 0,
+                                       win.modelData?.height ?? 0)
         fillMode: Image.PreserveAspectCrop
         cache: true
         asynchronous: true

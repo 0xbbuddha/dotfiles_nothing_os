@@ -139,6 +139,40 @@ SettingsPage {
         }
 
         SettingRow {
+            key: "wallpaperSet"
+            label: "Nothing dots"
+            hint: "The dot-matrix pair shipped in hypr/wallpapers"
+            NPillButton {
+                text: Config.dotWallpaperOn ? "In use" : "Use"
+                opacity: Config.dotWallpaperOn ? 0.45 : 1
+                onActivated: {
+                    if (Config.dotWallpaperOn)
+                        return;
+                    Config.wallpaper = Config.dotWallpaperKey;
+                    Config.save();
+                }
+            }
+        }
+
+        SettingRow {
+            key: "wallpaperFormat"
+            label: "Format"
+            hint: "Auto gives every screen the frame drawn for its own shape"
+            visible: Config.dotWallpaperOn
+        }
+
+        DotPicker {
+            visible: Config.dotWallpaperOn
+            options: [
+                { label: "Auto",  value: "auto" },
+                { label: "16:10", value: "16-10" },
+                { label: "16:9",  value: "16-9" }
+            ]
+            current: Config.wallpaperFormat
+            onPicked: (v) => { Config.wallpaperFormat = v; Config.save(); }
+        }
+
+        SettingRow {
             key: "wallpaper"
             label: "Image"
             hint: "Absolute path, empty = the image shipped in hypr/"

@@ -144,6 +144,14 @@ The host compositor eats `SUPER`. Optional passthrough: source
 - On an Asus ROG machine, `./install` offers the three asus-linux tools.
   It never touches your kernel
 - Dolphin / GTK / Qt themed to match; file pickers go through xdg-desktop-portal
+- Two **dot-matrix wallpapers** in `hypr/wallpapers/`, one cut for 16:10
+  and one for 16:9. Settings picks between them per screen, so the laptop
+  and the external each get the frame drawn for their own shape
+- `scripts/dot-wallpaper.py` makes more of them from any picture: black
+  ground, one red kept from the source, manga concentration lines, and a
+  vertical Japanese column set in Nothing's own dot face. What it lights
+  is the ink, not the luminance, which is what makes a drawing survive
+  being turned into dots
 - **kitty**, **fish** + starship, **mpv**, and **fontconfig** (which fonts apps pick, and greyscale anti-aliasing)
 - **fastfetch** in the same language as the rest: tracked capitals, one
   red, and a dot-matrix logo rasterised from the real vector rather than

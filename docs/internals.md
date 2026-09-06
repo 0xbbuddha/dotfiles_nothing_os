@@ -36,6 +36,9 @@ quickshell/nothing/
 scripts/                       install, session, screenshots, icons
 scripts/essential.py           Essential Space vault + Gemini helpers
 scripts/essential-app.py       Essential Apps: generate, validate, store
+scripts/dot-wallpaper.py       any picture -> a dot-matrix wallpaper
+scripts/make-fetch-logos.sh    rebuild the fastfetch dot logos
+scripts/fetch-logo.sh          pick or alternate the fastfetch logo
 theme/                         Dolphin / GTK / portal / icon seeds
 config/                        kitty, fish, starship, fastfetch, mpv, fontconfig
 install                        public installer

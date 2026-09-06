@@ -30,6 +30,8 @@ Singleton {
         { key: "accent",     label: "Accent colour",    page: 0, words: "colour color red theme" },
         { key: "wallpaper",  label: "Wallpaper image",  page: 0, words: "background picture desktop image" },
         { key: "wallpaperDraw", label: "Wallpaper drawn by the shell", page: 0, words: "background swww hyprpaper" },
+        { key: "wallpaperSet",  label: "Nothing dot-matrix wallpaper", page: 0, words: "background dots anime manga bundled shipped" },
+        { key: "wallpaperFormat", label: "Wallpaper format",  page: 0, words: "background aspect ratio 16 10 9 screen shape" },
 
         // ── Interface ─────────────────────────────────────────────────
         { key: "workspaces",      label: "Workspaces in bar",  page: 1, words: "workspace desktop bar" },
