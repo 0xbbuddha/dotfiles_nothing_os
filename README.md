@@ -25,6 +25,8 @@ Written for **Arch / EndeavourOS**, **Hyprland ≥ 0.56** (Lua config) and
 | ![Essential Apps](assets/essential-apps.png) | ![Game bar](assets/game-bar.png) |
 | **Dolphin** | **Displays** |
 | ![File explorer](assets/file-explorer.png) | ![Displays](assets/displays.png) |
+| **fastfetch** | |
+| ![fastfetch](assets/fetch.png) | |
 
 ## Install
 
@@ -141,7 +143,11 @@ The host compositor eats `SUPER`. Optional passthrough: source
 - On an Asus ROG machine, `./install` offers the three asus-linux tools.
   It never touches your kernel
 - Dolphin / GTK / Qt themed to match; file pickers go through xdg-desktop-portal
-- **kitty**, **fish** + starship, **fastfetch**, **mpv**, and **fontconfig** (which fonts apps pick, and greyscale anti-aliasing)
+- **kitty**, **fish** + starship, **mpv**, and **fontconfig** (which fonts apps pick, and greyscale anti-aliasing)
+- **fastfetch** in the same language as the rest: tracked capitals, one
+  red, and a dot-matrix logo rasterised from the real vector rather than
+  drawn by hand. `scripts/fetch-logo.sh` switches between the Arch mark,
+  the Nothing mark and your own PNG
 
 Settings live in `~/.config/nothing/config.json`.
 

@@ -1,118 +1,95 @@
 {
   "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+
+  // Nothing OS, in a terminal. Monochrome, one red, and the dot matrix
+  // doing the work colour usually does.
+  //
+  // The logo is a dot grid: lit dots white, unlit dots left visible in
+  // near-black, the way an unlit LED still shows on a Nothing panel.
+  // logos/arch.txt is the real Arch mountain and logos/nothing.txt the
+  // Nothing mark, both rasterised from their vectors by
+  // scripts/make-fetch-logos.sh rather than drawn by hand.
+  //
+  // scripts/fetch-logo.sh switches between them and the Tamaki PNG.
+  // fastfetch loads exactly one config file, so the switch edits this
+  // block rather than shipping three near-identical copies of it.
+  //
+  // Keys are tracked capitals (K E R N E L), the house's one unmistakable
+  // typographic move, and the reason this reads as designed rather than
+  // merely recoloured. Values stay plain: the label is the decoration,
+  // the answer is not.
+
+  // These two lines are what scripts/fetch-logo.sh rewrites. The markers
+  // are there so it can find them without parsing JSON that has comments
+  // in it, and so that editing them by hand stays obvious.
   "logo": {
-    "type": "kitty-direct",
-    "source": "~/.config/fastfetch/pngs/tamaki.png",
-    "height": 18
+    "type": "file",                                    // logo-type
+    "source": "~/.config/fastfetch/logos/arch.txt",    // logo-source
+    "color": { "1": "#ffffff", "2": "#262626" },
+    "padding": { "left": 2, "right": 4, "top": 1 }
   },
+
   "display": {
-    "separator": " : "
+    // No colon. Nothing sets a label and its value in two columns and
+    // lets the gap do the separating.
+    "separator": "  ",
+    // Never bold: the point of a tracked label is that it whispers, and
+    // bold capitals shout.
+    "brightColor": false,
+    // 17 clears "P A C K A G E S", the longest label, with a space to
+    // spare. Every value starts on the same column.
+    "key": { "width": 17 },
+    "color": { "keys": "#8a8a8a", "title": "#ffffff" },
+    // Number plus gauge. The stock three states go green to red, which
+    // would put two more colours on a page that has exactly one, so the
+    // healthy states are greys and only the last one is the red. It then
+    // means what red means everywhere else here: look at this.
+    "percent": {
+      "type": 11,
+      "color": { "green": "#545454", "yellow": "#8a8a8a", "red": "#d71921" }
+    },
+    "bar": {
+      "char": { "elapsed": "●", "total": "·" },
+      "border": { "left": "", "right": "" },
+      "width": 12
+    },
+    "size": { "binaryPrefix": "si" }
   },
+
   "modules": [
-    {
-      "type": "custom",
-      "format": "\u001b[36m   󰄛  コンピューター"
-    },
-    {
-      "type": "custom",
-      "format": "┌──────────────────────────────────────────┐"
-    },
-    {
-      "type": "chassis",
-      "key": "  󰇺 Chassis",
-      "format": "{2} {3}"
-    },
-    {
-      "type": "os",
-      "key": "   OS",
-      "format": "{2}",
-      "keyColor": "red"
-    },
-    {
-      "type": "kernel",
-      "key": "   Kernel",
-      "format": "{2}",
-      "keyColor": "red"
-    },
-    {
-      "type": "packages",
-      "key": "  󰏗 Packages",
-      "keyColor": "green"
-    },
-    {
-      "type": "display",
-      "key": "  󰍹 Display",
-      "format": "{1}x{2} @ {3}Hz [{7}]",
-      "keyColor": "green"
-    },
-    {
-      "type": "terminal",
-      "key": "  >_ Terminal",
-      "keyColor": "yellow"
-    },
-    {
-      "type": "wm",
-      "key": "  󱗃 WM",
-      "format": "{2}",
-      "keyColor": "yellow"
-    },
-    {
-      "type": "custom",
-      "format": "└──────────────────────────────────────────┘"
-    },
-    "break",
-    {
-      "type": "title",
-      "key": "  ",
-      "format": "{6} {7} {8}"
-    },
-    {
-      "type": "custom",
-      "format": "┌──────────────────────────────────────────┐"
-    },
-    {
-      "type": "cpu",
-      "format": "{1} @ {7}",
-      "key": "   CPU",
-      "keyColor": "blue"
-    },
-    {
-      "type": "gpu",
-      "format": "{1} {2}",
-      "key": "  󰊴 GPU",
-      "keyColor": "blue"
-    },
-    {
-      "type": "gpu",
-      "format": "{3}",
-      "key": "   GPU Driver",
-      "keyColor": "magenta"
-    },
-    {
-      "type": "memory",
-      "key": "    Memory",
-      "keyColor": "magenta"
-    },
-    {
-      "type": "command",
-      "key": "  󱦟 OS Age ",
-      "keyColor": "red",
-      "text": "birth_install=$(stat -c %W /); current=$(date +%s); time_progression=$((current - birth_install)); days_difference=$((time_progression / 86400)); echo $days_difference days"
-    },
-    {
-      "type": "uptime",
-      "key": "  󱫐 Uptime ",
-      "keyColor": "red"
-    },
-    {
-      "type": "custom",
-      "format": "└──────────────────────────────────────────┘"
-    },
-    {
-      "type": "colors",
-      "paddingLeft": 2,
-      "symbol": "circle"
-    },
-    "break"
+    { "type": "custom", "format": "\u001b[38;2;215;25;33m●\u001b[0m  \u001b[38;2;255;255;255mN O T H I N G\u001b[0m \u001b[38;2;110;110;110mO S\u001b[0m" },
+    { "type": "title", "key": " ", "format": "\u001b[38;2;255;255;255m{user-name}\u001b[0m \u001b[38;2;110;110;110mat\u001b[0m \u001b[38;2;255;255;255m{host-name}\u001b[0m" },
+    { "type": "custom", "format": "\u001b[38;2;42;42;42m──────────────────────────────────────────────\u001b[0m" },
+
+    { "type": "os",       "key": "O S",       "format": "{pretty-name} {arch}" },
+    { "type": "kernel",   "key": "K E R N E L",   "format": "{release}" },
+    { "type": "packages", "key": "P A C K A G E S" },
+    { "type": "uptime",   "key": "U P T I M E" },
+    // Birth time is 0 on a filesystem that does not record one, which
+    // would otherwise report the machine as 20805 days old.
+    { "type": "command",  "key": "A G E",
+      "text": "b=$(stat -c %W / 2>/dev/null); if [ \"${b:-0}\" -gt 0 ] 2>/dev/null; then echo $(( ( $(date +%s) - b ) / 86400 )) days; else echo unknown; fi" },
+
+    { "type": "custom", "format": "\u001b[38;2;42;42;42m──────────────────────────────────────────────\u001b[0m" },
+
+    { "type": "wm",       "key": "W M",       "format": "{pretty-name}" },
+    { "type": "shell",    "key": "S H E L L",    "format": "{pretty-name} {version}" },
+    { "type": "terminal", "key": "T E R M",     "format": "{pretty-name}" },
+    // Named, because this desktop is usually driving two and two
+    // identical "S C R E E N" lines say nothing about which is which.
+    { "type": "display",  "key": "S C R E E N",
+      "format": "{width}x{height} at {refresh-rate} Hz  \u001b[38;2;110;110;110m{name}\u001b[0m" },
+
+    { "type": "custom", "format": "\u001b[38;2;42;42;42m──────────────────────────────────────────────\u001b[0m" },
+
+    { "type": "cpu",    "key": "C P U",    "format": "{name}" },
+    { "type": "gpu",    "key": "G P U",    "format": "{name}" },
+    { "type": "memory", "key": "M E M O R Y" },
+    { "type": "disk",   "key": "D I S K",   "folders": "/" }
+
+    // No palette row. It is the one line this file cannot keep
+    // monochrome: it prints whatever sixteen colours the terminal
+    // happens to hold, and on a theme generated from a wallpaper that is
+    // eight pastels under a page built around a single red.
   ]
 }
