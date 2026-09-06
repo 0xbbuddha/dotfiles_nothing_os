@@ -31,8 +31,8 @@ Written for **Arch / EndeavourOS**, **Hyprland ≥ 0.56** (Lua config) and
 ## Install
 
 ```bash
-git clone https://github.com/<you>/nothing.git
-cd nothing
+git clone https://github.com/0xbbuddha.fr/dotfiles_nothing_os.git ~/hypr_nothing
+cd hypr_nothing
 ./install
 ```
 
@@ -51,6 +51,7 @@ no symlinks):
 | `~/.config/theme/` | Dolphin / GTK / portal seeds |
 | `~/.config/kitty/` | terminal (Nothing colours) |
 | `~/.config/fish/conf.d/nothing.fish` | greeting, starship, aliases |
+| `~/.config/fish/functions/fastfetch.fish` | rotates the fetch logo |
 | `~/.config/starship.toml` | prompt |
 | `~/.config/fastfetch/` | fetch |
 | `~/.config/mpv/` | player |
@@ -146,8 +147,10 @@ The host compositor eats `SUPER`. Optional passthrough: source
 - **kitty**, **fish** + starship, **mpv**, and **fontconfig** (which fonts apps pick, and greyscale anti-aliasing)
 - **fastfetch** in the same language as the rest: tracked capitals, one
   red, and a dot-matrix logo rasterised from the real vector rather than
-  drawn by hand. `scripts/fetch-logo.sh` switches between the Arch mark,
-  the Nothing mark and your own PNG
+  drawn by hand. `scripts/fetch-logo.sh` picks between the Arch mark, the
+  Nothing mark and your own PNG, and
+  `scripts/fetch-logo.sh alternate arch tamaki` shows a different one
+  each run
 
 Settings live in `~/.config/nothing/config.json`.
 

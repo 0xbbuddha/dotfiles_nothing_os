@@ -77,8 +77,10 @@ echo "-> ~/.config/starship.toml"
 copy_file "$ROOT/config/starship.toml" "$CONF/starship.toml"
 
 echo "-> ~/.config/fish"
-mkdir -p "$CONF/fish/conf.d"
+mkdir -p "$CONF/fish/conf.d" "$CONF/fish/functions"
 copy_file "$ROOT/config/fish/conf.d/nothing.fish" "$CONF/fish/conf.d/nothing.fish"
+# Autoloaded by name, so it works without touching an existing config.fish.
+copy_file "$ROOT/config/fish/functions/fastfetch.fish" "$CONF/fish/functions/fastfetch.fish"
 if [[ ! -e "$CONF/fish/config.fish" ]]; then
     copy_file "$ROOT/config/fish/config.fish" "$CONF/fish/config.fish"
 else

@@ -10,21 +10,27 @@
   // Nothing mark, both rasterised from their vectors by
   // scripts/make-fetch-logos.sh rather than drawn by hand.
   //
-  // scripts/fetch-logo.sh switches between them and the Tamaki PNG.
-  // fastfetch loads exactly one config file, so the switch edits this
-  // block rather than shipping three near-identical copies of it.
+  // scripts/fetch-logo.sh switches between them and your own PNG. It
+  // rewrites the "logo" block below: fastfetch loads exactly one config
+  // file, so the alternative would be three near-identical copies of
+  // this one.
+  //
+  // `fetch-logo.sh alternate arch tamaki` shows a different one each
+  // run. That cannot live here at all, for the same reason: the file is
+  // read once and names one logo. The list goes to
+  // ~/.config/fastfetch/logo and fish/functions/fastfetch.fish reads it
+  // per run, so outside fish this block is still what you get.
   //
   // Keys are tracked capitals (K E R N E L), the house's one unmistakable
   // typographic move, and the reason this reads as designed rather than
   // merely recoloured. Values stay plain: the label is the decoration,
   // the answer is not.
 
-  // These two lines are what scripts/fetch-logo.sh rewrites. The markers
-  // are there so it can find them without parsing JSON that has comments
-  // in it, and so that editing them by hand stays obvious.
   "logo": {
-    "type": "file",                                    // logo-type
-    "source": "~/.config/fastfetch/logos/arch.txt",    // logo-source
+    "type": "file",
+    "source": "~/.config/fastfetch/logos/arch.txt",
+    // $1 is a lit dot, $2 an unlit one. The grid carries its own size,
+    // so no width or height here: giving one would stretch it.
     "color": { "1": "#ffffff", "2": "#262626" },
     "padding": { "left": 2, "right": 4, "top": 1 }
   },
