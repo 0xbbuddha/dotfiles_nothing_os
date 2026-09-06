@@ -148,6 +148,10 @@ Singleton {
 
     // ── Lock screen ───────────────────────────────────────────────────
     property alias lockScreen: a.lockScreen
+    property alias idleDim: a.idleDim
+    property alias idleLock: a.idleLock
+    property alias idleOff: a.idleOff
+    property alias idleSuspend: a.idleSuspend
 
     // ── Glyph Matrix ──────────────────────────────────────────────────
     property alias glyphEnabled: a.glyphEnabled
@@ -700,6 +704,11 @@ Singleton {
         a.nightTo = "06:30";
         a.nightTemperature = 4000;
 
+        a.idleDim = 120;
+        a.idleLock = 300;
+        a.idleOff = 600;
+        a.idleSuspend = 1200;
+
         a.gameMode = false;
         a.gameNoAnimations = true;
         a.gameNoBlur = true;
@@ -887,6 +896,14 @@ Singleton {
             // screen is not a thing to switch by default: hyprlock keeps
             // it until you have tried the other.
             property string lockScreen: "hyprlock"
+
+            // The idle timeline, in seconds, 0 for never. Written out as
+            // a hypridle config by services/Idle.qml, because hypridle
+            // reads its file once at start and has no runtime interface.
+            property int idleDim: 120
+            property int idleLock: 300
+            property int idleOff: 600
+            property int idleSuspend: 1200
             property bool showTray: true
             property bool showBattery: true
             property bool showWorkspaces: true

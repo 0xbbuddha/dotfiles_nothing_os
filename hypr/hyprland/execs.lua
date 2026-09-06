@@ -1,3 +1,10 @@
+local function isFile(path)
+    local fh = io.open(path)
+    if not fh then return false end
+    fh:close()
+    return true
+end
+
 local function pidof(name)
     local f = io.popen("pidof -s " .. name .. " 2>/dev/null")
     if not f then return false end
@@ -26,7 +33,12 @@ local function startup()
     hl.exec_cmd("hyprctl setcursor " .. cursorTheme .. " " .. cursorSize)
 
     if exists("hypridle") and not pidof("hypridle") then
-        hl.exec_cmd("hypridle -c " .. ROOT .. "/hypr/hypridle.conf")
+        -- The shell owns the idle timings (Settings, Interface, Idle) and
+        -- writes them out here. The repo file is the fallback for a
+        -- session where the shell has not written one yet.
+        local gen = (os.getenv("HOME") or "") .. "/.config/nothing/hypridle.conf"
+        local conf = isFile(gen) and gen or (ROOT .. "/hypr/hypridle.conf")
+        hl.exec_cmd("hypridle -c " .. conf)
     end
 
     if exists("gnome-keyring-daemon") then

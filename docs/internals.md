@@ -54,6 +54,17 @@ and an existing `fish/config.fish` are created once and never
 overwritten; `fish/conf.d/nothing.fish` is refreshed. Re-run
 `./install --files` after pulling.
 
+**Idle.** hypridle reads one config file when it starts and has no
+runtime interface, so `services/Idle.qml` generates
+`~/.config/nothing/hypridle.conf` from the four timings in Settings and
+restarts the daemon. `hypr/hyprland/execs.lua` uses that file when it
+exists and falls back to `hypr/hypridle.conf`, so a session that has
+never opened Settings still idles. The restart is deliberately
+lock-free and self-correcting: it kills, waits for the process to be
+gone, starts one, then trims to a single daemon. Two overlapping
+restarts used to leave two hypridle running, and two of them fire every
+timeout twice.
+
 **Bluetooth.** `Bluetooth.defaultAdapter` is null for the first couple
 of seconds after the shell starts, and `Net.scanBt()` on a null adapter
 silently does nothing. The flyout therefore renews discovery on a timer
