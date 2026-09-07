@@ -435,15 +435,6 @@ ShellRoot {
 
     // ── Capture feedback ──────────────────────────────────────────────
     Connections {
-        target: Lens
-        function onFinished(message: string): void {
-            notify.command = ["notify-send", "-a", "Lens", "-i",
-                              "image-x-generic", "Google Lens", message];
-            notify.running = true;
-        }
-    }
-
-    Connections {
         target: Recorder
         function onFinished(message: string): void {
             notify.command = ["notify-send", "-a", "Recording", "-i",
@@ -455,8 +446,13 @@ ShellRoot {
     Connections {
         target: Shot
         function onFinished(message: string): void {
-            notify.command = ["notify-send", "-a", "Capture", "-i",
-                              "camera-photo-symbolic", "Screenshot", message];
+            // Lens goes through the same region picker as a screenshot, so
+            // it arrives here too. Only the label differs.
+            const lens = Shot.pendingAction === "lens";
+            notify.command = ["notify-send", "-a", lens ? "Lens" : "Capture",
+                              "-i", lens ? "image-x-generic"
+                                         : "camera-photo-symbolic",
+                              lens ? "Google Lens" : "Screenshot", message];
             notify.running = true;
         }
     }

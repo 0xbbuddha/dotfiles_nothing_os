@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # Screenshot helper for the Nothing shell.
-#   screenshot.sh <region|window|screen|geo|freeze> <copy|save|edit|ocr> [geo] [output]
+#   screenshot.sh <region|window|screen|geo|freeze> <copy|save|edit|ocr|lens> [geo] [output]
+#
+# WARNING: the lens action SENDS the crop to a third-party host
+# (uguu.se) to get a public URL, then opens it in Google Lens.
 #
 # freeze: crop the pre-overlay grim in /tmp/nothing-snip/<output>.png
 # so the picker veil is not baked into the shot.
@@ -48,6 +51,17 @@ capture() {
         local args=(-m "$hm" -z -s -o "$DIR" -f "$(basename "$FILE")")
         [[ "$MODE" == "screen" ]] && args=(-m output -m "$(hyprctl -j activeworkspace | jq -r .monitor)" -s -o "$DIR" -f "$(basename "$FILE")")
         hyprshot "${args[@]}" >/dev/null 2>&1
+        # hyprshot's last line is `begin_grab $OPTION & checkRunning`: the
+        # grab, and so the grim that writes the file, runs in the
+        # background while the foreground returns as soon as slurp
+        # disappears. That is the moment you release the mouse, not the
+        # moment the file exists, so testing for it here lost the race and
+        # the capture came back "Cancelled". Wait for it instead.
+        local i=0
+        while [[ ! -s "$FILE" ]] && (( i < 40 )); do
+            sleep 0.05
+            i=$((i + 1))
+        done
         [[ -s "$FILE" ]]
         return
     fi
@@ -82,6 +96,29 @@ case "$ACTION" in
             wl-copy < "$FILE"
             echo "swappy missing, copied instead"
         fi
+        ;;
+    lens)
+        # Reached through the shell's own region picker, the same one the
+        # other actions use. Spawning slurp instead meant asking for a
+        # pointer grab while the launcher still held one, and it never
+        # got one: no crosshair appeared and the process waited forever.
+        URL="$(curl -sF "files[]=@$FILE" "https://uguu.se/upload" \
+            | jq -r '.files[0].url' 2>/dev/null)"
+        rm -f "$FILE"
+        if [[ -z "$URL" || "$URL" == "null" ]]; then
+            echo "Upload failed"; exit 1
+        fi
+        # xdg-open consults $BROWSER before the desktop association and
+        # takes it on faith. A BROWSER naming a binary that does not
+        # exist makes it fail without a word; cleared, it falls back to
+        # the .desktop association.
+        if [[ -n "${BROWSER:-}" ]] && ! command -v "${BROWSER%% *}" >/dev/null 2>&1; then
+            unset BROWSER
+        fi
+        setsid xdg-open "https://lens.google.com/uploadbyurl?url=${URL}" \
+            >/dev/null 2>&1 </dev/null &
+        disown 2>/dev/null || true
+        echo "Opened in Google Lens"
         ;;
     ocr)
         if ! have tesseract; then echo "tesseract is not installed"; exit 1; fi

@@ -11,22 +11,40 @@ LENS="https://lens.google.com/uploadbyurl?url="
 DIR="$(mktemp -d /tmp/nothing-lens-XXXXXX)"
 NAME="shot.png"
 TMP="$DIR/$NAME"
+
 trap 'rm -rf "$DIR"' EXIT
 
-# Use a file instead of -r: hyprshot's getopt declares this option as
-# taking an argument and rejects it as-is.
-if command -v hyprshot >/dev/null 2>&1; then
-    hyprshot -m region -z -s -o "$DIR" -f "$NAME" >/dev/null 2>&1
-else
-    GEO="$(slurp -d -b 00000080 -c d71921ff -w 2)" || { echo "Cancelled"; exit 1; }
-    grim -g "$GEO" "$TMP" || { echo "Capture failed"; exit 1; }
-fi
+# slurp plus grim, deliberately, and not hyprshot.
+#
+# hyprshot's last line is `begin_grab $OPTION & checkRunning`: the grab,
+# and so the grim that writes the file, runs in the background while the
+# foreground returns as soon as slurp disappears. That is the moment you
+# release the mouse, not the moment the file exists, so the check below
+# ran against a file that was not written yet and every capture came back
+# "Cancelled". This path is synchronous.
+#
+# No screen freeze either. hyprpicker was tried for that and is the wrong
+# tool: -z is --no-zoom, not --freeze, and hyprpicker is a colour picker
+# that takes the pointer and the keyboard for a fullscreen surface. Run
+# alongside slurp it leaves two grabbers fighting over the same input and
+# the desktop looks like it has locked up.
+GEO="$(slurp -d -b 00000080 -c d71921ff -w 2)" || { echo "Cancelled"; exit 1; }
+grim -g "$GEO" "$TMP" || { echo "Capture failed"; exit 1; }
 
 [[ -s "$TMP" ]] || { echo "Cancelled"; exit 1; }
 
 URL="$(curl -sF "files[]=@$TMP" "$ENDPOINT" | jq -r '.files[0].url' 2>/dev/null)"
 if [[ -z "$URL" || "$URL" == "null" ]]; then
     echo "Upload failed"; exit 1
+fi
+
+# xdg-open consults $BROWSER before the desktop association, and takes
+# it on faith. Here /etc/environment carries BROWSER=helium while the
+# binary is helium-browser, so xdg-open failed without a word and nothing
+# opened. Only keep the variable if it actually runs; cleared, xdg-open
+# falls back to the .desktop association, which is right.
+if [[ -n "${BROWSER:-}" ]] && ! command -v "${BROWSER%% *}" >/dev/null 2>&1; then
+    unset BROWSER
 fi
 
 # xdg-open returns immediately; detach cleanly
