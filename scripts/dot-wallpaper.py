@@ -61,7 +61,8 @@ def paper_colour(rgb, alpha):
 
 
 def build(src_path, out, W, H, pitch, subject_h, cx, cy, label, sub,
-          gain, red_at, floor, circle, halo, grid, specs, rays, jp):
+          gain, red_at, floor, circle, halo, grid, specs, rays, jp,
+          papers=None):
     src = Image.open(src_path).convert("RGBA")
 
     if circle:
@@ -84,8 +85,13 @@ def build(src_path, out, W, H, pitch, subject_h, cx, cy, label, sub,
     plate.alpha_composite(src, (int(W * cx - src.size[0] / 2),
                                 int(H * cy - src.size[1] / 2)))
 
-    paper = paper_colour(plate.convert("RGB"), plate.split()[3])
-    far = max(1.0, sum(c * c for c in paper) ** 0.5)
+    # More than one background is allowed, because a picture can have
+    # more than one. A character drawn pale on a saturated red disc has
+    # two: detect only the red and the whole figure counts as ink and
+    # lights up in one block, linework and all. Naming both leaves just
+    # the drawn lines to light.
+    papers = papers or [paper_colour(plate.convert("RGB"), plate.split()[3])]
+    far = max(1.0, max(sum(c * c for c in p) ** 0.5 for p in papers))
 
     cols, rows = W // pitch, H // pitch
     # One area average per cell. Point sampling a line drawing turns fine
@@ -133,8 +139,9 @@ def build(src_path, out, W, H, pitch, subject_h, cx, cy, label, sub,
 
             lit, colour = 0.0, WHITE
             if a > 20:
-                dist = ((r - paper[0]) ** 2 + (g - paper[1]) ** 2
-                        + (b - paper[2]) ** 2) ** 0.5 / far
+                # Distance to the nearest declared background.
+                dist = min(((r - p[0]) ** 2 + (g - p[1]) ** 2
+                            + (b - p[2]) ** 2) ** 0.5 for p in papers) / far
                 # A dead zone around the paper colour: a background is
                 # rarely perfectly flat, and without this its vignette
                 # fogs the empty half of the screen.
@@ -249,7 +256,8 @@ def build(src_path, out, W, H, pitch, subject_h, cx, cy, label, sub,
         d.line([cx_, cy_, cx_, cy_ + sy * m], fill=rule, width=1)
 
     img.save(out)
-    print("%s  %dx%d  paper %s" % (out, W, H, paper))
+    print("%s  %dx%d  paper %s"
+          % (out, W, H, ", ".join("#%02x%02x%02x" % p for p in papers)))
 
 
 def aspect_label(W, H):
@@ -292,6 +300,10 @@ def main():
                    help="a line for the small block, repeatable")
     p.add_argument("--rays", type=int, default=64,
                    help="manga concentration lines, 0 for none")
+    p.add_argument("--paper", action="append", default=[], metavar="#RRGGBB",
+                   help="a background colour, repeatable. Detected when "
+                        "not given; name them when the picture has more "
+                        "than one, such as a figure on a coloured disc")
     p.add_argument("--jp", default="ナッシング",
                    help="vertical Japanese column, empty for none")
     a = p.parse_args()
@@ -303,9 +315,16 @@ def main():
 
     specs = a.spec or ["%d  x  %d" % (W, H), aspect_label(W, H),
                        "D O T   M A T R I X"]
+    def rgb(text):
+        t = text.lstrip("#")
+        if len(t) != 6:
+            sys.exit("--paper wants #RRGGBB, not %r" % text)
+        return tuple(int(t[i:i + 2], 16) for i in (0, 2, 4))
+
     build(a.source, a.out, W, H, a.pitch, a.scale, a.x, a.y,
           a.label, a.sub, a.gain, a.red_at, a.floor, a.circle,
-          a.halo, a.grid, specs, a.rays, a.jp)
+          a.halo, a.grid, specs, a.rays, a.jp,
+          [rgb(c) for c in a.paper] or None)
 
 
 if __name__ == "__main__":

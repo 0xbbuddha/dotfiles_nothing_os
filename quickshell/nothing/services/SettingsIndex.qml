@@ -80,6 +80,7 @@ Singleton {
         { key: "launcher",     label: "External launcher", page: 3, words: "launcher rofi wofi run" },
 
         // ── Network ───────────────────────────────────────────────────
+        { key: "wifiAdd", label: "Add a hidden network", page: 4, words: "wifi hidden ssid manual add join network password" },
         { key: "wifi",      label: "Wi-Fi",     page: 4, words: "wifi wireless network internet password" },
         { key: "bluetooth", label: "Bluetooth", page: 4, words: "bluetooth bt headset pair" },
 

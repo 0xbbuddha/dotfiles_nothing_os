@@ -146,18 +146,31 @@ ColumnLayout {
                 Rectangle {
                     id: row
                     required property var modelData
+                    // Only ever one row asks at a time, and it is the one
+                    // whose connection came back wanting a secret.
+                    readonly property bool asking: root.kind === "wifi"
+                        && Net.wifiAsk !== "" && Net.wifiAsk === modelData.name
                     readonly property bool busy: root.kind === "bt"
                         && (modelData.pairing
                             || modelData.state === BluetoothDeviceState.Connecting
                             || modelData.state === BluetoothDeviceState.Disconnecting)
                     Layout.fillWidth: true
                     implicitHeight: Theme.px(36)
+                        + (row.asking ? Theme.px(42) : 0)
+                    Behavior on implicitHeight {
+                        NumberAnimation { duration: Theme.fast; easing.type: Theme.ease }
+                    }
                     radius: Theme.r.tiny
+                    clip: true
                     color: modelData.connected ? Theme.c.surface3
                          : (rma.containsMouse ? Theme.c.surface3 : Theme.c.surface2)
 
                     RowLayout {
-                        anchors.fill: parent
+                        id: line
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        height: Theme.px(36)
                         anchors.leftMargin: Theme.px(10)
                         anchors.rightMargin: Theme.px(10)
                         spacing: Theme.px(8)
@@ -225,19 +238,58 @@ ColumnLayout {
                         }
                     }
 
+                    // Asked for only when NetworkManager says it has no
+                    // secret for this network, never up front: a network
+                    // it already knows joins without a word.
+                    RowLayout {
+                        anchors.top: line.bottom
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.leftMargin: Theme.px(10)
+                        anchors.rightMargin: Theme.px(10)
+                        anchors.topMargin: Theme.px(2)
+                        height: Theme.px(34)
+                        visible: row.asking
+                        spacing: Theme.px(6)
+
+                        NField {
+                            id: psk
+                            Layout.fillWidth: true
+                            implicitWidth: 0
+                            implicitHeight: Theme.px(30)
+                            secret: true
+                            placeholder: "Password"
+                            onCommitted: (v) => {
+                                Net.connectWifiPsk(row.modelData, v);
+                                psk.clear();
+                            }
+                            // The field appears because a click already
+                            // happened, so it takes the keyboard rather
+                            // than making you click again.
+                            onVisibleChanged: if (visible) takeFocus()
+                        }
+
+                        CircleButton {
+                            icon: "󰅖"
+                            size: Theme.px(22)
+                            onActivated: { psk.clear(); Net.cancelWifiAsk(); }
+                        }
+                    }
+
                     MouseArea {
                         id: rma
-                        anchors.fill: parent
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        height: Theme.px(36)
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
                             const d = row.modelData;
-                            if (root.kind === "bt") {
+                            if (root.kind === "bt")
                                 Net.btConnect(d);
-                            } else {
-                                if (d.connected) d.disconnect();
-                                else d.connect();
-                            }
+                            else
+                                Net.connectWifi(d);
                         }
                     }
                 }
@@ -263,6 +315,16 @@ ColumnLayout {
               || (root.kind === "bt" && Net.btPowered && Net.btDevices.length === 0)
         text: "Looking…"
         color: Theme.c.onDim
+    }
+
+    // A refused connection used to leave the row exactly as it was,
+    // which is indistinguishable from nothing having happened.
+    NText {
+        Layout.fillWidth: true
+        visible: root.kind === "wifi" && Net.wifiMessage !== ""
+        text: Net.wifiMessage
+        color: Theme.c.red
+        wrapMode: Text.WordWrap
     }
 
     NLabel {

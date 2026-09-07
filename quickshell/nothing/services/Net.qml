@@ -39,6 +39,246 @@ Singleton {
         return "󰖩";
     }
 
+    // ── Joining a network ─────────────────────────────────────────────
+    //
+    // The order is the one the backend documents: call connect() first,
+    // because NetworkManager may already hold the secret, and only ask
+    // for a password when it answers connectionFailed(NoSecrets). The
+    // panel used to call connect() and listen to nothing, so a network
+    // that wanted a password simply did nothing at all.
+    property var pendingNet: null      // the attempt in flight
+    property string wifiAsk: ""        // ssid waiting for a password
+    property string wifiMessage: ""
+
+    // A PSK is only meaningful for these. Anything else either needs no
+    // secret or needs a certificate, which is not something a text field
+    // can supply.
+    function takesPsk(net: var): bool {
+        if (!net)
+            return false;
+        switch (net.security) {
+        case WifiSecurityType.WpaPsk:
+        case WifiSecurityType.Wpa2Psk:
+        case WifiSecurityType.Sae:
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    function connectWifi(net: var): void {
+        if (!net)
+            return;
+        root.wifiMessage = "";
+        root.wifiAsk = "";
+        if (net.connected) {
+            root.pendingNet = null;
+            net.disconnect();
+            return;
+        }
+        root.pendingNet = net;
+        net.connect();
+    }
+
+    function connectWifiPsk(net: var, psk: string): void {
+        if (!net || psk === "")
+            return;
+        root.wifiMessage = "";
+        root.wifiAsk = "";
+        root.pendingNet = net;
+        net.connectWithPsk(psk);
+    }
+
+    function cancelWifiAsk(): void {
+        root.wifiAsk = "";
+        root.wifiMessage = "";
+        root.pendingNet = null;
+    }
+
+    Connections {
+        target: root.pendingNet
+        ignoreUnknownSignals: true
+
+        function onConnectionFailed(reason): void {
+            const net = root.pendingNet;
+            root.pendingNet = null;
+            if (!net)
+                return;
+            if (reason === ConnectionFailReason.NoSecrets && root.takesPsk(net)) {
+                root.wifiAsk = net.name;
+                return;
+            }
+            root.wifiAsk = "";
+            switch (reason) {
+            case ConnectionFailReason.NoSecrets:
+                root.wifiMessage = "This network needs credentials the shell cannot supply";
+                break;
+            case ConnectionFailReason.WifiAuthTimeout:
+                root.wifiMessage = "Authentication timed out";
+                break;
+            case ConnectionFailReason.WifiNetworkLost:
+                root.wifiMessage = "The network went out of range";
+                break;
+            default:
+                root.wifiMessage = "Could not connect";
+                break;
+            }
+            wifiClear.restart();
+        }
+
+        function onConnectedChanged(): void {
+            if (root.pendingNet?.connected) {
+                root.pendingNet = null;
+                root.wifiAsk = "";
+                root.wifiMessage = "";
+            }
+        }
+    }
+
+    Timer {
+        id: wifiClear
+        interval: 9000
+        onTriggered: root.wifiMessage = ""
+    }
+
+    // ── A network's saved profile ─────────────────────────────────────
+    //
+    // NetworkManager keeps one settings profile per known network, and
+    // Quickshell hands it over whole: read() gives the nested
+    // { group: { key: value } } map, write() takes a partial one back and
+    // saves it to disk. Defaults are simply absent from the map, so
+    // "autoconnect is not in there" means autoconnect is on, not off.
+    function profileOf(net: var): var {
+        const list = net?.nmSettings ?? [];
+        return list.length > 0 ? list[0] : null;
+    }
+
+    function readProfile(net: var): var {
+        return root.profileOf(net)?.read() ?? ({});
+    }
+
+    // Only what changed, which is all write() wants. A null value removes
+    // the key and puts the default back.
+    function writeProfile(net: var, patch: var): bool {
+        const st = root.profileOf(net);
+        if (!st)
+            return false;
+        st.write(patch);
+        return true;
+    }
+
+    function group(map: var, name: string): var {
+        return (map && map[name]) ? map[name] : ({});
+    }
+
+    // NM leaves a default out of the map entirely, so every read goes
+    // through a fallback rather than trusting the key to be there.
+    function autoconnectOf(map: var): bool {
+        const v = root.group(map, "connection").autoconnect;
+        return v === undefined ? true : v === true;
+    }
+
+    // 0 unknown, 1 metered, 2 not metered. Anything else is NM's guess.
+    function meteredOf(map: var): int {
+        const v = root.group(map, "connection").metered;
+        return v === undefined ? 0 : v;
+    }
+
+    function hiddenOf(map: var): bool {
+        return root.group(map, "802-11-wireless").hidden === true;
+    }
+
+    function ipv4MethodOf(map: var): string {
+        return root.group(map, "ipv4").method ?? "auto";
+    }
+
+    // address-data is the readable form: [{ address, prefix }].
+    function ipv4AddressOf(map: var): string {
+        const list = root.group(map, "ipv4")["address-data"] ?? [];
+        if (list.length === 0)
+            return "";
+        const a = list[0];
+        return (a.address ?? "") + "/" + (a.prefix ?? 24);
+    }
+
+    function ipv4GatewayOf(map: var): string {
+        return root.group(map, "ipv4").gateway ?? "";
+    }
+
+    function ipv4DnsOf(map: var): string {
+        const d = root.group(map, "ipv4")["dns-data"] ?? [];
+        return d.join(", ");
+    }
+
+    function clearSecrets(net: var): void {
+        root.profileOf(net)?.clearSecrets();
+    }
+
+    function forgetNetwork(net: var): void {
+        if (net)
+            net.forget();
+    }
+
+    // ── Joining a network that is not on the list ─────────────────────
+    //
+    // Through nmcli, and deliberately: the backend can connect, forget
+    // and rewrite a profile, but it has no call that creates one, so a
+    // hidden SSID you type in has nothing to attach to. Passed as argv
+    // rather than through a shell, so a passphrase with a quote in it
+    // cannot become part of the command.
+    property string addMessage: ""
+    property bool addBusy: false
+
+    function addNetwork(ssid: string, psk: string, hidden: bool): void {
+        const name = (ssid ?? "").trim();
+        if (name === "" || !root.wifiDevice)
+            return;
+        const argv = ["nmcli", "device", "wifi", "connect", name,
+                      "ifname", root.wifiDevice.name];
+        if ((psk ?? "") !== "")
+            argv.push("password", psk);
+        if (hidden)
+            argv.push("hidden", "yes");
+        root.addMessage = "";
+        root.addBusy = true;
+        adder.command = argv;
+        adder.running = false;
+        adder.running = true;
+    }
+
+    NProcess {
+        id: adder
+        // nmcli says why on stdout as well as stderr, and the reason is
+        // the whole point of showing anything at all.
+        quiet: true
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const t = text.trim();
+                if (t !== "" && t.indexOf("successfully") < 0)
+                    root.addMessage = t;
+            }
+        }
+        stderr: StdioCollector {
+            onStreamFinished: {
+                const t = text.trim();
+                if (t !== "")
+                    root.addMessage = t;
+            }
+        }
+        onExited: (code) => {
+            root.addBusy = false;
+            if (code === 0 && root.addMessage === "")
+                root.addMessage = "Connected";
+            addClear.restart();
+        }
+    }
+
+    Timer {
+        id: addClear
+        interval: 9000
+        onTriggered: root.addMessage = ""
+    }
+
     // ── Bluetooth ─────────────────────────────────────────────────────
     readonly property var adapter: Bluetooth.defaultAdapter
     readonly property bool btPowered: adapter?.enabled ?? false
