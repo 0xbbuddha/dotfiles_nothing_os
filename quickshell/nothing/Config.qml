@@ -32,6 +32,11 @@ Singleton {
     property alias showTray: a.showTray
     property alias showBattery: a.showBattery
     property alias showWorkspaces: a.showWorkspaces
+
+    // What sits in each island of the bar, in order. See BarRegistry.
+    property alias barLeft: a.barLeft
+    property alias barCentre: a.barCentre
+    property alias barRight: a.barRight
     property alias barShowCpu: a.barShowCpu
     property alias barShowRam: a.barShowRam
     property alias barShowGpu: a.barShowGpu
@@ -629,6 +634,62 @@ Singleton {
         persist.restart();
     }
 
+    // ── The bar's three islands ───────────────────────────────────────
+    //
+    // Read through _list, never touched directly: a JsonAdapter list is
+    // not a JavaScript array, Array.isArray says so, and splice on it
+    // does nothing at all.
+    function barZone(zone: string): var {
+        switch (zone) {
+        case "left":   return root._list(a.barLeft) ?? [];
+        case "centre": return root._list(a.barCentre) ?? [];
+        case "right":  return root._list(a.barRight) ?? [];
+        default:       return [];
+        }
+    }
+
+    function setBarZone(zone: string, list: var): void {
+        switch (zone) {
+        case "left":   a.barLeft = list; break;
+        case "centre": a.barCentre = list; break;
+        case "right":  a.barRight = list; break;
+        default:       return;
+        }
+        root.save();
+    }
+
+    function barZoneOf(id: string): string {
+        for (const z of ["left", "centre", "right"]) {
+            if (root.barZone(z).indexOf(id) >= 0)
+                return z;
+        }
+        return "";
+    }
+
+    // One home at a time. Placing an element pulls it out of wherever it
+    // was, so a list can never hold the same thing twice, and an empty
+    // zone means "not shown".
+    function barPlace(id: string, zone: string): void {
+        for (const z of ["left", "centre", "right"]) {
+            const list = root.barZone(z).filter(x => x !== id);
+            if (list.length !== root.barZone(z).length)
+                root.setBarZone(z, list);
+        }
+        if (zone === "")
+            return;
+        root.setBarZone(zone, root.barZone(zone).concat([id]));
+    }
+
+    function barMove(zone: string, index: int, delta: int): void {
+        const list = root.barZone(zone);
+        const to = index + delta;
+        if (index < 0 || index >= list.length || to < 0 || to >= list.length)
+            return;
+        const [item] = list.splice(index, 1);
+        list.splice(to, 0, item);
+        root.setBarZone(zone, list);
+    }
+
     function addDockApp(id: string): void {
         if (!id || a.dockApps.includes(id)) return;
         a.dockApps = a.dockApps.concat([id]);
@@ -662,6 +723,12 @@ Singleton {
         a.drawWallpaper = true;
         a.wallpaper = "";
         a.wallpaperFormat = "auto";
+
+        a.barLeft = ["workspaces", "media"];
+        a.barCentre = ["apps", "clock", "essential"];
+        a.barRight = ["tray", "net", "bluetooth", "cpu", "ram", "gpu", "temp",
+                      "updates", "mic", "volume", "battery",
+                      "notifications", "privacy", "recording"];
 
         a.showDock = true;
         a.showDesktopWidgets = true;
@@ -861,6 +928,21 @@ Singleton {
             // Which of the dot-matrix pair to use: "auto", "16-10" or
             // "16-9". Only consulted when the pair is the chosen image.
             property string wallpaperFormat: "auto"
+
+            // The bar, one ordered list per island. Empty is a legitimate
+            // answer: an island with nothing in it simply does not draw.
+            //
+            // Spelled out as three lists rather than one map of zone to
+            // list, because a var property whose default is an empty
+            // object never loads back from the file, while one with an
+            // array default does. See the glyph surfaces for the same
+            // scar.
+            property var barLeft: ["workspaces", "media"]
+            property var barCentre: ["apps", "clock", "essential"]
+            property var barRight: ["tray", "net", "bluetooth", "cpu", "ram",
+                                    "gpu", "temp", "updates", "mic", "volume",
+                                    "battery", "notifications", "privacy",
+                                    "recording"]
 
             property bool showDock: true
             property bool showDesktopWidgets: true

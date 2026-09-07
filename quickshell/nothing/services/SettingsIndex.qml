@@ -26,63 +26,65 @@ Singleton {
 
     readonly property var entries: [
         // ── Appearance ────────────────────────────────────────────────
-        { key: "scale",      label: "Interface size",   page: 0, words: "scale zoom size dpi big small" },
-        { key: "accent",     label: "Accent colour",    page: 0, words: "colour color red theme" },
-        { key: "wallpaper",  label: "Wallpaper image",  page: 0, words: "background picture desktop image" },
-        { key: "wallpaperDraw", label: "Wallpaper drawn by the shell", page: 0, words: "background swww hyprpaper" },
-        { key: "wallpaperSet",  label: "Nothing dot-matrix wallpaper", page: 0, words: "background dots anime manga bundled shipped" },
-        { key: "wallpaperFormat", label: "Wallpaper format",  page: 0, words: "background aspect ratio 16 10 9 screen shape" },
+        { key: "theme",      label: "Light or dark",    page: 0, words: "theme dark light appearance colour scheme", icon: "󰝨" },
+        { key: "scale",      label: "Interface size",   page: 0, words: "scale zoom size dpi big small", icon: "󰫰" },
+        { key: "accent",     label: "Accent colour",    page: 0, words: "colour color red theme", icon: "󰝥" },
+        { key: "wallpaper",  label: "Wallpaper image",  page: 0, words: "background picture desktop image", icon: "󰋊" },
+        { key: "wallpaperDraw", label: "Wallpaper drawn by the shell", page: 0, words: "background swww hyprpaper", icon: "󰋊" },
+        { key: "wallpaperSet",  label: "Nothing dot-matrix wallpaper", page: 0, words: "background dots anime manga bundled shipped", icon: "󰋊" },
+        { key: "wallpaperFormat", label: "Wallpaper format",  page: 0, words: "background aspect ratio 16 10 9 screen shape", icon: "󰕴" },
 
         // ── Interface ─────────────────────────────────────────────────
-        { key: "workspaces",      label: "Workspaces in bar",  page: 1, words: "workspace desktop bar" },
-        { key: "workspaceStyle",  label: "Workspace numbering", page: 1, words: "roman japanese arabic numbers" },
-        { key: "workspaceCount",  label: "Workspace count",    page: 1, words: "how many workspaces" },
-        { key: "workspaceGrid",   label: "Overview grid",      page: 1, words: "rows columns grid overview preview" },
-        { key: "workspaceScale",  label: "Overview thumbnail size", page: 1, words: "grid preview scale thumbnail" },
-        { key: "tray",            label: "System tray",        page: 1, words: "tray icons background apps" },
-        { key: "battery",         label: "Battery in bar",     page: 1, words: "battery power percent" },
-        { key: "barCpu",          label: "CPU in bar",         page: 1, words: "cpu usage percent bar" },
-        { key: "barRam",          label: "RAM in bar",         page: 1, words: "ram memory percent bar" },
-        { key: "barGpu",          label: "GPU in bar",         page: 1, words: "gpu usage percent bar" },
-        { key: "barTemp",         label: "Temperature in bar", page: 1, words: "temp temperature cpu bar" },
-        { key: "notifications",   label: "Notifications",      page: 1, words: "notify popup alert" },
-        { key: "notificationTimeout", label: "Notification duration", page: 1, words: "notify timeout seconds dismiss" },
-        { key: "osd",             label: "Volume and brightness overlays", page: 1, words: "osd bubble volume brightness mute charge glyph" },
-        { key: "night",           label: "Night light schedule", page: 1, words: "night blue light warm hyprsunset evening" },
-        { key: "nightTemp",       label: "Colour temperature", page: 1, words: "kelvin warm night light" },
-        { key: "weather",         label: "Weather",            page: 1, words: "weather wttr forecast" },
-        { key: "weatherCity",     label: "Weather city",       page: 1, words: "weather city location" },
+        { key: "barLayout",       label: "Bar layout",         page: 1, words: "bar navbar island left centre right order move clock workspaces tray reorder customise", icon: "󰌉" },
+        { key: "workspaces",      label: "Workspaces in bar",  page: 1, words: "workspace desktop bar", icon: "󰖰" },
+        { key: "workspaceStyle",  label: "Workspace numbering", page: 1, words: "roman japanese arabic numbers", icon: "󰭺" },
+        { key: "workspaceCount",  label: "Workspace count",    page: 1, words: "how many workspaces", icon: "󰭺" },
+        { key: "workspaceGrid",   label: "Overview grid",      page: 1, words: "rows columns grid overview preview", icon: "󰋉" },
+        { key: "workspaceScale",  label: "Overview thumbnail size", page: 1, words: "grid preview scale thumbnail", icon: "󰫰" },
+        { key: "tray",            label: "System tray",        page: 1, words: "tray icons background apps", icon: "󰕢" },
+        { key: "battery",         label: "Battery in bar",     page: 1, words: "battery power percent", icon: "󰁹" },
+        { key: "barCpu",          label: "CPU in bar",         page: 1, words: "cpu usage percent bar", icon: "󰻠" },
+        { key: "barRam",          label: "RAM in bar",         page: 1, words: "ram memory percent bar", icon: "󰍛" },
+        { key: "barGpu",          label: "GPU in bar",         page: 1, words: "gpu usage percent bar", icon: "󰢮" },
+        { key: "barTemp",         label: "Temperature in bar", page: 1, words: "temp temperature cpu bar", icon: "󰔐" },
+        { key: "notifications",   label: "Notifications",      page: 1, words: "notify popup alert", icon: "󰂚" },
+        { key: "notificationTimeout", label: "Notification duration", page: 1, words: "notify timeout seconds dismiss", icon: "󰥔" },
+        { key: "osd",             label: "Volume and brightness overlays", page: 1, words: "osd bubble volume brightness mute charge glyph", icon: "󰕾" },
+        { key: "night",           label: "Night light schedule", page: 1, words: "night blue light warm hyprsunset evening", icon: "󰖔" },
+        { key: "nightTemp",       label: "Colour temperature", page: 1, words: "kelvin warm night light", icon: "󰖔" },
+        { key: "weather",         label: "Weather",            page: 1, words: "weather wttr forecast", icon: "󰖐" },
+        { key: "weatherCity",     label: "Weather city",       page: 1, words: "weather city location", icon: "󰙀" },
 
         // ── Essential ─────────────────────────────────────────────────
-        { key: "essential",       label: "Essential Space", page: 2, words: "essential space note clip snip ocr record song voice mic key" },
-        { key: "essentialSide",   label: "Essential shelf", page: 2, words: "essential side left right shelf pane panel" },
-        { key: "essentialSearch", label: "Essential Search", page: 2, words: "essential search launcher ask gemini captures settings super" },
-        { key: "mind",            label: "Mind",            page: 2, words: "mind ollama gemini ai stub essential" },
-        { key: "geminiKey",       label: "Gemini API key",  page: 2, words: "gemini api key google ai studio mind" },
-        { key: "lockBackground",  label: "Lock screen background", page: 1, words: "lock screen password wallpaper black background session logout reboot" },
-        { key: "idleDim",         label: "Dim the screen when idle", page: 1, words: "idle dim brightness timeout hypridle sleep away darker" },
-        { key: "idleLock",        label: "Lock when idle",   page: 1, words: "idle lock timeout hypridle away automatic" },
-        { key: "idleOff",         label: "Screens off when idle", page: 1, words: "idle dpms screen off timeout hypridle blank sleep standby" },
-        { key: "idleSuspend",     label: "Suspend when idle", page: 1, words: "idle suspend sleep timeout hypridle power" },
-        { key: "appsKey",         label: "Essential Apps button in the bar", page: 2, words: "essential apps bar button clock key icon" },
-        { key: "deskApps",        label: "Apps on the desktop", page: 2, words: "essential apps widget desktop generated pin right column playground" },
-        { key: "appsLibrary",     label: "Essential Apps library", page: 2, words: "essential apps library mini app create prompt generate widget" },
+        { key: "essential",       label: "Essential Space", page: 2, words: "essential space note clip snip ocr record song voice mic key", icon: "󰋖" },
+        { key: "essentialSide",   label: "Essential shelf", page: 2, words: "essential side left right shelf pane panel", icon: "󰘌" },
+        { key: "essentialSearch", label: "Essential Search", page: 2, words: "essential search launcher ask gemini captures settings super", icon: "󰍉" },
+        { key: "mind",            label: "Mind",            page: 2, words: "mind ollama gemini ai stub essential", icon: "󰍜" },
+        { key: "geminiKey",       label: "Gemini API key",  page: 2, words: "gemini api key google ai studio mind", icon: "󰌆" },
+        { key: "lockBackground",  label: "Lock screen background", page: 1, words: "lock screen password wallpaper black background session logout reboot", icon: "󰌾" },
+        { key: "idleDim",         label: "Dim the screen when idle", page: 1, words: "idle dim brightness timeout hypridle sleep away darker", icon: "󰂽" },
+        { key: "idleLock",        label: "Lock when idle",   page: 1, words: "idle lock timeout hypridle away automatic", icon: "󰌾" },
+        { key: "idleOff",         label: "Screens off when idle", page: 1, words: "idle dpms screen off timeout hypridle blank sleep standby", icon: "󰍹" },
+        { key: "idleSuspend",     label: "Suspend when idle", page: 1, words: "idle suspend sleep timeout hypridle power", icon: "󰤄" },
+        { key: "appsKey",         label: "Essential Apps button in the bar", page: 2, words: "essential apps bar button clock key icon", icon: "󰀻" },
+        { key: "deskApps",        label: "Apps on the desktop", page: 2, words: "essential apps widget desktop generated pin right column playground", icon: "󰀻" },
+        { key: "appsLibrary",     label: "Essential Apps library", page: 2, words: "essential apps library mini app create prompt generate widget", icon: "󰋉" },
 
         // ── Widgets ───────────────────────────────────────────────────
 
         // ── Dock ──────────────────────────────────────────────────────
-        { key: "dockShow",     label: "Show dock",         page: 3, words: "dock bottom launcher bar" },
-        { key: "dockAutoHide", label: "Dock auto hide",    page: 3, words: "dock hide reveal edge" },
-        { key: "dockDelay",    label: "Dock hide delay",   page: 3, words: "dock delay milliseconds" },
-        { key: "dockApps",     label: "Dock applications", page: 3, words: "dock apps pinned favourites" },
-        { key: "terminal",     label: "Terminal",          page: 3, words: "terminal kitty console shell" },
-        { key: "fileManager",  label: "File manager",      page: 3, words: "files dolphin nautilus explorer" },
-        { key: "launcher",     label: "External launcher", page: 3, words: "launcher rofi wofi run" },
+        { key: "dockShow",     label: "Show dock",         page: 3, words: "dock bottom launcher bar", icon: "󰌉" },
+        { key: "dockAutoHide", label: "Dock auto hide",    page: 3, words: "dock hide reveal edge", icon: "󰍴" },
+        { key: "dockDelay",    label: "Dock hide delay",   page: 3, words: "dock delay milliseconds", icon: "󰥔" },
+        { key: "dockApps",     label: "Dock applications", page: 3, words: "dock apps pinned favourites", icon: "󰀻" },
+        { key: "terminal",     label: "Terminal",          page: 3, words: "terminal kitty console shell", icon: "󰆍" },
+        { key: "fileManager",  label: "File manager",      page: 3, words: "files dolphin nautilus explorer", icon: "󰉖" },
+        { key: "launcher",     label: "External launcher", page: 3, words: "launcher rofi wofi run", icon: "󰍉" },
 
         // ── Network ───────────────────────────────────────────────────
-        { key: "wifiAdd", label: "Add a hidden network", page: 4, words: "wifi hidden ssid manual add join network password" },
-        { key: "wifi",      label: "Wi-Fi",     page: 4, words: "wifi wireless network internet password" },
-        { key: "bluetooth", label: "Bluetooth", page: 4, words: "bluetooth bt headset pair" },
+        { key: "wifiAdd", label: "Add a hidden network", page: 4, words: "wifi hidden ssid manual add join network password", icon: "󰜄" },
+        { key: "wifi",      label: "Wi-Fi",     page: 4, words: "wifi wireless network internet password", icon: "󰖩" },
+        { key: "bluetooth", label: "Bluetooth", page: 4, words: "bluetooth bt headset pair", icon: "󰂯" },
 
         // ── Game ──────────────────────────────────────────────────────
         { key: "gameMode",        label: "Game mode",           page: 5, words: "game gaming performance" },
@@ -109,6 +111,11 @@ Singleton {
 
     // Filter on the label and keywords; every word of the query must
     // appear somewhere.
+    // The glyph for a row, looked up by the key it already declares.
+    function iconFor(key: string): string {
+        return root.entries.find(e => e.key === key)?.icon ?? "";
+    }
+
     function search(query: string): var {
         const q = query.trim().toLowerCase();
         if (q === "")

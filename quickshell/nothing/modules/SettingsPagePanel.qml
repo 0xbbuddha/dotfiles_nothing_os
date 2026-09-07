@@ -13,6 +13,20 @@ SettingsPage {
     id: page
 
     SettingsSection {
+        title: "Bar"
+
+        BarPreview {}
+
+        SettingRow {
+            key: "barLayout"
+            label: "What is in the bar"
+            hint: "Three islands. An element lives in one of them, or in none"
+        }
+
+        BarLayoutEditor {}
+    }
+
+    SettingsSection {
         title: "Workspaces"
 
         SettingRow {

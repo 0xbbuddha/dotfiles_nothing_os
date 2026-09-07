@@ -51,9 +51,25 @@ Flickable {
             const n = col.children.length;
             for (let i = 0; i < n; i++) {
                 const child = col.children[i];
-                child.opacity = Qt.binding(() =>
-                    Math.max(0, Math.min(1, root.enter * (n + 2) - i)));
+                const step = () =>
+                    Math.max(0, Math.min(1, root.enter * (n + 2) - i));
+                child.opacity = Qt.binding(step);
+                // And a short lift. Fading alone reads as a page slowly
+                // becoming legible; a block that arrives from below reads
+                // as one being placed, which is the difference between a
+                // transition and a delay.
+                child.transform = riseFor(child, step);
             }
+        }
+
+        // A translation rather than an animated y: these blocks are placed
+        // by the ColumnLayout, and moving y fights the layout and leaves
+        // them stacked on top of each other.
+        function riseFor(child: var, step: var): var {
+            const t = Qt.createQmlObject(
+                "import QtQuick; Translate {}", child, "rise");
+            t.y = Qt.binding(() => (1 - step()) * Theme.px(14));
+            return [t];
         }
     }
 }

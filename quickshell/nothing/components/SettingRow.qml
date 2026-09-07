@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import ".."
+import "../services"
 
 // One settings row: label and description on the left, control on the right.
 Rectangle {
@@ -12,6 +13,12 @@ Rectangle {
     // Identifier used by search to target this row. Must match an entry
     // in SettingsIndex.
     property string key: ""
+
+    // Taken from the index rather than set here. A page of eighty rows was
+    // eighty lines of label and hint and nothing to catch the eye: the
+    // glyph is what makes the list scannable instead of read.
+    readonly property string icon:
+        root.key !== "" ? SettingsIndex.iconFor(root.key) : ""
 
     signal activated()
     default property alias content: holder.data
@@ -65,9 +72,28 @@ Rectangle {
 
     RowLayout {
         anchors.fill: parent
-        anchors.leftMargin: Theme.px(14)
+        anchors.leftMargin: root.icon !== "" ? Theme.px(10) : Theme.px(14)
         anchors.rightMargin: Theme.px(12)
         spacing: Theme.px(14)
+
+        // A dim well rather than a bare glyph: at this size a lone icon
+        // floats, and the disc gives the row a left edge to start from.
+        Rectangle {
+            visible: root.icon !== ""
+            Layout.alignment: Qt.AlignVCenter
+            implicitWidth: Theme.px(26)
+            implicitHeight: Theme.px(26)
+            radius: width / 2
+            color: root.highlighted ? Theme.c.red : Theme.veil(0.05)
+            Behavior on color { ColorAnimation { duration: Theme.fast } }
+
+            NIcon {
+                anchors.centerIn: parent
+                text: root.icon
+                size: Theme.z.iconM
+                color: root.highlighted ? Theme.c.onAccent : Theme.c.onDim
+            }
+        }
 
         ColumnLayout {
             id: text
