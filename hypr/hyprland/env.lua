@@ -2,7 +2,7 @@
 -- has the merit of being proven on this machine.
 
 -- Repo root, for children that need it without being able to deduce it
--- (hypr/hypridle.conf finds the hyprlock config there). Launch scripts
+-- (the generated hypridle config finds scripts/lock.sh there). Launch scripts
 -- already set it; this covers a Hyprland started by hand.
 hl.env("NOTHING_ROOT", ROOT)
 

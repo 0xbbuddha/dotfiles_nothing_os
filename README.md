@@ -45,7 +45,6 @@ no symlinks):
 | `~/.config/hypr/hyprland/` | env, keybinds, rules, … |
 | `~/.config/hypr/wallpaper.png` | `hypr/wallpaper.png` (default wallpaper) |
 | `~/.config/hypr/hypridle.conf` | idle |
-| `~/.config/hypr/hyprlock.conf` | lock |
 | `~/.config/quickshell/nothing/` | the shell |
 | `~/.config/scripts/` | helpers |
 | `~/.config/theme/` | Dolphin / GTK / portal seeds |

@@ -205,12 +205,10 @@ ShellRoot {
 
     IpcHandler {
         target: "lock"
-        // Answers only when the shell's own lock is the chosen one, so
-        // scripts/lock.sh can tell the difference and fall back to
-        // hyprlock rather than leaving the screen open.
+        // Answering at all is the test scripts/lock.sh performs: a shell
+        // that does not reply is a shell that cannot lock, and the script
+        // says so rather than leaving the session open in silence.
         function activate(): string {
-            if (Config.lockScreen !== "shell")
-                return "hyprlock";
             Lock.reset();
             Lock.locked = true;
             return "ok";

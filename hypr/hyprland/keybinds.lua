@@ -39,7 +39,7 @@ hl.bind(mainMod .. " + Escape",     ipc("session", "toggle"))
 hl.bind("CTRL + " .. mainMod .. " + R", ipc("shell", "reload"))
 
 --## Session
--- Through the wrapper, not hyprlock directly: it is what carries out a
+-- Through the wrapper, which asks the shell to lock: it is what
 -- session action the lock screen armed, once the password is accepted.
 hl.bind(mainMod .. " + L",          hl.dsp.exec_cmd(ROOT .. "/scripts/lock.sh"))
 hl.bind(mainMod .. " + SHIFT + L",  hl.dsp.exec_cmd("systemctl suspend || loginctl suspend"),

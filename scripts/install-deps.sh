@@ -41,7 +41,7 @@ PACMAN_PKGS=(
     # greeter
     sddm qt6-virtualkeyboard gst-libav
     # compositor + shell
-    hyprland hypridle hyprlock hyprpicker hyprcursor hyprsunset
+    hyprland hypridle hyprpicker hyprcursor hyprsunset
     xdg-desktop-portal xdg-desktop-portal-hyprland
     xdg-desktop-portal-gtk xdg-desktop-portal-kde
     qt6-base qt6-declarative qt6-wayland qt6-svg qt6-multimedia

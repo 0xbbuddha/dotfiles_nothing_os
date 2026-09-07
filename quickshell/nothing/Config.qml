@@ -147,7 +147,7 @@ Singleton {
     property alias appsKey: a.appsKey
 
     // ── Lock screen ───────────────────────────────────────────────────
-    property alias lockScreen: a.lockScreen
+    property alias lockBackground: a.lockBackground
     property alias idleDim: a.idleDim
     property alias idleLock: a.idleLock
     property alias idleOff: a.idleOff
@@ -704,6 +704,8 @@ Singleton {
         a.nightTo = "06:30";
         a.nightTemperature = 4000;
 
+        a.lockBackground = "black";
+
         a.idleDim = 120;
         a.idleLock = 300;
         a.idleOff = 600;
@@ -891,11 +893,12 @@ Singleton {
             // Bar button, left of the clock, mirroring the Essential Key.
             property bool appsKey: true
 
-            // hyprlock | shell. The shell's own lock draws in the Nothing
-            // language and varies the mark per character, but a lock
-            // screen is not a thing to switch by default: hyprlock keeps
-            // it until you have tried the other.
-            property string lockScreen: "hyprlock"
+            // "black" or "wallpaper", behind the lock screen. Black is
+            // the Nothing look and the safe default: a wallpaper can be
+            // anything, including something that makes white text on it
+            // unreadable. The layout keeps the right of the screen clear
+            // either way, so a chosen wallpaper is actually visible.
+            property string lockBackground: "black"
 
             // The idle timeline, in seconds, 0 for never. Written out as
             // a hypridle config by services/Idle.qml, because hypridle

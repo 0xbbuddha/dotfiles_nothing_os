@@ -59,7 +59,7 @@ Singleton {
         { key: "essentialSearch", label: "Essential Search", page: 2, words: "essential search launcher ask gemini captures settings super" },
         { key: "mind",            label: "Mind",            page: 2, words: "mind ollama gemini ai stub essential" },
         { key: "geminiKey",       label: "Gemini API key",  page: 2, words: "gemini api key google ai studio mind" },
-        { key: "lockScreen",      label: "Lock screen",     page: 1, words: "lock screen hyprlock password shell session logout reboot" },
+        { key: "lockBackground",  label: "Lock screen background", page: 1, words: "lock screen password wallpaper black background session logout reboot" },
         { key: "idleDim",         label: "Dim the screen when idle", page: 1, words: "idle dim brightness timeout hypridle sleep away darker" },
         { key: "idleLock",        label: "Lock when idle",   page: 1, words: "idle lock timeout hypridle away automatic" },
         { key: "idleOff",         label: "Screens off when idle", page: 1, words: "idle dpms screen off timeout hypridle blank sleep standby" },

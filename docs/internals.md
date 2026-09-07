@@ -15,7 +15,6 @@ hypr/hyprland/animations.lua   curves
 hypr/hyprland/keybinds.lua     binds
 hypr/hyprland/rules.lua        window / layer rules
 hypr/wallpaper.png             default wallpaper
-hypr/hyprlock.conf             lock screen
 hypr/hypridle.conf             idle / sleep
 hypr/lockstatus.sh             lock-screen status line
 hypr/custom.lua.example        sample binds -> ~/.config/hypr/custom.lua
@@ -46,7 +45,7 @@ install                        public installer
 
 ## Notes
 
-**~/.config.** `./install` copies Hyprland, hypridle, hyprlock, the
+**~/.config.** `./install` copies Hyprland, hypridle, the
 Quickshell shell, `scripts/`, `theme/`, kitty, mpv, fontconfig,
 fastfetch and starship into the user config dirs (rsync/cp, no
 symlinks). Previous files are kept as `*.bak-<stamp>`. `custom.lua`

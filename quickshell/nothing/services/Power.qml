@@ -14,12 +14,10 @@ import Quickshell
 Singleton {
     id: root
 
-    readonly property string lockConfig:
-        Quickshell.shellPath("../../hypr/hyprlock.conf")
-
-    // The wrapper, never hyprlock directly: it is what performs a session
-    // action armed from the lock screen, and only after the password is
-    // accepted.
+    // The wrapper hypridle is pointed at. It does nothing but ask the
+    // running shell to lock: there is no second locker to fall back to
+    // any more, and a session action armed on the lock screen is carried
+    // out by the shell itself, once PAM has accepted the password.
     readonly property string lockScript:
         Quickshell.shellPath("../../scripts/lock.sh")
 
@@ -28,12 +26,8 @@ Singleton {
     }
 
     function lock(): void {
-        if (Config.lockScreen === "shell") {
-            Lock.reset();
-            Lock.locked = true;
-            return;
-        }
-        root.run(`${root.lockScript}`);
+        Lock.reset();
+        Lock.locked = true;
     }
 
     function suspend(): void {

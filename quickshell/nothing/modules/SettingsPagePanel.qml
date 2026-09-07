@@ -452,27 +452,28 @@ SettingsPage {
         title: "Lock"
 
         SettingRow {
-            key: "lockScreen"
-            label: "Lock screen"
-            hint: Config.lockScreen === "shell"
-                ? "Drawn by the shell: a dot-matrix mark per character, session buttons that wait for the password"
-                : "hyprlock, from hypr/hyprlock.conf"
+            key: "lockBackground"
+            label: "Behind the lock screen"
+            hint: Config.lockBackground === "wallpaper"
+                ? "Your wallpaper, veiled only on the left where the clock and the field are"
+                : "Matte black with the dot field, the Nothing look"
         }
 
         DotPicker {
             options: [
-                { label: "hyprlock", value: "hyprlock" },
-                { label: "Shell",    value: "shell" }
+                { label: "Black",     value: "black" },
+                { label: "Wallpaper", value: "wallpaper" }
             ]
-            current: Config.lockScreen
-            onPicked: (v) => { Config.lockScreen = v; Config.save(); }
+            current: Config.lockBackground
+            onPicked: (v) => { Config.lockBackground = v; Config.save(); }
         }
 
         NText {
             Layout.fillWidth: true
-            text: "Try it with SUPER+L before trusting it to the idle timer. "
-                + "If the shell ever fails to answer, locking falls back to "
-                + "hyprlock rather than leaving the session open."
+            text: "The shell draws the lock itself, on ext-session-lock. "
+                + "The compositor keeps those surfaces up even if the shell "
+                + "dies, so a crash leaves you locked out of the desktop "
+                + "rather than letting you in."
             color: Theme.c.onDim
             wrapMode: Text.WordWrap
         }

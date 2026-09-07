@@ -247,7 +247,7 @@ Singleton {
           run: () => Notifs.clearHistory() },
         { name: "clipboard", label: "Clear the clipboard", icon: "󰅍",
           run: () => Clipboard.wipe() },
-        // Power.lock() calls hyprlock directly: "loginctl lock-session"
+        // Power.lock() locks the shell directly: "loginctl lock-session"
         // goes through hypridle, which caffeine mode kills.
         { name: "lock", label: "Lock the session",     icon: "󰌾",
           run: () => Power.lock() },
