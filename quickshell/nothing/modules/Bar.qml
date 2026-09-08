@@ -221,18 +221,15 @@ PanelWindow {
         Repeater {
             model: bar.rightIds
 
-            RowLayout {
+            // Straight into the island, with no wrapper: BarIsland already
+            // spaces its children by 10, and the margin this used to carry
+            // simply added to that and left nine pixels hanging off the
+            // end of the last element.
+            BarSlot {
                 required property string modelData
                 Layout.alignment: Qt.AlignVCenter
-                spacing: 0
-
-                BarSlot {
-                    id: rightSlot
-                    Layout.alignment: Qt.AlignVCenter
-                    Layout.rightMargin: rightSlot.applies ? Theme.px(9) : 0
-                    itemId: modelData
-                    win: bar
-                }
+                itemId: modelData
+                win: bar
             }
         }
     }

@@ -41,8 +41,14 @@ Loader {
     // movement rather than a disappearance. Recording stopping, an update
     // count falling to zero and a battery going away all used to blink
     // out between two frames.
-    visible: slot.applies || slot.scale > 0.02
-    scale: slot.applies ? 1 : 0.6
+    // Tested on opacity, not on scale. Scale rests at 0.85 when the
+    // element does not apply, so `scale > 0.02` was true for ever: the
+    // element stayed invisible but kept its width, and the right island
+    // ended in a strip of dead black where privacy and recording were
+    // waiting for something to happen. Opacity does reach zero, so the
+    // layout closes up behind it.
+    visible: slot.applies || slot.opacity > 0.01
+    scale: slot.applies ? 1 : 0.85
     opacity: slot.applies ? 1 : 0
     Behavior on scale {
         NumberAnimation { duration: Theme.med; easing.type: Theme.ease }

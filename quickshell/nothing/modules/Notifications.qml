@@ -47,8 +47,9 @@ PanelWindow {
                 id: bubble
                 required property var modelData
 
-                Layout.fillWidth: true
+                width: stack.width
                 implicitHeight: body.implicitHeight + Theme.px(22)
+                height: implicitHeight
                 radius: Theme.r.chip
                 clip: true
 

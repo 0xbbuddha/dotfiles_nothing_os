@@ -111,6 +111,42 @@ Singleton {
 
     // Filter on the label and keywords; every word of the query must
     // appear somewhere.
+    // The glyph for a section, looked up by its title.
+    readonly property var sectionIcons: ({
+        "Theme": "󰝨",
+        "Scale": "󰫰",
+        "Accent": "󰝥",
+        "Wallpaper": "󰋊",
+        "Bar": "󰌉",
+        "Workspaces": "󰖰",
+        "Overview grid": "󰋉",
+        "On-screen feedback": "󰕾",
+        "Night light": "󰖔",
+        "Weather": "󰖐",
+        "Idle": "󰤄",
+        "Lock": "󰌾",
+        "Space": "󰋖",
+        "Search": "󰍉",
+        "Mind": "󰍜",
+        "Apps": "󰀻",
+        "Add an app": "󰜄",
+        "Dock applications": "󰀻",
+        "Default programs": "󰆍",
+        "Files": "󰉖",
+        "Behaviour": "󰍴",
+        "Wi-Fi": "󰖩",
+        "Bluetooth": "󰂯",
+        "Game mode": "󰊗",
+        "Overlay widgets": "󰋉",
+        "Crosshair": "󰗠",
+        "Versions": "󰖩",
+        "Maintenance": "󰒓"
+    })
+
+    function sectionIcon(title: string): string {
+        return root.sectionIcons[title] ?? "";
+    }
+
     // The glyph for a row, looked up by the key it already declares.
     function iconFor(key: string): string {
         return root.entries.find(e => e.key === key)?.icon ?? "";

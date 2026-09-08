@@ -12,6 +12,12 @@ SettingsPage {
     // These three settings used to live on the Interface page, while the
     // rest of the dock is configured here.
     SettingsSection {
+        title: "Dock"
+
+        DockPreview {}
+    }
+
+    SettingsSection {
         title: "Behaviour"
 
         SettingRow {

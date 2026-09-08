@@ -43,62 +43,82 @@ ColumnLayout {
                 }
             }
 
-            Repeater {
-                model: zoneBlock.ids
+            // A Column and not the enclosing ColumnLayout, for its move
+            // transition: pressing an arrow reorders the list, and without
+            // this the two rows swap between one frame and the next, which
+            // reads as the list having been redrawn rather than as
+            // something having moved.
+            Column {
+                id: rows
+                Layout.fillWidth: true
+                spacing: Theme.px(4)
 
-                Rectangle {
-                    id: row
-                    required property string modelData
-                    required property int index
+                move: Transition {
+                    NumberAnimation {
+                        properties: "y"
+                        duration: Theme.med
+                        easing.type: Theme.ease
+                    }
+                }
 
-                    Layout.fillWidth: true
-                    implicitHeight: Theme.px(34)
-                    radius: Theme.r.tiny
-                    color: rowMa.containsMouse ? Theme.c.surface3 : Theme.c.surface2
-                    Behavior on color { ColorAnimation { duration: Theme.fast } }
+                Repeater {
+                    model: zoneBlock.ids
 
-                    MouseArea { id: rowMa; anchors.fill: parent; hoverEnabled: true }
+                    Rectangle {
+                        id: row
+                        required property string modelData
+                        required property int index
 
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: Theme.px(10)
-                        anchors.rightMargin: Theme.px(6)
-                        spacing: Theme.px(8)
+                        width: rows.width
+                        implicitHeight: Theme.px(34)
+                        height: implicitHeight
+                        radius: Theme.r.tiny
+                        color: rowMa.containsMouse ? Theme.c.surface3 : Theme.c.surface2
+                        Behavior on color { ColorAnimation { duration: Theme.fast } }
 
-                        NIcon {
-                            text: BarRegistry.icon(row.modelData)
-                            size: Theme.z.icon
-                            color: Theme.c.onDim
-                        }
+                        MouseArea { id: rowMa; anchors.fill: parent; hoverEnabled: true }
 
-                        NText {
-                            Layout.fillWidth: true
-                            text: BarRegistry.label(row.modelData)
-                            elide: Text.ElideRight
-                        }
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: Theme.px(10)
+                            anchors.rightMargin: Theme.px(6)
+                            spacing: Theme.px(8)
 
-                        // Reordering. Greyed at the ends rather than
-                        // hidden, so the row does not change width as it
-                        // travels up the list.
-                        CircleButton {
-                            icon: "󰅃"
-                            size: Theme.px(20)
-                            opacity: row.index > 0 ? 1 : 0.25
-                            onActivated: if (row.index > 0)
-                                Config.barMove(zoneBlock.modelData, row.index, -1)
-                        }
+                            NIcon {
+                                text: BarRegistry.icon(row.modelData)
+                                size: Theme.z.icon
+                                color: Theme.c.onDim
+                            }
 
-                        CircleButton {
-                            icon: "󰅀"
-                            size: Theme.px(20)
-                            opacity: row.index < zoneBlock.ids.length - 1 ? 1 : 0.25
-                            onActivated: if (row.index < zoneBlock.ids.length - 1)
-                                Config.barMove(zoneBlock.modelData, row.index, 1)
-                        }
+                            NText {
+                                Layout.fillWidth: true
+                                text: BarRegistry.label(row.modelData)
+                                elide: Text.ElideRight
+                            }
 
-                        ZonePicker {
-                            itemId: row.modelData
-                            here: zoneBlock.modelData
+                            // Reordering. Greyed at the ends rather than
+                            // hidden, so the row does not change width as it
+                            // travels up the list.
+                            CircleButton {
+                                icon: "󰅃"
+                                size: Theme.px(20)
+                                opacity: row.index > 0 ? 1 : 0.25
+                                onActivated: if (row.index > 0)
+                                    Config.barMove(zoneBlock.modelData, row.index, -1)
+                            }
+
+                            CircleButton {
+                                icon: "󰅀"
+                                size: Theme.px(20)
+                                opacity: row.index < zoneBlock.ids.length - 1 ? 1 : 0.25
+                                onActivated: if (row.index < zoneBlock.ids.length - 1)
+                                    Config.barMove(zoneBlock.modelData, row.index, 1)
+                            }
+
+                            ZonePicker {
+                                itemId: row.modelData
+                                here: zoneBlock.modelData
+                            }
                         }
                     }
                 }
