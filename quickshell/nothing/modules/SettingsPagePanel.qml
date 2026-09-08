@@ -27,6 +27,78 @@ SettingsPage {
     }
 
     SettingsSection {
+        title: "Control centre"
+
+        CcPreview {}
+
+        SettingRow {
+            key: "ccTiles"
+            label: "Tiles"
+            hint: "Fourteen to choose from. What is not listed is not drawn"
+        }
+
+        CcLayoutEditor {
+            zone: "tiles"
+            emptyHint: "No tiles. The panel keeps its blocks and its buttons."
+        }
+
+        SettingRow {
+            key: "ccColumns"
+            label: "Tiles per row"
+            hint: "Two reads at a glance, four fits everything"
+
+            DotPicker {
+                options: [
+                    { label: "2", value: 2 },
+                    { label: "3", value: 3 },
+                    { label: "4", value: 4 }
+                ]
+                current: Config.ccColumns
+                onPicked: (v) => { Config.ccColumns = v; Config.save(); }
+            }
+        }
+
+        SettingRow {
+            key: "ccFooter"
+            label: "Buttons"
+            hint: "The squares along the bottom. Glyph only, so keep it short"
+        }
+
+        CcLayoutEditor {
+            zone: "footer"
+            emptyHint: "No buttons. Settings is still on SUPER, and the "
+                + "session panel on its own shortcut."
+        }
+
+        SettingRow {
+            key: "ccSections"
+            label: "Blocks"
+            hint: "The whole rows, above and below the tiles"
+        }
+
+        // Straight from CcRegistry rather than five hand written rows: the
+        // catalogue is what the panel reads, so a block added there shows
+        // up here without a second edit.
+        Repeater {
+            model: CcRegistry.sections
+
+            SettingRow {
+                required property var modelData
+                label: modelData.label
+                hint: modelData.hint
+
+                // ccSection reads the matching adapter property, and a
+                // binding captures what a function it calls reads, so this
+                // follows the value without naming it here.
+                NSwitch {
+                    checked: Config.ccSection(modelData.id)
+                    onToggled: (v) => Config.setCcSection(modelData.id, v)
+                }
+            }
+        }
+    }
+
+    SettingsSection {
         title: "Workspaces"
 
         SettingRow {

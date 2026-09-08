@@ -42,6 +42,16 @@ Singleton {
     property alias barShowGpu: a.barShowGpu
     property alias barShowTemp: a.barShowTemp
 
+    // ── Control centre ────────────────────────────────────────────────
+    property alias ccTiles: a.ccTiles
+    property alias ccFooter: a.ccFooter
+    property alias ccColumns: a.ccColumns
+    property alias ccCalendar: a.ccCalendar
+    property alias ccMedia: a.ccMedia
+    property alias ccUpdates: a.ccUpdates
+    property alias ccStats: a.ccStats
+    property alias ccCaffeine: a.ccCaffeine
+
     // ── Behaviour ─────────────────────────────────────────────────────
     property alias notificationsEnabled: a.notificationsEnabled
     property alias notificationTimeout: a.notificationTimeout
@@ -690,6 +700,79 @@ Singleton {
         root.setBarZone(zone, list);
     }
 
+    // ── The control centre's two lists ────────────────────────────────
+    //
+    // Same rule as the bar's islands: read through _list, never touched
+    // directly. Unlike the bar there is nowhere else for an entry to go,
+    // so one call adds or removes rather than moving between zones.
+    function ccZone(zone: string): var {
+        switch (zone) {
+        case "tiles":  return root._list(a.ccTiles) ?? [];
+        case "footer": return root._list(a.ccFooter) ?? [];
+        default:       return [];
+        }
+    }
+
+    function setCcZone(zone: string, list: var): void {
+        switch (zone) {
+        case "tiles":  a.ccTiles = list; break;
+        case "footer": a.ccFooter = list; break;
+        default:       return;
+        }
+        root.save();
+    }
+
+    function ccHas(zone: string, id: string): bool {
+        return root.ccZone(zone).indexOf(id) >= 0;
+    }
+
+    function ccToggle(zone: string, id: string): void {
+        const list = root.ccZone(zone);
+        const at = list.indexOf(id);
+        if (at >= 0)
+            list.splice(at, 1);
+        else
+            list.push(id);
+        root.setCcZone(zone, list);
+    }
+
+    function ccMove(zone: string, index: int, delta: int): void {
+        const list = root.ccZone(zone);
+        const to = index + delta;
+        if (index < 0 || index >= list.length || to < 0 || to >= list.length)
+            return;
+        const [item] = list.splice(index, 1);
+        list.splice(to, 0, item);
+        root.setCcZone(zone, list);
+    }
+
+    // Sections are plain booleans, but the settings page draws them from
+    // CcRegistry and so needs them by name. Spelled out for the same
+    // reason _list exists: indexing the adapter with a built string reads
+    // every value as its default.
+    function ccSection(id: string): bool {
+        switch (id) {
+        case "ccCalendar": return a.ccCalendar;
+        case "ccMedia":    return a.ccMedia;
+        case "ccUpdates":  return a.ccUpdates;
+        case "ccStats":    return a.ccStats;
+        case "ccCaffeine": return a.ccCaffeine;
+        default:           return false;
+        }
+    }
+
+    function setCcSection(id: string, on: bool): void {
+        switch (id) {
+        case "ccCalendar": a.ccCalendar = on; break;
+        case "ccMedia":    a.ccMedia = on; break;
+        case "ccUpdates":  a.ccUpdates = on; break;
+        case "ccStats":    a.ccStats = on; break;
+        case "ccCaffeine": a.ccCaffeine = on; break;
+        default:           return;
+        }
+        root.save();
+    }
+
     function addDockApp(id: string): void {
         if (!id || a.dockApps.includes(id)) return;
         a.dockApps = a.dockApps.concat([id]);
@@ -740,6 +823,15 @@ Singleton {
         a.barShowRam = true;
         a.barShowGpu = true;
         a.barShowTemp = true;
+
+        a.ccTiles = ["wifi", "bluetooth", "warp", "sound", "light", "notify"];
+        a.ccFooter = ["night", "settings", "reload", "lock", "power"];
+        a.ccColumns = 3;
+        a.ccCalendar = true;
+        a.ccMedia = true;
+        a.ccUpdates = true;
+        a.ccStats = true;
+        a.ccCaffeine = true;
 
         a.notificationsEnabled = true;
         a.notificationTimeout = 5;
@@ -996,6 +1088,20 @@ Singleton {
             property bool barShowRam: true
             property bool barShowGpu: true
             property bool barShowTemp: true
+
+            // The defaults are the panel exactly as it was before any of
+            // this was configurable: same six tiles, same five buttons,
+            // every block on. Nobody's control centre changes by updating.
+            property var ccTiles: ["wifi", "bluetooth", "warp",
+                                   "sound", "light", "notify"]
+            property var ccFooter: ["night", "settings", "reload",
+                                    "lock", "power"]
+            property int  ccColumns: 3      // 2 to 4
+            property bool ccCalendar: true
+            property bool ccMedia: true
+            property bool ccUpdates: true
+            property bool ccStats: true
+            property bool ccCaffeine: true
 
             property bool notificationsEnabled: true
             property int  notificationTimeout: 5

@@ -37,6 +37,10 @@ Singleton {
 
         // ── Interface ─────────────────────────────────────────────────
         { key: "barLayout",       label: "Bar layout",         page: 1, words: "bar navbar island left centre right order move clock workspaces tray reorder customise", icon: "󰌉" },
+        { key: "ccTiles",   label: "Control centre tiles", page: 1, words: "control centre center cc tile toggle quick settings panel wifi bluetooth warp sound light notify game record microphone theme dock customise", icon: "󰘮" },
+        { key: "ccColumns", label: "Tiles per row",        page: 1, words: "control centre grid columns width tiles per row", icon: "󰕳" },
+        { key: "ccFooter",  label: "Control centre buttons", page: 1, words: "control centre footer buttons square lock reload power settings shortcuts screenshot displays", icon: "󱊨" },
+        { key: "ccSections", label: "Control centre blocks", page: 1, words: "control centre calendar media updates system stats caffeine block hide show", icon: "󰕪" },
         { key: "workspaces",      label: "Workspaces in bar",  page: 1, words: "workspace desktop bar", icon: "󰖰" },
         { key: "workspaceStyle",  label: "Workspace numbering", page: 1, words: "roman japanese arabic numbers", icon: "󰭺" },
         { key: "workspaceCount",  label: "Workspace count",    page: 1, words: "how many workspaces", icon: "󰭺" },
@@ -120,6 +124,7 @@ Singleton {
         "Wallpaper": "󰋊",
         "Spotify": "󰓇",
         "Bar": "󰌉",
+        "Control centre": "󰘮",
         "Workspaces": "󰖰",
         "Overview grid": "󰋉",
         "On-screen feedback": "󰕾",

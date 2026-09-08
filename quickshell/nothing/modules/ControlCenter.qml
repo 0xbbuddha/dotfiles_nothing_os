@@ -4,6 +4,7 @@ import Quickshell
 import ".."
 import "../components"
 import "../components/panels"
+import "../components/cc"
 import "../components/widgets"
 import "../services"
 
@@ -99,12 +100,16 @@ Item {
                         }
                         NLabel {
                             Layout.alignment: Qt.AlignRight
+                            visible: Config.ccCalendar
                             text: root.calOpen ? "Close" : "Calendar"
                         }
                     }
 
+                    // No calendar, no invitation to open one: the date
+                    // stops offering the pointer as well as the label.
                     MouseArea {
                         anchors.fill: parent
+                        enabled: Config.ccCalendar
                         cursorShape: Qt.PointingHandCursor
                         onClicked: root.calOpen = !root.calOpen
                     }
@@ -130,56 +135,49 @@ Item {
                     WCalendar {
                         id: cal
                         Layout.fillWidth: true
-                        visible: root.calOpen
+                        visible: root.calOpen && Config.ccCalendar
                     }
 
-                    // ── Connectivity ──────────────────────────────────
-                    RowLayout {
+                    // ── The grid ──────────────────────────────────────
+                    // One Flow, not two fixed rows. A tile whose service
+                    // is missing hides itself, and a Flow closes up behind
+                    // an invisible child instead of leaving the hole two
+                    // hardcoded rows used to leave where WARP would go.
+                    Flow {
+                        id: grid
                         Layout.fillWidth: true
                         spacing: Theme.gap
 
-                        Toggle {
-                            Layout.fillWidth: true
-                            Layout.preferredWidth: 1
-                            icon: Net.glyph
-                            title: Net.kind === "ethernet" ? "Ethernet" : "Wi-Fi"
-                            subtitle: Net.name
-                            active: Net.kind !== "none"
-                            onToggled: if (Net.kind !== "ethernet") Net.toggleWifi()
-                            onSecondary: root.expand("wifi")
-                        }
+                        readonly property int cols:
+                            Math.max(2, Math.min(4, Config.ccColumns))
+                        // Width is shared out here rather than by a layout:
+                        // a Flow does not size its children, and tiles that
+                        // each measured themselves would come out ragged.
+                        readonly property real cellWidth:
+                            (width - spacing * (cols - 1)) / cols
 
-                        Toggle {
-                            Layout.fillWidth: true
-                            Layout.preferredWidth: 1
-                            icon: Net.btConnected.length > 0 ? "󰂱" : "󰂯"
-                            title: "Bluetooth"
-                            subtitle: Net.btLabel
-                            active: Net.btPowered
-                            onToggled: Net.toggleBt()
-                            onSecondary: root.expand("bt")
-                        }
+                        Repeater {
+                            model: Config.ccTiles ? Config.ccZone("tiles") : []
 
-                        Toggle {
-                            Layout.fillWidth: true
-                            Layout.preferredWidth: 1
-                            visible: Warp.available
-                            icon: "󰖂"
-                            title: "WARP"
-                            subtitle: Warp.busy ? "…" : (Warp.connected ? "on" : "off")
-                            active: Warp.connected
-                            onToggled: Warp.toggle()
+                            CcTile {
+                                required property string modelData
+                                width: grid.cellWidth
+                                height: Theme.px(42)
+                                itemId: modelData
+                                cc: root
+                            }
                         }
                     }
 
-                    // Wi-Fi and Bluetooth open here, under their own tile,
-                    // so the control you came from stays where you left it.
+                    // One expander under the whole grid, for all four of
+                    // the tiles that open something in place. It used to be
+                    // two, one under each row, which only worked while the
+                    // rows were fixed and the right tiles were in them.
                     Item {
                         Layout.fillWidth: true
                         clip: true
-                        readonly property bool on:
-                            root.expanded === "wifi" || root.expanded === "bt"
-                        implicitHeight: on ? netPanel.implicitHeight + Theme.px(10) : 0
+                        readonly property bool on: root.expanded !== ""
+                        implicitHeight: on ? expLoader.implicitHeight + Theme.px(10) : 0
                         opacity: on ? 1 : 0
 
                         Behavior on implicitHeight {
@@ -187,136 +185,50 @@ Item {
                         }
                         Behavior on opacity { NumberAnimation { duration: Theme.fast } }
 
-                        NetPanel {
-                            id: netPanel
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.top: parent.top
-                            anchors.topMargin: Theme.px(10)
-                            kind: root.expanded === "bt" ? "bt" : "wifi"
-                            // Never scan for an expander nobody is looking
-                            // at: it would hold the Bluetooth radio while
-                            // the control centre is shut.
-                            active: parent.on && root.open
-                        }
-                    }
-
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: Theme.gap
-
-                        Toggle {
-                            Layout.fillWidth: true
-                            Layout.preferredWidth: 1
-                            icon: Audio.muted ? "󰝟" : (Audio.volume > 0.5 ? "󰕾" : "󰖀")
-                            title: "Sound"
-                            subtitle: Audio.muted ? "muted" : (Math.round(Audio.volume * 100) + "%")
-                            active: !Audio.muted
-                            onToggled: if (Audio.audio) Audio.audio.muted = !Audio.audio.muted
-                            onSecondary: root.expand("audio")
-                        }
-
-                        Toggle {
-                            Layout.fillWidth: true
-                            Layout.preferredWidth: 1
-                            visible: Brightness.available
-                            icon: Brightness.extraDim
-                                ? "󰖔"
-                                : (Brightness.value > 0.5 ? "󰃠" : "󰃞")
-                            title: "Light"
-                            subtitle: Math.round(Brightness.combined * 100) + "%"
-                            active: true
-                            onToggled: root.expand("light")
-                            onSecondary: root.expand("light")
-                        }
-
-                        // Do not disturb, which is what "off" means for
-                        // notifications day to day: the server keeps taking
-                        // them and the history keeps filling, nothing pops
-                        // up. Pressing it twice gets you back where you
-                        // started, which a tile that dismantled the whole
-                        // feature would not.
-                        //
-                        // The one exception is a feature switched off in
-                        // settings entirely. The tile could hide itself,
-                        // but then the grid has a hole in it and there is
-                        // no way back from here; it says "off" and turns
-                        // the feature on instead. Only ever in that
-                        // direction, so the press still means the same
-                        // thing it looks like it means.
-                        //
-                        // Lit while notifications are getting through, so
-                        // it reads the same way as Sound beside it: filled
-                        // means you will hear from it.
-                        Toggle {
-                            Layout.fillWidth: true
-                            Layout.preferredWidth: 1
-                            readonly property bool off: !Config.notificationsEnabled
-                            icon: (off || Notifs.doNotDisturb)
-                                ? "󰂛" : "󰂚"
-                            title: "Notify"
-                            subtitle: off
-                                ? "off"
-                                : (Notifs.doNotDisturb
-                                    ? "silenced"
-                                    : (Notifs.unread > 0
-                                        ? Notifs.unread + " unread" : "on"))
-                            active: !off && !Notifs.doNotDisturb
-                            onToggled: {
-                                if (off) {
-                                    Config.notificationsEnabled = true;
-                                    Config.save();
-                                    Notifs.doNotDisturb = false;
-                                    return;
-                                }
-                                Notifs.doNotDisturb = !Notifs.doNotDisturb;
-                            }
-                            // requestClose, not closeAll: closeAll leaves
-                            // the control centre itself open, and the two
-                            // panels would sit on top of one another.
-                            onSecondary: {
-                                root.requestClose();
-                                GlobalState.notifCenterOpen = true;
-                            }
-                        }
-                    }
-
-                    Item {
-                        Layout.fillWidth: true
-                        clip: true
-                        readonly property bool on:
-                            root.expanded === "audio" || root.expanded === "light"
-                        implicitHeight: on ? avLoader.implicitHeight + Theme.px(10) : 0
-                        opacity: on ? 1 : 0
-
-                        Behavior on implicitHeight {
-                            NumberAnimation { duration: Theme.med; easing.type: Theme.ease }
-                        }
-                        Behavior on opacity { NumberAnimation { duration: Theme.fast } }
-
-                        // Loaded on demand: unlike the network one, these
-                        // two are different components, so a Loader is what
-                        // picks between them anyway.
                         Loader {
-                            id: avLoader
+                            id: expLoader
                             anchors.left: parent.left
                             anchors.right: parent.right
                             anchors.top: parent.top
                             anchors.topMargin: Theme.px(10)
                             active: parent.on
-                            sourceComponent: root.expanded === "light"
-                                ? lightPanelC : audioPanelC
+                            sourceComponent: {
+                                switch (root.expanded) {
+                                case "light": return lightPanelC;
+                                case "audio": return audioPanelC;
+                                default:      return netPanelC;
+                                }
+                            }
+                        }
+                    }
+
+                    // Wi-Fi and Bluetooth share one panel that takes a
+                    // kind, so it is built here rather than inline: the
+                    // Loader above only picks between components.
+                    Component {
+                        id: netPanelC
+                        NetPanel {
+                            kind: root.expanded === "bt" ? "bt" : "wifi"
+                            // Never scan for an expander nobody is looking
+                            // at: it would hold the Bluetooth radio while
+                            // the control centre is shut.
+                            active: root.open
+                                && (root.expanded === "wifi" || root.expanded === "bt")
                         }
                     }
 
                     Component { id: audioPanelC; AudioPanel {} }
                     Component { id: lightPanelC; BrightnessPanel {} }
 
-                    MediaCard { Layout.fillWidth: true }
+                    MediaCard {
+                        Layout.fillWidth: true
+                        visible: Config.ccMedia
+                    }
 
                     Item {
                         Layout.fillWidth: true
-                        visible: Updates.available && Updates.count > 0
+                        visible: Config.ccUpdates
+                            && Updates.available && Updates.count > 0
                         implicitHeight: updRow.implicitHeight
 
                         RowLayout {
@@ -347,6 +259,7 @@ Item {
                     // keep compact gauges here so they don't shove the footer.
                     NCard {
                         Layout.fillWidth: true
+                        visible: Config.ccStats
                         color: Theme.c.surface2
                         radius: Theme.r.chip
                         implicitHeight: sys.implicitHeight + Theme.px(18)
@@ -379,7 +292,11 @@ Item {
                 }
             }
 
-            // ── Footer: always visible ────────────────────────────────
+            // ── Footer ────────────────────────────────────────────────
+            // Caffeine keeps its own full width row rather than joining
+            // the grid: it is a switch with a label, not a state you read
+            // at a glance, and squeezing it into a tile would have been a
+            // redesign rather than a setting.
             RowLayout {
                 id: footer
                 Layout.fillWidth: true
@@ -387,6 +304,7 @@ Item {
 
                 NCard {
                     Layout.fillWidth: true
+                    visible: Config.ccCaffeine
                     implicitHeight: Theme.px(30)
                     color: Theme.c.surface2
                     radius: Theme.r.chip
@@ -407,28 +325,22 @@ Item {
                     }
                 }
 
-                SquareButton {
-                    icon: "󰖔"
-                    visible: NightLight.available
-                    lit: NightLight.active
-                    onActivated: NightLight.toggle()
+                // With caffeine hidden the buttons would sit hard against
+                // the left edge, which reads as a row that lost something.
+                // This holds the space it used to take.
+                Item {
+                    Layout.fillWidth: true
+                    visible: !Config.ccCaffeine
                 }
-                SquareButton {
-                    icon: "󰒓"
-                    onActivated: { root.requestClose(); GlobalState.settingsOpen = true; }
-                }
-                SquareButton {
-                    icon: "󰑐"
-                    onActivated: { root.requestClose(); Power.reloadAll(); }
-                }
-                SquareButton {
-                    icon: "󰌾"
-                    onActivated: { root.requestClose(); Power.lock(); }
-                }
-                SquareButton {
-                    icon: "󰐥"
-                    danger: true
-                    onActivated: { root.requestClose(); GlobalState.sessionOpen = true; }
+
+                Repeater {
+                    model: Config.ccFooter ? Config.ccZone("footer") : []
+
+                    CcFooterSlot {
+                        required property string modelData
+                        itemId: modelData
+                        cc: root
+                    }
                 }
             }
         }

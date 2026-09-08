@@ -102,6 +102,11 @@ The host compositor eats `SUPER`. Optional passthrough: source
 ## What you get
 
 - **Bar, dock, control centre, settings** - one scale slider, one accent
+- **Nothing is hardcoded**: the bar's three islands and the control
+  centre are both built from a registry. 19 bar elements across left,
+  centre and right; 14 control centre tiles, 8 footer buttons, 5 blocks,
+  and 2 to 4 tiles per row. Settings > Interface edits both, with a live
+  preview of each
 - **Desktop widgets** - 46 of them in 12 families: dot-matrix and dial
   clocks, date and calendar, Quick Look, weather, photos, media, a
   countdown on any of Nothing's twelve shapes, breathing exercises,
