@@ -143,6 +143,12 @@ The host compositor eats `SUPER`. Optional passthrough: source
 - On an Asus ROG machine, `./install` offers the three asus-linux tools.
   It never touches your kernel
 - Dolphin / GTK / Qt themed to match; file pickers go through xdg-desktop-portal
+- **Spotify** in the same palette, through spicetify: no green anywhere,
+  Ndot on the page titles and the track name, hairlines instead of gaps,
+  and the play button in whatever accent the shell is set to.
+  `./scripts/apply-spicetify.sh` (it is skipped unless spicetify is
+  already installed, because patching Spotify needs write access to
+  `/opt/spotify`)
 - Two **dot-matrix wallpapers** in `hypr/wallpapers/`, one cut for 16:10
   and one for 16:9. Settings picks between them per screen, so the laptop
   and the external each get the frame drawn for their own shape
@@ -210,6 +216,7 @@ Packages are left installed. App theme revert:
 
 ```bash
 ./scripts/apply-app-theme.sh --revert
+./scripts/apply-spicetify.sh --revert
 ```
 
 ## Credits

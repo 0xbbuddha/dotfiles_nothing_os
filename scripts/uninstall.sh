@@ -41,5 +41,14 @@ restore "$CONF/hypr/hyprland.conf"
 restore "$DATA/applications/nothing-x.desktop"
 restore "$DATA/icons/hicolor/scalable/apps/nothing-x.svg"
 
+# Spotify is patched in place rather than configured, so removing the
+# theme file would leave a themed client with nothing to read. Ask
+# spicetify to put the original app back instead.
+if command -v spicetify >/dev/null 2>&1; then
+    echo "-> Restore Spotify"
+    spicetify restore >/dev/null 2>&1 && echo "  spotify unpatched" \
+        || echo "  spotify was not patched"
+fi
+
 echo "Left in place: $CONF/hypr/custom.lua"
 echo "Done."

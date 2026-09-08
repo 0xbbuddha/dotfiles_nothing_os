@@ -54,7 +54,7 @@ Item {
         id: card
         width: root.implicitWidth
         height: Math.min(root.naturalHeight, root.maxHeight)
-        radius: Theme.px(4)
+        radius: Theme.r.panel
         clip: true
 
         ColumnLayout {

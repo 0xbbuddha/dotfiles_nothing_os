@@ -1,0 +1,551 @@
+/*
+ * Nothing, for Spotify.
+ *
+ * Selectors here were read out of the shipped stylesheets of Spotify
+ * 1.2.96 rather than copied from a theme gallery. That matters more than
+ * it sounds: half of what the older Spicetify themes target no longer
+ * exists in the client, so they apply cleanly, change nothing, and leave
+ * you looking at a dark Spotify wondering what went wrong. Every class
+ * below was checked against xpui-snapshot.css and the dwp-* bundles.
+ *
+ * Three passes, in order of how much they matter:
+ *
+ *   1. the geometry. Spotify rounds everything at 8 to 16 pixels and
+ *      separates its panels with gaps of page background. Nothing rounds
+ *      surfaces at 4 and separates with hairlines. This is what actually
+ *      makes the window stop reading as Spotify.
+ *   2. the type. Inter for the interface, Ndot for the two places that
+ *      are already display-sized, and small tracked capitals on every
+ *      label. Ndot at list size is a dot pattern, not a word, so it stays
+ *      out of lists.
+ *   3. the colour, which Spicetify has mostly done from color.ini before
+ *      this file is read. What is left is Spotify's own gradients: it
+ *      tints every page header with the artwork's dominant colour, and no
+ *      palette survives that.
+ *
+ * Rules that could not be verified against a class in the bundle are kept
+ * anyway when the older name is cheap to carry, but they are never the
+ * only selector on a rule.
+ */
+
+/* ── 0. Tokens ───────────────────────────────────────────────────────── */
+
+:root {
+    /* 4px, the radius the shell gives its control centre, its bar islands
+       and its Hyprland window corners. One number for every surface on
+       the screen is the whole point. */
+    --nothing-r: 4px;
+    --nothing-line: rgba(var(--spice-rgb-selected-row), 0.13);
+    --nothing-line-soft: rgba(var(--spice-rgb-selected-row), 0.07);
+    --nothing-dot: rgba(var(--spice-rgb-selected-row), 0.06);
+    --nothing-hover: rgba(var(--spice-rgb-selected-row), 0.06);
+    --nothing-track: 0.13em;
+}
+
+/* Spicetify rewrites color.ini into Spotify's own stylesheet, but the
+   parts of the client that were moved onto encore read these instead and
+   never see it. Spotify declares them inside @layer encore, and an
+   unlayered rule beats a layered one whatever the specificity, so this
+   block wins without needing !important on every line. */
+:root,
+body,
+.encore-dark-theme,
+.encore-light-theme {
+    --background-base: var(--spice-main);
+    --background-highlight: var(--spice-highlight);
+    --background-press: var(--spice-main);
+    --background-elevated-base: var(--spice-card);
+    --background-elevated-highlight: var(--spice-highlight-elevated);
+    --background-elevated-press: var(--spice-card);
+    --background-tinted-base: var(--nothing-hover);
+    --background-tinted-highlight: rgba(var(--spice-rgb-selected-row), 0.1);
+    --background-tinted-press: var(--nothing-line-soft);
+    --background-unsafe-for-overlay: var(--spice-main);
+
+    --text-base: var(--spice-text);
+    --text-subdued: var(--spice-subtext);
+    --text-bright-accent: var(--spice-button);
+    --text-negative: var(--spice-notification-error);
+    --text-positive: var(--spice-button);
+    --text-announcement: var(--spice-button);
+
+    --essential-base: var(--spice-text);
+    --essential-subdued: var(--spice-subtext);
+    --essential-bright-accent: var(--spice-button);
+    --essential-negative: var(--spice-notification-error);
+    --essential-positive: var(--spice-button);
+    --essential-announcement: var(--spice-button);
+
+    --decorative-base: var(--spice-text);
+    --decorative-subdued: var(--spice-misc);
+}
+
+/* ── 1. Type ─────────────────────────────────────────────────────────── */
+
+* {
+    font-family: "Inter Variable", "Inter", sans-serif !important;
+}
+
+/* Ndot, twice on the screen and no more: the name of the page you are on,
+   and the name of the track that is playing. Both are already large, both
+   are already the thing you look at first. */
+.main-entityHeader-title,
+.main-entityHeader-title h1,
+.main-entityHeader-titleText,
+.main-entityHeader-topbarTitle,
+.main-trackInfo-name,
+.main-trackInfo-name a {
+    font-family: "Ndot77JPExtended", "Inter Variable", sans-serif !important;
+    font-weight: 400 !important;
+    letter-spacing: 0.02em !important;
+    text-transform: lowercase;
+}
+
+.main-entityHeader-title,
+.main-entityHeader-title h1 {
+    /* Spotify runs this up to 96px on a wide window. Ndot is a dot grid,
+       and a dot grid that big stops being a word. */
+    font-size: clamp(28px, 4vw, 46px) !important;
+    line-height: 1.1 !important;
+}
+
+/* Every label, caption, tab and column head. Small, tracked, upper: this
+   is the single change that does the most work, because Nothing's whole
+   interface is built out of them. */
+.main-entityHeader-pretitle,
+.main-entityHeader-metaDataText,
+.main-entityHeader-metaDataTextSubdued,
+.main-trackList-column,
+.main-trackList-trackListHeader,
+.main-yourLibraryX-rootListHeader,
+.main-globalNav-navLink span,
+.main-shelf-title h2,
+.main-shelf-subtitle,
+.main-trackInfo-artists a,
+.main-card-cardMetadata .main-cardSubHeader-root {
+    text-transform: uppercase !important;
+    letter-spacing: var(--nothing-track) !important;
+    font-size: 10px !important;
+    font-weight: 500 !important;
+    color: var(--spice-subtext) !important;
+}
+
+/* Anything counted rather than read, in tabular figures, so a list does
+   not shuffle sideways as the numbers change width. */
+.main-trackList-rowSectionIndex,
+.main-trackList-number,
+.main-trackList-duration,
+.playback-bar__progress-time-elapsed,
+.main-playbackBarRemainingTime-container,
+.playback-bar > div:first-child,
+.playback-bar > div:last-child {
+    font-family: "JetBrainsMono Nerd Font", "Inter Variable", monospace !important;
+    font-variant-numeric: tabular-nums;
+    font-size: 11px !important;
+    color: var(--spice-misc) !important;
+}
+
+/* ── 2. Shell ────────────────────────────────────────────────────────── */
+
+.Root__top-container,
+.Root__main-view,
+.main-view-container,
+.main-view-container__scroll-node,
+.main-view-container__scroll-node-child {
+    background-color: var(--spice-main) !important;
+}
+
+/* The dot field, the same grid the shell draws behind its own panels.
+   Painted as the main view's own background rather than as an overlay
+   pseudo-element: Spotify stacks positioned children over that area and
+   an overlay would either sit under all of them or over all of them, and
+   neither is what a texture does. background-attachment keeps it still
+   while the page scrolls, which is what makes it read as a surface. */
+.Root__main-view,
+.main-view-container__scroll-node {
+    background-image: radial-gradient(var(--nothing-dot) 1px, transparent 1px) !important;
+    background-size: 9px 9px !important;
+    background-attachment: fixed !important;
+}
+
+/* Spotify separates its panels with a gap of page background. Nothing
+   separates with a hairline, so the panels have to actually touch. */
+.Root__nav-bar,
+.main-yourLibraryX-library,
+.main-yourLibraryX-libraryContainer {
+    background-color: var(--spice-sidebar) !important;
+    border-right: 1px solid var(--nothing-line-soft);
+    border-radius: 0 !important;
+}
+
+.Root__right-sidebar,
+.Root__right-sidebar > div {
+    background-color: var(--spice-sidebar) !important;
+    border-left: 1px solid var(--nothing-line-soft);
+    border-radius: 0 !important;
+}
+
+.Root__now-playing-bar,
+.main-nowPlayingBar-nowPlayingBar,
+.main-nowPlayingBar-container {
+    background-color: var(--spice-player) !important;
+    border-top: 1px solid var(--nothing-line);
+}
+
+.Root__globalNav,
+.main-globalNav-searchSection,
+.main-topBar-background,
+.main-topBar-container {
+    background-color: var(--spice-main) !important;
+}
+
+.Root__globalNav {
+    border-bottom: 1px solid var(--nothing-line-soft);
+}
+
+/* One radius, everywhere there is a surface. Listed rather than applied
+   with a universal selector: * would take the circular avatars, the
+   progress handle and the play button with it. */
+.main-view-container,
+.main-yourLibraryX-library,
+.main-yourLibraryX-libraryItemContainer,
+.main-yourLibraryX-listItem,
+.main-card-card,
+.main-card-imageContainer,
+.main-cardImage-image,
+.main-image-image,
+.main-entityHeader-image,
+.main-entityHeader-imageContainer,
+.main-trackList-rowImage,
+.main-trackList-trackListRow,
+.main-nowPlayingWidget-coverArt,
+.main-nowPlayingWidget-coverArt img,
+.cover-art,
+.main-contextMenu-menu,
+.GenericModal,
+.main-buddyFeed-buddyFeedRoot,
+.main-trackCreditsModal-container {
+    border-radius: var(--nothing-r) !important;
+}
+
+/* Round art is round art: avatars and the circular card variant stay
+   circles, and are relisted after the block above so they win. */
+.main-avatar-avatar img,
+.main-userWidget-box img,
+.main-cardImage-circular .main-cardImage-image,
+.main-entityHeader-circle .main-image-image {
+    border-radius: 50% !important;
+}
+
+/* ── 3. Killing the gradients ────────────────────────────────────────── */
+
+/* Spotify tints every page header, action bar and library entry with the
+   artwork's dominant colour. It is the single loudest thing in the
+   window, it is a different colour on every page, and no palette applied
+   underneath it survives. */
+.main-entityHeader-background,
+.main-entityHeader-backgroundColor,
+.main-entityHeader-overlay,
+.main-entityHeader-shadow,
+.main-entityHeader-withBackgroundImage,
+.main-actionBarBackground-background,
+.main-actionBar-ActionBarContainer,
+.main-home-homeHeader,
+.under-main-view > div:first-child,
+.main-topBar-overlay {
+    background: var(--spice-main) !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+
+.main-entityHeader-container,
+.main-entityHeader-containerNormal,
+.main-entityHeader-containerFlex {
+    background: transparent !important;
+    background-image: none !important;
+}
+
+/* The divider Spotify draws under a header, and the one between tracks. */
+.main-entityHeader-divider,
+.main-trackList-rowSeperator {
+    background-color: var(--nothing-line-soft) !important;
+    border-color: var(--nothing-line-soft) !important;
+}
+
+/* ── 4. Controls ─────────────────────────────────────────────────────── */
+
+/* The play button: filled disc, ground-coloured glyph, and no hover
+   swell. Nothing's controls change colour, never size. */
+.main-playButton-PlayButton,
+.main-playPauseButton-button,
+.main-actionBar-ActionBarPlayButtonContainer button,
+.main-card-PlayButtonContainer button,
+button[data-testid="play-button"] {
+    background-color: var(--spice-button) !important;
+    color: var(--spice-main) !important;
+    border-radius: 50% !important;
+    box-shadow: none !important;
+    transition: filter 140ms ease, opacity 140ms ease !important;
+}
+
+.main-playButton-PlayButton:hover,
+.main-playPauseButton-button:hover,
+.main-actionBar-ActionBarPlayButtonContainer button:hover,
+button[data-testid="play-button"]:hover {
+    transform: none !important;
+    scale: 1 !important;
+    filter: brightness(1.18);
+}
+
+/* Everything else is an icon that changes colour, with the accent
+   reserved for state that is actually on. */
+.main-shuffleButton-button.main-shuffleButton-active,
+.main-repeatButton-button.main-repeatButton-active,
+.main-addButton-active,
+.main-genericButton-buttonActive,
+.main-nowPlayingBar-lyricsButton[aria-pressed="true"],
+button[aria-checked="true"] {
+    color: var(--spice-button) !important;
+}
+
+.main-shuffleButton-button.main-shuffleButton-active::after,
+.main-repeatButton-button.main-repeatButton-active::after {
+    background-color: var(--spice-button) !important;
+}
+
+/* The home filter chips, and the library filter pills. Outlined, tracked,
+   filled only when they are the one that is on. */
+.main-home-filterChipsSection button,
+.main-yourLibraryX-libraryFilter button,
+.main-yourLibraryX-filterArea button,
+button[data-encore-id="chip"] {
+    border-radius: 999px !important;
+    border: 1px solid var(--nothing-line) !important;
+    background: transparent !important;
+    color: var(--spice-text) !important;
+    text-transform: uppercase !important;
+    letter-spacing: var(--nothing-track) !important;
+    font-size: 10px !important;
+    transition: background-color 140ms ease, color 140ms ease,
+                border-color 140ms ease !important;
+}
+
+.main-home-filterChipsSectionActive button,
+.main-home-filterChipsSection button[aria-checked="true"],
+.main-yourLibraryX-libraryFilter button[aria-checked="true"],
+button[data-encore-id="chip"][aria-checked="true"],
+button[data-encore-id="chip"][data-active="true"] {
+    background: var(--spice-text) !important;
+    color: var(--spice-main) !important;
+    border-color: var(--spice-text) !important;
+}
+
+/* The search field in the top nav. */
+.main-globalNav-searchInputWrapper,
+.main-globalNav-searchInputContainer,
+.main-searchInput-input,
+input[data-testid="search-input"] {
+    background: var(--spice-card) !important;
+    border: 1px solid var(--nothing-line-soft) !important;
+    border-radius: 999px !important;
+    letter-spacing: 0.04em;
+}
+
+.main-globalNav-searchInputWrapper:focus-within,
+.main-searchInput-input:focus {
+    border-color: var(--spice-button) !important;
+    box-shadow: none !important;
+}
+
+/* ── 5. Progress and volume ──────────────────────────────────────────── */
+
+/* This build draws both bars with one component that reads four custom
+   properties off its container, so the colours are set there rather than
+   on the fill: --fg-color is the played part, --bg-color the rest, and
+   --is-active-fg-color the colour Spotify swaps in on hover, which is the
+   green that a fill-only rule leaves behind. */
+.progress-bar,
+.playback-bar,
+.playback-progressbar-isInteractive {
+    --progress-bar-height: 2px !important;
+    --progress-bar-radius: 0 !important;
+    --fg-color: var(--spice-button) !important;
+    --is-active-fg-color: var(--spice-button) !important;
+    --bg-color: var(--nothing-line) !important;
+    --mg-color: rgba(var(--spice-rgb-button), 0.35) !important;
+}
+
+.x-progressBar-fillColor,
+.progress-bar__fg {
+    background-color: var(--spice-button) !important;
+    border-radius: 0 !important;
+}
+
+.x-progressBar-progressBarBg,
+.x-progressBar-sliderArea,
+.progress-bar__bg {
+    border-radius: 0 !important;
+}
+
+/* Spotify hides the handle until hover; on a bar two pixels tall there is
+   then nothing to grab. */
+.x-progressBar-slider,
+.progress-bar__slider {
+    background-color: var(--spice-text) !important;
+    width: 8px !important;
+    height: 8px !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    opacity: 1 !important;
+}
+
+/* Volume stays white: it is not playback state, and two accents in one
+   corner is one too many. */
+.volume-bar__slider-container,
+.main-nowPlayingBar-volumeBar {
+    --fg-color: var(--spice-text) !important;
+    --is-active-fg-color: var(--spice-text) !important;
+}
+
+/* ── 6. Lists ────────────────────────────────────────────────────────── */
+
+.main-trackList-trackListRow {
+    transition: background-color 140ms ease, box-shadow 140ms ease !important;
+}
+
+.main-trackList-trackListRow:hover,
+.main-trackList-trackListRow[aria-selected="true"],
+.main-trackList-selected {
+    background-color: var(--nothing-hover) !important;
+}
+
+/* The playing row gets a mark down its left edge rather than green text.
+   Nothing marks state with a mark; it does not recolour the word. */
+.main-trackList-trackListRow:has(.main-trackList-playingIcon),
+.main-trackList-active {
+    box-shadow: inset 2px 0 0 var(--spice-button) !important;
+    background-color: var(--nothing-line-soft) !important;
+}
+
+.main-trackList-active .main-trackList-rowTitle,
+.main-trackList-rowTitle[data-encore-text-color="textBrightAccent"] {
+    color: var(--spice-text) !important;
+}
+
+/* The animated bars Spotify draws on the playing row. */
+.main-trackList-playingIcon {
+    filter: grayscale(1) brightness(2);
+}
+
+/* Cards lose their fill and gain an edge on hover, which is how the shell
+   draws every tile it has. */
+.main-card-card {
+    background: transparent !important;
+    border: 1px solid transparent;
+    transition: background-color 160ms ease, border-color 160ms ease !important;
+}
+
+.main-card-card:hover {
+    background: var(--spice-card) !important;
+    border-color: var(--nothing-line-soft);
+}
+
+.main-card-cardTitle,
+.main-card-cardTitleLink {
+    letter-spacing: 0.01em;
+}
+
+/* ── 7. Sidebar ──────────────────────────────────────────────────────── */
+
+.main-yourLibraryX-listItem,
+.main-yourLibraryX-libraryItemContainer,
+.main-globalNav-navLink,
+.main-yourLibraryX-entryPoints li {
+    transition: background-color 140ms ease, box-shadow 140ms ease !important;
+}
+
+.main-yourLibraryX-listItem:hover,
+.main-globalNav-navLink:hover {
+    background-color: var(--nothing-hover) !important;
+}
+
+/* Active nav gets the same left mark as the playing row, so one language
+   covers both lists. */
+.main-globalNav-navLinkActive,
+.main-yourLibraryX-listItem[aria-current="page"],
+.main-yourLibraryX-navItem[aria-current="page"] {
+    background-color: var(--spice-card) !important;
+    box-shadow: inset 2px 0 0 var(--spice-button) !important;
+}
+
+.main-yourLibraryX-header,
+.main-yourLibraryX-headerContent {
+    background: transparent !important;
+    border-bottom: 1px solid var(--nothing-line-soft);
+}
+
+/* ── 8. Now playing ──────────────────────────────────────────────────── */
+
+.main-trackInfo-name,
+.main-trackInfo-name a {
+    font-size: 15px !important;
+    letter-spacing: 0.03em !important;
+}
+
+.main-trackInfo-artists a {
+    text-transform: uppercase;
+    letter-spacing: var(--nothing-track);
+    font-size: 9px !important;
+    color: var(--spice-subtext) !important;
+}
+
+.main-coverSlotCollapsed-container,
+.main-nowPlayingWidget-coverArtContainer {
+    border-radius: var(--nothing-r) !important;
+    overflow: hidden;
+}
+
+/* ── 9. Chrome ───────────────────────────────────────────────────────── */
+
+.os-scrollbar-handle,
+::-webkit-scrollbar-thumb {
+    background: var(--nothing-line) !important;
+    border-radius: 0 !important;
+}
+
+.os-scrollbar-handle:hover,
+::-webkit-scrollbar-thumb:hover {
+    background: var(--spice-misc) !important;
+}
+
+::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* Context menus and dialogs: flat sheet, hairline edge, no drop shadow.
+   Nothing separates layers with contrast, never with a blur. */
+.main-contextMenu-menu,
+.GenericModal,
+.main-trackCreditsModal-container,
+.main-noConnection-notificationContainer {
+    background: var(--spice-card) !important;
+    border: 1px solid var(--nothing-line) !important;
+    box-shadow: none !important;
+}
+
+.main-contextMenu-menuItemButton:hover {
+    background: rgba(var(--spice-rgb-selected-row), 0.08) !important;
+}
+
+/* Last, and narrow on purpose. A blanket filter over the whole app would
+   drag the album art through it too. */
+[style*="rgb(30, 215, 96)"],
+[style*="#1ed760"],
+[style*="#1db954"] {
+    color: var(--spice-button) !important;
+}

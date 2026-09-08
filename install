@@ -80,6 +80,17 @@ install_files() {
 
     log "Copies into $HOME/.config: hypr, quickshell, scripts, theme"
     run bash "$ROOT/scripts/install-config.sh"
+
+    # Spotify only if spicetify is already there. Patching it needs write
+    # access to /opt/spotify, which needs root, and an installer that asks
+    # for root to theme a music player has overstepped. The script says
+    # what to run when it cannot do it itself; a failure here is never
+    # allowed to take the rest of the install down with it.
+    if command -v spicetify >/dev/null 2>&1; then
+        log "Spotify theme (spicetify)"
+        bash "$ROOT/scripts/apply-spicetify.sh" \
+            || warn "spotify left alone: ./scripts/apply-spicetify.sh --fix-perms"
+    fi
 }
 
 install_session() {

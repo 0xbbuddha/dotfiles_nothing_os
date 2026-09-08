@@ -29,8 +29,15 @@ hl.config({
     },
 
     decoration = {
-        rounding       = 18,
-        rounding_power = 2.6,
+        -- The same corner as the shell's panels (Theme.r.panel = 4). A
+        -- window rounded at 18 next to a control centre rounded at 4 is
+        -- two different design languages sharing a screen.
+        --
+        -- rounding_power back to 2: the squircle exponent is what makes a
+        -- large corner look drawn rather than cut, and at four pixels it
+        -- has nothing to shape, so it only smears the corner.
+        rounding       = 4,
+        rounding_power = 2.0,
 
         active_opacity   = 1.0,
         inactive_opacity = 0.94,

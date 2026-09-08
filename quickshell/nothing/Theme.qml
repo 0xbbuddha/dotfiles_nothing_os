@@ -89,6 +89,11 @@ Singleton {
     // ── Rayons ────────────────────────────────────────────────────────
     readonly property QtObject r: QtObject {
         readonly property int pill: 999
+        // Panels: the control centre, the bar islands, and Hyprland's own
+        // window corners, which are set to match in hypr/hyprland/general.lua.
+        // Nearly square on purpose: Nothing rounds its controls and leaves
+        // its surfaces alone, so a panel and a pill never share a radius.
+        readonly property int panel: root.px(4)
         readonly property int card: root.px(20)
         readonly property int chip: root.px(13)
         readonly property int tiny: root.px(8)

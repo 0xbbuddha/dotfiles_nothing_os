@@ -181,11 +181,11 @@ PanelWindow {
             NCard {
                 id: centreCard
                 required property string modelData
-                radius: Theme.r.pill
+                radius: Theme.r.panel
                 height: Theme.z.bar
                 // A wide element sizes to its own content plus breathing
-                // room; a square one keeps the bar's height, so the pill
-                // stays a circle.
+                // room; a square one keeps the bar's height, so it comes
+                // out an actual square rather than a stretched one.
                 width: BarRegistry.isWide(modelData)
                     ? centreSlot.implicitWidth + Theme.px(28)
                     : Theme.z.bar

@@ -32,7 +32,10 @@ Rectangle {
         visible: ids.length > 0
         implicitWidth: row.implicitWidth + Theme.px(14)
         implicitHeight: Theme.px(20)
-        radius: height / 2
+        // Theme.r.panel is set against the real bar's 30px; this island is
+        // 20, so the radius is scaled with it. A preview that rounds
+        // harder than the thing it previews is a lie about the shape.
+        radius: Theme.px(3)
         color: Theme.c.surface
         anchors.verticalCenter: parent.verticalCenter
 
