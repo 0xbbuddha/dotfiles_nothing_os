@@ -64,7 +64,7 @@ PanelWindow {
     visible: want || catching || reveal > 0.02
 
     // While the shelf is open the catcher is the input region so a click
-    // outside closes it. While peeking, only the shelf is live — the rest
+    // outside closes it. While peeking, only the shelf is live, the rest
     // of the screen (and the bar above this window) stays clickable.
     mask: Region { item: (win.want && !win.catching) ? catcher : shelf }
 

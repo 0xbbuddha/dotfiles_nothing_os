@@ -7,8 +7,8 @@ import ".."
 
 // Brightness: panel, software gamma, keyboard backlight.
 // The screen slider has two phases, like the other rice:
-//   0–30 %  hyprsunset gamma (darker than the panel minimum)
-//   30–100 % backlight
+//   0 to 30 %  hyprsunset gamma (darker than the panel minimum)
+//   30 to 100 % backlight
 // Keys go through up()/down() to chain the two.
 Singleton {
     id: root

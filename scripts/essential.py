@@ -522,7 +522,7 @@ def gemini_once(entry: dict, key: str, model: str) -> tuple[bool, str]:
         if exc.code in (401, 403):
             return False, "Bad Gemini API key"
         if exc.code in (429, 503):
-            return False, "Gemini is busy — tap Ask again"
+            return False, "Gemini is busy, tap Ask again"
         return False, (msg or f"Gemini HTTP {exc.code}")[:180]
     except (urllib.error.URLError, TimeoutError):
         return False, "No network to Gemini"
@@ -592,7 +592,7 @@ def gemini_text_once(prompt: str, key: str, model: str, timeout: int) -> tuple[s
         if exc.code in (401, 403):
             return "", "Bad Gemini API key"
         if exc.code in (429, 503):
-            return "", "Gemini is busy — tap Ask again"
+            return "", "Gemini is busy, tap Ask again"
         return "", (msg or f"Gemini HTTP {exc.code}")[:180]
     except (urllib.error.URLError, TimeoutError):
         return "", "No network to Gemini"
@@ -1003,7 +1003,7 @@ def main() -> None:
     elif cmd == "ingest-song":
         title = args[1] if len(args) > 1 else ""
         artist = " ".join(args[2:]) if len(args) > 2 else ""
-        body = f"{title} — {artist}".strip(" —")
+        body = f"{title} - {artist}".strip(" -")
         cmd_add("song", body, backend)
     elif cmd == "remove":
         if len(args) < 2:

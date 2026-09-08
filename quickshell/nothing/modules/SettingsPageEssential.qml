@@ -48,7 +48,7 @@ SettingsPage {
             label: "Essential Search"
             hint: Config.essentialSearch
                 ? "SUPER mixes captures and settings, with Ask for Gemini"
-                : "SUPER stays a normal app launcher — no captures, no Ask"
+                : "SUPER stays a normal app launcher, no captures, no Ask"
             DotSwitch {
                 checked: Config.essentialSearch
                 onToggled: (v) => { Config.essentialSearch = v; Config.save(); }
@@ -188,8 +188,8 @@ SettingsPage {
             label: "Mind"
             hint: Config.mindBackend === "gemini"
                 ? (Essentials.hasGeminiKey
-                    ? "Gemini — key saved locally"
-                    : "Gemini — paste a key from Google AI Studio")
+                    ? "Gemini, key saved locally"
+                    : "Gemini, paste a key from Google AI Studio")
                 : (Config.mindBackend === "ollama"
                     ? "Ollama must be running locally"
                     : "Stub: title from the first line. Apps cannot be written on stub.")
@@ -217,7 +217,7 @@ SettingsPage {
             NField {
                 implicitWidth: Theme.px(180)
                 secret: true
-                placeholder: Essentials.hasGeminiKey ? "Key saved — paste to replace" : "Paste key"
+                placeholder: Essentials.hasGeminiKey ? "Key saved, paste to replace" : "Paste key"
                 onCommitted: (v) => {
                     const t = v.trim();
                     if (t === "")

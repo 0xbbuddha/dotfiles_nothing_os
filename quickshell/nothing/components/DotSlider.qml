@@ -5,7 +5,7 @@ import ".."
 //
 // The emitted value stays continuous: only the display is quantised.
 // Rounding to the nearest dot would make some defaults unreachable
-// (scale 1.0 on a 0.6–1.4 range falls between two dots).
+// (scale 1.0 on a 0.6 to 1.4 range falls between two dots).
 Item {
     id: root
 

@@ -187,7 +187,7 @@ PanelWindow {
                     }
                 }
 
-                // Ask — Gemini, in place. Red, not yellow: the accent
+                // Ask: Gemini, in place. Red, not yellow: the accent
                 // is already the Nothing red of this shell.
                 Rectangle {
                     visible: Search.askReady(search.text)

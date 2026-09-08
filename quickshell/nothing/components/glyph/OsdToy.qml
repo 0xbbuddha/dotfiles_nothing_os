@@ -3,7 +3,7 @@ import "../../services"
 import "draw.js" as D
 
 // Temporary overlay on the disc: volume, mute, brightness, charge.
-// Not a catalogue toy — OsdPulse holds it in front of the current one.
+// Not a catalogue toy: OsdPulse holds it in front of the current one.
 QtObject {
     id: root
 

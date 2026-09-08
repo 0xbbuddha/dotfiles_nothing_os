@@ -16,7 +16,7 @@ Singleton {
     property bool active: false
     property bool dndHeld: false
 
-    // Software gamma (hyprsunset): 25–100. Below 100, the image goes
+    // Software gamma (hyprsunset): 25 to 100. Below 100, the image goes
     // darker than the panel minimum. First phase of the Light slider,
     // as in the other rice.
     readonly property int gammaLowerLimit: 25

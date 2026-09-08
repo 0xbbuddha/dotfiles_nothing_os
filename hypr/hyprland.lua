@@ -1,9 +1,9 @@
--- ═══════════════════════════════════════════════════════════════════════
+-- ───────────────────────────────────────────────────────────────────────
 --  NOTHING - Hyprland config (Lua API, Hyprland ≥ 0.56)
 --  Lives at hypr/hyprland.lua (clone) and ~/.config/hypr/hyprland.lua
 --  (install). Split files are hypr/hyprland/*.lua, loaded with require.
 --  API reference: /usr/share/hypr/stubs/hl.meta.lua
--- ═══════════════════════════════════════════════════════════════════════
+-- ───────────────────────────────────────────────────────────────────────
 
 local src = debug.getinfo(1, "S").source:sub(2)
 if not src:match("^/") then
