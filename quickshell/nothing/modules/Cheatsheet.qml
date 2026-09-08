@@ -9,7 +9,7 @@ import "../services"
 OverlayWindow {
     id: win
     open: GlobalState.cheatsheetOpen
-    onOpenChanged: GlobalState.cheatsheetOpen = open
+    onCloseRequested: GlobalState.cheatsheetOpen = false
     sheetWidth: Math.min(Theme.px(800), screen.width * 0.85)
     sheetHeight: Math.min(Theme.px(560), screen.height * 0.82)
 

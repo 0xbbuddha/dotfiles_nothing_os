@@ -10,7 +10,7 @@ import "../services"
 OverlayWindow {
     id: win
     open: GlobalState.notifCenterOpen
-    onOpenChanged: GlobalState.notifCenterOpen = open
+    onCloseRequested: GlobalState.notifCenterOpen = false
     topBias: 0.28
     sheetWidth: Theme.px(430)
     sheetHeight: Math.min(Theme.px(500), screen.height * 0.72)

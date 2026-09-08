@@ -26,19 +26,45 @@ PanelWindow {
 
     anchors { top: true; right: true }
     implicitWidth: Theme.px(330)
-    implicitHeight: Math.min(screen.height * 0.8, column.implicitHeight + Theme.px(28))
+    implicitHeight: Math.min(screen.height * 0.8,
+                             win.dropY + stack.implicitHeight + Theme.px(14))
     exclusionMode: ExclusionMode.Ignore
 
-    mask: Region { item: column }
+    // Bubbles hang under the bar, not over it, at the same offset the
+    // control centre and the flyouts use. They started fourteen pixels
+    // from the top, which is inside the bar: this window is on the
+    // overlay layer, so its mask covered the right island and the bell
+    // underneath it stopped taking clicks whenever a popup was alive.
+    readonly property int dropY: Theme.px(5) + Theme.z.bar + Theme.px(8)
 
-    ColumnLayout {
-        id: column
+    mask: Region { item: stack }
+
+    // A Column and not a ColumnLayout, for its move transition: dismissing
+    // a bubble made every bubble under it jump up between two frames.
+    // ColumnLayout has no such transition.
+    //
+    // A Column leaves its children's width alone, so each one has to be
+    // told. That is what `width: stack.width` below is for, and it is why
+    // this positioner is named: it was written as ColumnLayout with the
+    // delegate already reading stack.width, and the name resolved to
+    // nothing at all. The bubbles came out zero pixels wide, so every
+    // notification since was invisible while still masking the bar.
+    Column {
+        id: stack
         anchors.top: parent.top
         anchors.right: parent.right
-        anchors.topMargin: Theme.px(14)
-        anchors.rightMargin: Theme.px(14)
+        anchors.topMargin: win.dropY
+        anchors.rightMargin: Theme.px(10)
         width: Theme.px(300)
         spacing: Theme.px(8)
+
+        move: Transition {
+            NumberAnimation {
+                properties: "y"
+                duration: Theme.med
+                easing.type: Theme.ease
+            }
+        }
 
         Repeater {
             model: Notifs.popups

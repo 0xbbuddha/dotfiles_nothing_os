@@ -229,6 +229,56 @@ Item {
                             onToggled: root.expand("light")
                             onSecondary: root.expand("light")
                         }
+
+                        // Do not disturb, which is what "off" means for
+                        // notifications day to day: the server keeps taking
+                        // them and the history keeps filling, nothing pops
+                        // up. Pressing it twice gets you back where you
+                        // started, which a tile that dismantled the whole
+                        // feature would not.
+                        //
+                        // The one exception is a feature switched off in
+                        // settings entirely. The tile could hide itself,
+                        // but then the grid has a hole in it and there is
+                        // no way back from here; it says "off" and turns
+                        // the feature on instead. Only ever in that
+                        // direction, so the press still means the same
+                        // thing it looks like it means.
+                        //
+                        // Lit while notifications are getting through, so
+                        // it reads the same way as Sound beside it: filled
+                        // means you will hear from it.
+                        Toggle {
+                            Layout.fillWidth: true
+                            Layout.preferredWidth: 1
+                            readonly property bool off: !Config.notificationsEnabled
+                            icon: (off || Notifs.doNotDisturb)
+                                ? "󰂛" : "󰂚"
+                            title: "Notify"
+                            subtitle: off
+                                ? "off"
+                                : (Notifs.doNotDisturb
+                                    ? "silenced"
+                                    : (Notifs.unread > 0
+                                        ? Notifs.unread + " unread" : "on"))
+                            active: !off && !Notifs.doNotDisturb
+                            onToggled: {
+                                if (off) {
+                                    Config.notificationsEnabled = true;
+                                    Config.save();
+                                    Notifs.doNotDisturb = false;
+                                    return;
+                                }
+                                Notifs.doNotDisturb = !Notifs.doNotDisturb;
+                            }
+                            // requestClose, not closeAll: closeAll leaves
+                            // the control centre itself open, and the two
+                            // panels would sit on top of one another.
+                            onSecondary: {
+                                root.requestClose();
+                                GlobalState.notifCenterOpen = true;
+                            }
+                        }
                     }
 
                     Item {

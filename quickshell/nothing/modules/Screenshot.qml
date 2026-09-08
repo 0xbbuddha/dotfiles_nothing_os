@@ -10,7 +10,7 @@ import "../services"
 OverlayWindow {
     id: win
     open: GlobalState.screenshotOpen
-    onOpenChanged: GlobalState.screenshotOpen = open
+    onCloseRequested: GlobalState.screenshotOpen = false
     sheetWidth: Theme.px(400)
     sheetHeight: Theme.px(250)
 
