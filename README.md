@@ -145,10 +145,12 @@ The host compositor eats `SUPER`. Optional passthrough: source
 - Dolphin / GTK / Qt themed to match; file pickers go through xdg-desktop-portal
 - **Spotify** in the same palette, through spicetify: no green anywhere,
   Ndot on the page titles and the track name, hairlines instead of gaps,
-  and the play button in whatever accent the shell is set to.
-  `./scripts/apply-spicetify.sh` (it is skipped unless spicetify is
-  already installed, because patching Spotify needs write access to
-  `/opt/spotify`)
+  and the play button in whatever accent the shell is set to. Turned on
+  from **Settings > Appearance > Spotify**, which handles the one thing
+  that needs root (Spotify is patched in place, so `/opt/spotify` has to
+  be made writable once) through the shell's own polkit prompt. It also
+  notices when you change your accent and offers to update.
+  `./scripts/apply-spicetify.sh` does the same from a terminal
 - Two **dot-matrix wallpapers** in `hypr/wallpapers/`, one cut for 16:10
   and one for 16:9. Settings picks between them per screen, so the laptop
   and the external each get the frame drawn for their own shape

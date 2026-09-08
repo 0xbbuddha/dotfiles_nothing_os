@@ -33,6 +33,7 @@ Singleton {
         { key: "wallpaperDraw", label: "Wallpaper drawn by the shell", page: 0, words: "background swww hyprpaper", icon: "󰋊" },
         { key: "wallpaperSet",  label: "Nothing dot-matrix wallpaper", page: 0, words: "background dots anime manga bundled shipped", icon: "󰋊" },
         { key: "wallpaperFormat", label: "Wallpaper format",  page: 0, words: "background aspect ratio 16 10 9 screen shape", icon: "󰕴" },
+        { key: "spotifyTheme", label: "Nothing theme for Spotify", page: 0, words: "spotify spicetify music theme green player apply patch", icon: "󰓇" },
 
         // ── Interface ─────────────────────────────────────────────────
         { key: "barLayout",       label: "Bar layout",         page: 1, words: "bar navbar island left centre right order move clock workspaces tray reorder customise", icon: "󰌉" },
@@ -117,6 +118,7 @@ Singleton {
         "Scale": "󰫰",
         "Accent": "󰝥",
         "Wallpaper": "󰋊",
+        "Spotify": "󰓇",
         "Bar": "󰌉",
         "Workspaces": "󰖰",
         "Overview grid": "󰋉",

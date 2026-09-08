@@ -8,7 +8,11 @@ import "../services"
 SettingsPage {
     id: page
 
-    onCurrentChanged: if (current) Walls.refresh()
+    onCurrentChanged: if (current) { Walls.refresh(); Spicetify.refresh(); }
+    // Also on creation: whether Spotify is themed is not something the
+    // panel can guess, and a page that opens straight onto index 0 never
+    // sees its own currentChanged.
+    Component.onCompleted: Spicetify.refresh()
 
     NProcess { id: sh; function run(cmd) { command = ["sh", "-c", cmd]; running = true; } }
 
@@ -243,6 +247,76 @@ SettingsPage {
                     sh.run(`cd "$HOME/hypr_nothing" && python3 scripts/gen-wallpaper.py ${w} ${h}`);
                 }
             }
+        }
+    }
+
+    // ── Spotify ───────────────────────────────────────────────────────
+    // One row, because there is one decision. Everything the theme needs
+    // to know (which accent, dark or light) it reads from the settings
+    // above rather than asking again here.
+    SettingsSection {
+        title: "Spotify"
+
+        SettingRow {
+            key: "spotifyTheme"
+            label: "Nothing theme for Spotify"
+            hint: {
+                switch (Spicetify.state) {
+                case "unknown":     return "Looking…";
+                case "noSpotify":   return "Spotify is not installed on this machine";
+                case "noSpicetify": return "Needs spicetify, the patcher every Spotify "
+                                         + "theme goes through";
+                case "locked":      return "Spotify is patched in place, so "
+                                         + Spicetify.dir + " has to be made writable "
+                                         + "once. You will be asked for your password.";
+                case "stale":       return Spicetify.scheme !== Spicetify.wantScheme
+                                         ? "Applied in " + Spicetify.scheme
+                                           + ". The shell is set to " + Spicetify.wantScheme + "."
+                                         : "Applied with #" + Spicetify.accent
+                                           + ". Your accent is now #" + Spicetify.wantAccent + ".";
+                case "on":          return "Applied. Close and reopen Spotify to see it.";
+                default:            return "Matte black, no green anywhere, and the "
+                                         + "play button in your accent";
+                }
+            }
+
+            NPillButton {
+                visible: Spicetify.state !== "noSpotify"
+                    && Spicetify.state !== "unknown"
+                text: {
+                    if (Spicetify.busy) return "Working…";
+                    switch (Spicetify.state) {
+                    case "noSpicetify": return "Install";
+                    case "stale":       return "Update";
+                    case "on":          return "Remove";
+                    default:            return "Apply";
+                    }
+                }
+                danger: Spicetify.state === "on"
+                onActivated: {
+                    if (Spicetify.busy) return;
+                    if (Spicetify.state === "noSpicetify") Spicetify.installSpicetify();
+                    else if (Spicetify.state === "on") Spicetify.revert();
+                    else Spicetify.apply();
+                }
+            }
+        }
+
+        // Only ever drawn when something went wrong, and it carries
+        // spicetify's own last line rather than a sentence of ours: the
+        // reason it refused is the only useful thing on this row.
+        SettingRow {
+            visible: Spicetify.error !== ""
+            label: "It did not go through"
+            hint: Spicetify.error
+            NIcon { text: "󰀦"; size: Theme.z.icon; color: Theme.c.red }
+        }
+
+        SettingRow {
+            visible: Spicetify.state === "noSpicetify"
+            label: "What gets installed"
+            hint: "spicetify-cli, from the AUR. The Install button opens your "
+                + "terminal so you can read the build and answer its prompts."
         }
     }
 }
