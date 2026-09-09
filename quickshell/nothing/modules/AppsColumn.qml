@@ -6,9 +6,8 @@ import "../components"
 import "../components/apps"
 import "../services"
 
-// Essential Apps pinned to the desktop. The rice's own widgets own the
-// left column (Desktop.qml); generated apps live here, on the right, so
-// a prompt gone wrong never disturbs the stock layout.
+// Essential Apps pinned to the desktop, as a homescreen of tiles.
+// Stock widgets keep the left column; these sit on the right.
 PanelWindow {
     id: win
     required property var modelData
@@ -22,9 +21,7 @@ PanelWindow {
     anchors { top: true; bottom: true; right: true }
     implicitWidth: Theme.z.widgets + Theme.px(96)
 
-    // Only the cards take clicks: an app has buttons, and the desktop
-    // behind it has to stay reachable everywhere else.
-    mask: Region { item: stack }
+    mask: Region { item: grid }
 
     readonly property var pinned: {
         MiniApps.stamp;
@@ -38,30 +35,18 @@ PanelWindow {
         return out;
     }
 
-    Column {
-        id: stack
+    Flow {
+        id: grid
         x: Theme.px(48)
         y: Theme.px(62)
         width: Theme.z.widgets
         spacing: Theme.gap
-
-        add: Transition {
-            NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.med }
-            NumberAnimation { property: "scale"; from: 0.92; to: 1
-                              duration: Theme.med; easing.type: Theme.ease }
-        }
-
-        move: Transition {
-            NumberAnimation { properties: "x,y"; duration: Theme.med; easing.type: Theme.ease }
-            NumberAnimation { property: "opacity"; to: 1; duration: Theme.fast }
-        }
 
         Repeater {
             model: win.pinned
 
             AppHost {
                 required property var modelData
-                width: stack.width
                 spec: modelData
                 chrome: true
                 onEdited: {

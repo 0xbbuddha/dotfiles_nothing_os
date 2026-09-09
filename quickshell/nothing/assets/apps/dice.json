@@ -2,17 +2,18 @@
   "name": "Dice",
   "icon": "󱅊",
   "size": "s",
+  "face": "stat",
+  "title": "DICE",
   "prompt": "roll a six sided die and remember how many times I rolled",
   "sources": [],
   "state": { "face": 1, "rolls": 0 },
-  "body": [
-    { "t": "row", "kids": [
-      { "t": "stat", "value": "state.face", "caption": "state.rolls + ' ROLLS'", "size": "l" },
-      { "t": "button", "label": "'ROLL'", "on": "roll" }
-    ] }
-  ],
+  "slots": {
+    "value": "state.face",
+    "caption": "state.rolls + ' ROLLS'"
+  },
+  "primary": "ROLL",
   "actions": {
-    "roll": [
+    "primary": [
       { "set": "face", "to": "1 + Math.floor(Math.random() * 6)" },
       { "inc": "rolls", "by": "1" }
     ]

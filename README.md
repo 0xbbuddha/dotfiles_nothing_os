@@ -136,13 +136,11 @@ The host compositor eats `SUPER`. Optional passthrough: source
 - **Launcher** (`SUPER`) - search on top, 10-workspace overview under it.
   `#` lists every Nothing app and surface
 - **Essential Apps** (`SUPER+ALT+A`, or the dot grid left of the clock) -
-  a shelf on the opposite edge to Essential Space, mirroring the bar.
-  Describe a widget in a sentence and the model writes it: a race
-  countdown, a tea timer, the anime airing this season with their
-  posters. It reads any public JSON API, plus the desktop's own battery,
-  volume, updates, notifications, workspace and Essential Space vault.
-  Six are bundled, so it works with no API key. Yours sit in the right
-  column of the desktop, the rice's widgets keep the left one
+  a conversation that builds a homescreen widget. Describe it, iterate,
+  pin it. Tiles come in 2×2, 2×4 and 4×4. They can read a public JSON
+  API plus battery, volume, weather, the vault. Six presets ship with
+  no API key. Yours sit on the right of the desktop; stock widgets keep
+  the left column
 - **Displays** (`SUPER+P`) - the arrangement Hyprland can do and never
   offers: extend, duplicate, or one screen only, plus resolution, refresh,
   scale and rotation per screen, and a map you drag a screen around on. It

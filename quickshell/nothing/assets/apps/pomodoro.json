@@ -1,7 +1,9 @@
 {
   "name": "Pomodoro",
   "icon": "󰔟",
-  "size": "m",
+  "size": "l",
+  "face": "custom",
+  "title": "POMODORO",
   "prompt": "a pomodoro timer, 25 minutes of focus then a 5 minute break, counting the finished rounds",
   "sources": ["notify"],
   "state": { "left": 1500, "total": 1500, "running": false, "onBreak": false, "done": 0 },

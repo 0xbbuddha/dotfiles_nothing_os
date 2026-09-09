@@ -160,8 +160,8 @@ SettingsPage {
             Layout.fillWidth: true
             visible: (Config.deskApps ?? []).length === 0
             text: MiniApps.empty
-                ? "No apps yet. SUPER+ALT+A opens the library, where a prompt writes one."
-                : "None pinned. Open the library and use the plus on a card."
+                ? "No widgets yet. SUPER+ALT+A opens the builder."
+                : "None pinned. Open a widget and tap Add to desktop."
             color: Theme.c.onDim
             wrapMode: Text.WordWrap
         }
@@ -169,7 +169,7 @@ SettingsPage {
         SettingRow {
             key: "appsLibrary"
             label: "Library"
-            hint: MiniApps.specs.length + " apps written, in ~/.local/share/nothing/apps"
+            hint: MiniApps.specs.length + " widgets in ~/.local/share/nothing/apps"
             NPillButton {
                 text: "OPEN"
                 onActivated: {

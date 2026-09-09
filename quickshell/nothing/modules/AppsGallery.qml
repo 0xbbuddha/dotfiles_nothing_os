@@ -4,75 +4,145 @@ import ".."
 import "../components"
 import "../services"
 
-// The library, one card per row. A shelf is narrow, and a single wide
-// column shows an app running at close to the size it will have on the
-// desktop, which two cramped columns never did.
-ListView {
+// Library: one row per widget. Driven by `length`, not the array
+// object — a JS array as a ListView model is silent in Quickshell.
+Flickable {
     id: root
-
     signal opened(string id)
 
-    model: {
+    readonly property int count: {
         MiniApps.stamp;
-        return MiniApps.specs;
+        return MiniApps.specs.length;
     }
 
-    clip: true
-    spacing: Theme.px(10)
-    topMargin: Theme.px(2)
-    bottomMargin: Theme.pad
-    leftMargin: Theme.pad
-    rightMargin: Theme.pad
+    contentWidth: width
+    contentHeight: col.implicitHeight + Theme.pad * 2
     boundsBehavior: Flickable.StopAtBounds
-    cacheBuffer: Theme.px(1200)
+    clip: true
 
-    delegate: AppsCard {
-        required property var modelData
-        width: root.width - Theme.pad * 2
-        spec: modelData
-        onOpened: (id) => root.opened(id)
-    }
-
-    // Empty state, in the same voice as the rest of the shelf.
     ColumnLayout {
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.top: parent.top
-        anchors.topMargin: Theme.px(50)
-        anchors.leftMargin: Theme.pad
-        anchors.rightMargin: Theme.pad
-        visible: MiniApps.empty
-        spacing: Theme.px(12)
+        id: col
+        x: Theme.pad
+        y: Theme.px(2)
+        width: root.width - Theme.pad * 2
+        spacing: Theme.px(6)
 
-        DotMatrix {
-            Layout.alignment: Qt.AlignHCenter
-            pattern: ["1101011",
-                      "1101011",
-                      "0000000",
-                      "1101011",
-                      "1101011",
-                      "0000000",
-                      "0011100"]
-            dot: Theme.px(4)
-            gap: Theme.px(3)
-            onColor: Theme.c.onFaint
-            offColor: Theme.c.onFaint
-            offOpacity: 0.15
+        Repeater {
+            model: root.count
+
+            Rectangle {
+                id: row
+                required property int index
+                readonly property var spec: {
+                    MiniApps.stamp;
+                    return MiniApps.specs[row.index] ?? ({});
+                }
+                readonly property string appId: row.spec.id ?? ""
+                readonly property bool onDesk: Config.hasDeskApp(row.appId)
+
+                Layout.fillWidth: true
+                implicitHeight: Theme.px(56)
+                radius: Theme.r.chip
+                color: rma.containsMouse ? Theme.c.surface3 : Theme.c.surface2
+
+                Rectangle {
+                    anchors.left: parent.left
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    width: Theme.px(2)
+                    color: Theme.c.red
+                    visible: row.onDesk
+                }
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: Theme.px(14)
+                    anchors.rightMargin: Theme.px(8)
+                    spacing: Theme.px(10)
+
+                    Rectangle {
+                        Layout.preferredWidth: Theme.px(28)
+                        Layout.preferredHeight: Theme.px(28)
+                        radius: width / 2
+                        color: row.onDesk ? Theme.c.red : Theme.c.surface
+
+                        NIcon {
+                            anchors.centerIn: parent
+                            text: row.spec.icon || "󰀻"
+                            size: Theme.px(13)
+                            color: Theme.c.on
+                        }
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 0
+
+                        NText {
+                            Layout.fillWidth: true
+                            text: row.spec.name || "Untitled"
+                            font.pixelSize: Theme.f.body
+                            elide: Text.ElideRight
+                        }
+                        NText {
+                            Layout.fillWidth: true
+                            text: (row.spec.face || "widget")
+                                + " · "
+                                + (row.spec.size === "l" ? "4×4"
+                                    : (row.spec.size === "m" ? "2×4" : "2×2"))
+                            color: Theme.c.onDim
+                            font.pixelSize: Theme.f.micro
+                            font.capitalization: Font.AllUppercase
+                            font.letterSpacing: Theme.f.track
+                        }
+                    }
+
+                    CircleButton {
+                        icon: row.onDesk ? "󰤱" : "󰐕"
+                        filled: row.onDesk
+                        size: Theme.px(22)
+                        onActivated: if (row.appId !== "")
+                            Config.toggleDeskApp(row.appId)
+                    }
+                    CircleButton {
+                        icon: "󰏫"
+                        size: Theme.px(22)
+                        onActivated: if (row.appId !== "")
+                            root.opened(row.appId)
+                    }
+                }
+
+                MouseArea {
+                    id: rma
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    z: -1
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: if (row.appId !== "")
+                        root.opened(row.appId)
+                }
+            }
         }
 
-        DisplayText {
-            Layout.alignment: Qt.AlignHCenter
-            text: "NOTHING YET"
-            size: Theme.px(20)
-            color: Theme.c.onFaint
-        }
-
-        NText {
+        ColumnLayout {
             Layout.fillWidth: true
-            horizontalAlignment: Text.AlignHCenter
-            text: "Describe an app in the field above, or start from a preset."
-            color: Theme.c.onDim
-            wrapMode: Text.WordWrap
+            Layout.topMargin: Theme.px(40)
+            visible: root.count === 0
+            spacing: Theme.px(12)
+
+            DisplayText {
+                Layout.alignment: Qt.AlignHCenter
+                text: "NOTHING YET"
+                size: Theme.px(20)
+                color: Theme.c.onFaint
+            }
+            NText {
+                Layout.fillWidth: true
+                horizontalAlignment: Text.AlignHCenter
+                text: "Build a widget, or start from a preset."
+                color: Theme.c.onDim
+                wrapMode: Text.WordWrap
+            }
         }
     }
 }

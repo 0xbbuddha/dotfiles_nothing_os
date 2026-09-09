@@ -427,6 +427,7 @@ Singleton {
                     const data = JSON.parse(text);
                     list = Array.isArray(data) ? data : [];
                 } catch (e) {
+                    console.warn("MiniApps list unreadable", e);
                     list = [];
                 }
                 const keptState = {};
@@ -455,6 +456,7 @@ Singleton {
     // ── Creating and editing ─────────────────────────────────────────
 
     property string awaiting: ""   // id the panel should open once written
+    property string lastId: ""     // last widget the user had open
 
     function create(prompt: string): void {
         const text = (prompt ?? "").trim();
@@ -462,7 +464,7 @@ Singleton {
             return;
         root.busy = true;
         root.cancelled = false;
-        root.status = "Writing the app";
+        root.status = "Building the widget";
         root.lastError = "";
         root.note = "";
         maker.payload = text;
@@ -515,11 +517,13 @@ Singleton {
                     root.lastError = "";
                     root.note = reply.note ?? "";
                     root.awaiting = reply.id ?? "";
+                    if (root.awaiting !== "")
+                        root.lastId = root.awaiting;
                     root.refresh();
                 } else {
                     root.status = "";
                     root.lastError = (reply && reply.error)
-                        ? reply.error : "The app could not be written";
+                        ? reply.error : "The widget could not be built";
                 }
             }
         }
@@ -565,6 +569,8 @@ Singleton {
     function remove(id: string): void {
         delete root.stateBag[id];
         delete root.dataBag[id];
+        if (root.lastId === id)
+            root.lastId = "";
         Config.removeDeskApp(id);
         simple.running = false;
         simple.command = ["python3", root.script, "remove", id];
@@ -631,5 +637,6 @@ Singleton {
         seeder.running = true;
         presetLister.command = ["python3", root.script, "presets"];
         presetLister.running = true;
+        root.refresh();
     }
 }
