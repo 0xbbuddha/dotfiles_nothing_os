@@ -40,7 +40,7 @@ local function detectLayout()
             local layout = line:match("X11 Layout:%s*(.-)%s*$")
             if layout and layout ~= "" then
                 f:close()
-                return layout
+                return layout:gsub("%s+", "")
             end
         end
         f:close()
