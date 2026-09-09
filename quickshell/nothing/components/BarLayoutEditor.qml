@@ -43,81 +43,66 @@ ColumnLayout {
                 }
             }
 
-            // A Column and not the enclosing ColumnLayout, for its move
-            // transition: pressing an arrow reorders the list, and without
-            // this the two rows swap between one frame and the next, which
-            // reads as the list having been redrawn rather than as
-            // something having moved.
-            Column {
+            // Dragged rather than nudged with a pair of arrows: moving
+            // something three places was four presses and no idea where it
+            // would land. DragList positions the rows itself, so the gap
+            // opens where the row is going while you are still holding it.
+            DragList {
                 id: rows
                 Layout.fillWidth: true
-                spacing: Theme.px(4)
-
-                move: Transition {
-                    NumberAnimation {
-                        properties: "y"
-                        duration: Theme.med
-                        easing.type: Theme.ease
-                    }
-                }
+                count: zoneBlock.ids.length
+                rowHeight: Theme.px(34)
+                rowSpacing: Theme.px(4)
+                onReordered: (from, to) =>
+                    Config.barMove(zoneBlock.modelData, from, to - from)
 
                 Repeater {
                     model: zoneBlock.ids
 
-                    Rectangle {
+                    // `index` is not declared here and not assigned here:
+                    // DragRow already requires it, so the Repeater fills it
+                    // in. Writing `index: index` at this call site would
+                    // have bound the property to itself, which is how a
+                    // bar element once woke up with its window undefined.
+                    DragRow {
                         id: row
                         required property string modelData
-                        required property int index
 
-                        width: rows.width
-                        implicitHeight: Theme.px(34)
-                        height: implicitHeight
-                        radius: Theme.r.tiny
-                        color: rowMa.containsMouse ? Theme.c.surface3 : Theme.c.surface2
-                        Behavior on color { ColorAnimation { duration: Theme.fast } }
+                        list: rows
 
-                        MouseArea { id: rowMa; anchors.fill: parent; hoverEnabled: true }
-
-                        RowLayout {
+                        Rectangle {
                             anchors.fill: parent
-                            anchors.leftMargin: Theme.px(10)
-                            anchors.rightMargin: Theme.px(6)
-                            spacing: Theme.px(8)
+                            radius: Theme.r.tiny
+                            color: (row.dragging || rowMa.containsMouse)
+                                ? Theme.c.surface3 : Theme.c.surface2
+                            Behavior on color { ColorAnimation { duration: Theme.fast } }
 
-                            NIcon {
-                                text: BarRegistry.icon(row.modelData)
-                                size: Theme.z.icon
-                                color: Theme.c.onDim
-                            }
+                            MouseArea { id: rowMa; anchors.fill: parent; hoverEnabled: true }
 
-                            NText {
-                                Layout.fillWidth: true
-                                text: BarRegistry.label(row.modelData)
-                                elide: Text.ElideRight
-                            }
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: Theme.px(10)
+                                anchors.rightMargin: Theme.px(6)
+                                spacing: Theme.px(8)
 
-                            // Reordering. Greyed at the ends rather than
-                            // hidden, so the row does not change width as it
-                            // travels up the list.
-                            CircleButton {
-                                icon: "󰅃"
-                                size: Theme.px(20)
-                                opacity: row.index > 0 ? 1 : 0.25
-                                onActivated: if (row.index > 0)
-                                    Config.barMove(zoneBlock.modelData, row.index, -1)
-                            }
+                                DragHandle { row: row }
 
-                            CircleButton {
-                                icon: "󰅀"
-                                size: Theme.px(20)
-                                opacity: row.index < zoneBlock.ids.length - 1 ? 1 : 0.25
-                                onActivated: if (row.index < zoneBlock.ids.length - 1)
-                                    Config.barMove(zoneBlock.modelData, row.index, 1)
-                            }
+                                NIcon {
+                                    text: BarRegistry.icon(row.modelData)
+                                    size: Theme.z.icon
+                                    color: Theme.c.onDim
+                                }
 
-                            ZonePicker {
-                                itemId: row.modelData
-                                here: zoneBlock.modelData
+                                NText {
+                                    Layout.fillWidth: true
+                                    text: BarRegistry.label(row.modelData)
+                                    elide: Text.ElideRight
+                                }
+
+                                ZonePicker {
+                                    itemId: row.modelData
+                                    here: zoneBlock.modelData
+                                }
                             }
                         }
                     }

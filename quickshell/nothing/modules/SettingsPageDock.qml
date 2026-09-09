@@ -66,66 +66,72 @@ SettingsPage {
             hint: Config.dockApps.length + " in the dock, ordered left to right"
         }
 
-        Repeater {
-            model: Config.dockApps
+        // Dragged by the grip. The dock is read left to right and this
+        // list top to bottom, so the order matters more here than almost
+        // anywhere: it is worth being able to see it move.
+        DragList {
+            id: dockRows
+            Layout.fillWidth: true
+            count: Config.dockApps.length
+            rowHeight: Theme.px(38)
+            rowSpacing: Theme.px(4)
+            onReordered: (from, to) => Config.moveDockApp(from, to - from)
 
-            Rectangle {
-                id: row
-                required property string modelData
-                required property int index
-                readonly property var entry: Apps.entry(modelData)
+            Repeater {
+                model: Config.dockApps
 
-                Layout.fillWidth: true
-                implicitHeight: Theme.px(38)
-                radius: Theme.r.tiny
-                color: Theme.c.surface2
+                // `index` is neither declared nor assigned here: DragRow
+                // already requires it, so the Repeater fills it in.
+                DragRow {
+                    id: row
+                    required property string modelData
+                    readonly property var entry: Apps.entry(modelData)
 
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.leftMargin: Theme.px(10)
-                    anchors.rightMargin: Theme.px(6)
-                    spacing: Theme.px(9)
+                    list: dockRows
 
-                    AppIcon {
-                        appId: row.modelData
-                        size: Theme.px(20)
-                    }
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: Theme.r.tiny
+                        color: row.dragging ? Theme.c.surface3 : Theme.c.surface2
+                        Behavior on color { ColorAnimation { duration: Theme.fast } }
 
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 0
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: Theme.px(10)
+                            anchors.rightMargin: Theme.px(6)
+                            spacing: Theme.px(9)
 
-                        NText {
-                            Layout.fillWidth: true
-                            text: row.entry?.name ?? row.modelData
-                            color: row.entry ? Theme.c.on : Theme.c.red
-                            font.pixelSize: Theme.f.body
-                            elide: Text.ElideRight
+                            DragHandle { row: row }
+
+                            AppIcon {
+                                appId: row.modelData
+                                size: Theme.px(20)
+                            }
+
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: 0
+
+                                NText {
+                                    Layout.fillWidth: true
+                                    text: row.entry?.name ?? row.modelData
+                                    color: row.entry ? Theme.c.on : Theme.c.red
+                                    font.pixelSize: Theme.f.body
+                                    elide: Text.ElideRight
+                                }
+                                NLabel {
+                                    text: row.entry ? row.modelData
+                                        : "not found on this system"
+                                    color: row.entry ? Theme.c.onDim : Theme.c.red
+                                }
+                            }
+
+                            CircleButton {
+                                icon: "󰅖"
+                                size: Theme.px(21)
+                                onActivated: Config.removeDockApp(row.index)
+                            }
                         }
-                        NLabel {
-                            text: row.entry ? row.modelData : "not found on this system"
-                            color: row.entry ? Theme.c.onDim : Theme.c.red
-                        }
-                    }
-
-                    CircleButton {
-                        icon: "󰁝"
-                        size: Theme.px(21)
-                        enabled: row.index > 0
-                        opacity: enabled ? 1 : 0.3
-                        onActivated: Config.moveDockApp(row.index, -1)
-                    }
-                    CircleButton {
-                        icon: "󰁅"
-                        size: Theme.px(21)
-                        enabled: row.index < Config.dockApps.length - 1
-                        opacity: enabled ? 1 : 0.3
-                        onActivated: Config.moveDockApp(row.index, 1)
-                    }
-                    CircleButton {
-                        icon: "󰅖"
-                        size: Theme.px(21)
-                        onActivated: Config.removeDockApp(row.index)
                     }
                 }
             }

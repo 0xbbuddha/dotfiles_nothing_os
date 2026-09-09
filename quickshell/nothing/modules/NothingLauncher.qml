@@ -426,70 +426,81 @@ PanelWindow {
                                     wrapMode: Text.WordWrap
                                 }
 
-                                Repeater {
-                                    model: Config.widgets
+                                // Dragged by the grip. The number down the
+                                // left is the order, so watching it change
+                                // as the row travels is the whole point.
+                                DragList {
+                                    id: placedRows
+                                    Layout.fillWidth: true
+                                    count: Config.widgets.length
+                                    rowHeight: Theme.px(48)
+                                    rowSpacing: Theme.px(10)
+                                    onReordered: (from, to) =>
+                                        Config.moveWidget(from, to - from)
 
-                                    Rectangle {
-                                        id: placed
-                                        required property string modelData
-                                        required property int index
+                                    Repeater {
+                                        model: Config.widgets
 
-                                        Layout.fillWidth: true
-                                        implicitHeight: Theme.px(48)
-                                        radius: Theme.px(4)
-                                        color: Theme.c.surface2
+                                        // `index` is neither declared nor
+                                        // assigned here: DragRow already
+                                        // requires it, so the Repeater
+                                        // fills it in.
+                                        DragRow {
+                                            id: placed
+                                            required property string modelData
 
-                                        RowLayout {
-                                            anchors.fill: parent
-                                            anchors.leftMargin: Theme.px(16)
-                                            anchors.rightMargin: Theme.px(12)
-                                            spacing: Theme.px(12)
+                                            list: placedRows
 
-                                            NLabel {
-                                                Layout.preferredWidth: Theme.px(22)
-                                                text: String(placed.index + 1)
-                                                color: Theme.c.red
-                                            }
-
-                                            NIcon {
-                                                text: WidgetRegistry.icon(placed.modelData)
-                                                size: Theme.z.iconM
-                                                Layout.preferredWidth: Theme.px(20)
-                                            }
-
-                                            ColumnLayout {
-                                                Layout.fillWidth: true
-                                                spacing: 0
-                                                NText {
-                                                    text: WidgetRegistry.label(placed.modelData)
+                                            Rectangle {
+                                                anchors.fill: parent
+                                                radius: Theme.px(4)
+                                                color: placed.dragging
+                                                    ? Theme.c.surface3 : Theme.c.surface2
+                                                Behavior on color {
+                                                    ColorAnimation { duration: Theme.fast }
                                                 }
-                                                NText {
-                                                    Layout.fillWidth: true
-                                                    text: WidgetRegistry.hint(placed.modelData)
-                                                    color: Theme.c.onDim
-                                                    font.pixelSize: Theme.f.tiny
-                                                    elide: Text.ElideRight
-                                                }
-                                            }
 
-                                            CircleButton {
-                                                icon: "󰁝"
-                                                size: Theme.px(26)
-                                                enabled: placed.index > 0
-                                                opacity: enabled ? 1 : 0.25
-                                                onActivated: Config.moveWidget(placed.index, -1)
-                                            }
-                                            CircleButton {
-                                                icon: "󰁅"
-                                                size: Theme.px(26)
-                                                enabled: placed.index < Config.widgets.length - 1
-                                                opacity: enabled ? 1 : 0.25
-                                                onActivated: Config.moveWidget(placed.index, 1)
-                                            }
-                                            CircleButton {
-                                                icon: "󰅖"
-                                                size: Theme.px(26)
-                                                onActivated: Config.removeWidget(placed.modelData)
+                                                RowLayout {
+                                                    anchors.fill: parent
+                                                    anchors.leftMargin: Theme.px(12)
+                                                    anchors.rightMargin: Theme.px(12)
+                                                    spacing: Theme.px(10)
+
+                                                    DragHandle { row: placed }
+
+                                                    NLabel {
+                                                        Layout.preferredWidth: Theme.px(18)
+                                                        text: String(placed.index + 1)
+                                                        color: Theme.c.red
+                                                    }
+
+                                                    NIcon {
+                                                        text: WidgetRegistry.icon(placed.modelData)
+                                                        size: Theme.z.iconM
+                                                        Layout.preferredWidth: Theme.px(20)
+                                                    }
+
+                                                    ColumnLayout {
+                                                        Layout.fillWidth: true
+                                                        spacing: 0
+                                                        NText {
+                                                            text: WidgetRegistry.label(placed.modelData)
+                                                        }
+                                                        NText {
+                                                            Layout.fillWidth: true
+                                                            text: WidgetRegistry.hint(placed.modelData)
+                                                            color: Theme.c.onDim
+                                                            font.pixelSize: Theme.f.tiny
+                                                            elide: Text.ElideRight
+                                                        }
+                                                    }
+
+                                                    CircleButton {
+                                                        icon: "󰅖"
+                                                        size: Theme.px(26)
+                                                        onActivated: Config.removeWidget(placed.modelData)
+                                                    }
+                                                }
                                             }
                                         }
                                     }

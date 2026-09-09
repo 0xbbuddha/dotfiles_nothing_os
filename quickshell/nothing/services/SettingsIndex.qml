@@ -36,8 +36,8 @@ Singleton {
         { key: "spotifyTheme", label: "Nothing theme for Spotify", page: 0, words: "spotify spicetify music theme green player apply patch", icon: "󰓇" },
 
         // ── Interface ─────────────────────────────────────────────────
-        { key: "barLayout",       label: "Bar layout",         page: 1, words: "bar navbar island left centre right order move clock workspaces tray reorder customise", icon: "󰌉" },
-        { key: "ccTiles",   label: "Control centre tiles", page: 1, words: "control centre center cc tile toggle quick settings panel wifi bluetooth warp sound light notify game record microphone theme dock customise", icon: "󰘮" },
+        { key: "barLayout",       label: "Bar layout",         page: 1, words: "bar navbar island left centre right order move drag clock workspaces tray reorder customise", icon: "󰌉" },
+        { key: "ccTiles",   label: "Control centre tiles", page: 1, words: "control centre center cc tile toggle quick settings panel wifi bluetooth warp sound light notify game record microphone theme dock customise order drag reorder", icon: "󰘮" },
         { key: "ccColumns", label: "Tiles per row",        page: 1, words: "control centre grid columns width tiles per row", icon: "󰕳" },
         { key: "ccFooter",  label: "Control centre buttons", page: 1, words: "control centre footer buttons square lock reload power settings shortcuts screenshot displays", icon: "󱊨" },
         { key: "ccSections", label: "Control centre blocks", page: 1, words: "control centre calendar media updates system stats caffeine block hide show", icon: "󰕪" },
@@ -81,7 +81,7 @@ Singleton {
         { key: "dockShow",     label: "Show dock",         page: 3, words: "dock bottom launcher bar", icon: "󰌉" },
         { key: "dockAutoHide", label: "Dock auto hide",    page: 3, words: "dock hide reveal edge", icon: "󰍴" },
         { key: "dockDelay",    label: "Dock hide delay",   page: 3, words: "dock delay milliseconds", icon: "󰥔" },
-        { key: "dockApps",     label: "Dock applications", page: 3, words: "dock apps pinned favourites", icon: "󰀻" },
+        { key: "dockApps",     label: "Dock applications", page: 3, words: "dock apps pinned favourites order drag reorder", icon: "󰀻" },
         { key: "terminal",     label: "Terminal",          page: 3, words: "terminal kitty console shell", icon: "󰆍" },
         { key: "fileManager",  label: "File manager",      page: 3, words: "files dolphin nautilus explorer", icon: "󰉖" },
         { key: "launcher",     label: "External launcher", page: 3, words: "launcher rofi wofi run", icon: "󰍉" },

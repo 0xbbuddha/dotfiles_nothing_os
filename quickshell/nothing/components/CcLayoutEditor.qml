@@ -28,80 +28,62 @@ ColumnLayout {
     Layout.fillWidth: true
     spacing: Theme.px(4)
 
-    // A Column and not this ColumnLayout, for its move transition:
-    // pressing an arrow reorders the list, and without this the two rows
-    // swap between one frame and the next, which reads as the list having
-    // been redrawn rather than as something having moved.
-    Column {
+    // Dragged by the grip rather than nudged with a pair of arrows.
+    // DragList positions its own rows, so the gap opens where the row is
+    // going while you are still holding it.
+    DragList {
         id: rows
         Layout.fillWidth: true
-        spacing: Theme.px(4)
-
-        move: Transition {
-            NumberAnimation {
-                properties: "y"
-                duration: Theme.med
-                easing.type: Theme.ease
-            }
-        }
+        count: root.ids.length
+        rowHeight: Theme.px(34)
+        rowSpacing: Theme.px(4)
+        onReordered: (from, to) => Config.ccMove(root.zone, from, to - from)
 
         Repeater {
             model: root.ids
 
-            Rectangle {
+            // `index` is neither declared nor assigned here: DragRow
+            // already requires it, so the Repeater fills it in.
+            DragRow {
                 id: row
                 required property string modelData
-                required property int index
 
-                width: rows.width
-                implicitHeight: Theme.px(34)
-                height: implicitHeight
-                radius: Theme.r.tiny
-                color: rowMa.containsMouse ? Theme.c.surface3 : Theme.c.surface2
-                Behavior on color { ColorAnimation { duration: Theme.fast } }
+                list: rows
 
-                MouseArea { id: rowMa; anchors.fill: parent; hoverEnabled: true }
-
-                RowLayout {
+                Rectangle {
                     anchors.fill: parent
-                    anchors.leftMargin: Theme.px(10)
-                    anchors.rightMargin: Theme.px(6)
-                    spacing: Theme.px(8)
+                    radius: Theme.r.tiny
+                    color: (row.dragging || rowMa.containsMouse)
+                        ? Theme.c.surface3 : Theme.c.surface2
+                    Behavior on color { ColorAnimation { duration: Theme.fast } }
 
-                    NIcon {
-                        text: CcRegistry.icon(root.zone, row.modelData)
-                        size: Theme.z.icon
-                        color: Theme.c.onDim
-                    }
+                    MouseArea { id: rowMa; anchors.fill: parent; hoverEnabled: true }
 
-                    NText {
-                        Layout.fillWidth: true
-                        text: CcRegistry.label(root.zone, row.modelData)
-                        elide: Text.ElideRight
-                    }
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: Theme.px(10)
+                        anchors.rightMargin: Theme.px(6)
+                        spacing: Theme.px(8)
 
-                    // Greyed at the ends rather than hidden, so the row
-                    // does not change width as it travels up the list.
-                    CircleButton {
-                        icon: "󰅃"
-                        size: Theme.px(20)
-                        opacity: row.index > 0 ? 1 : 0.25
-                        onActivated: if (row.index > 0)
-                            Config.ccMove(root.zone, row.index, -1)
-                    }
+                        DragHandle { row: row }
 
-                    CircleButton {
-                        icon: "󰅀"
-                        size: Theme.px(20)
-                        opacity: row.index < root.ids.length - 1 ? 1 : 0.25
-                        onActivated: if (row.index < root.ids.length - 1)
-                            Config.ccMove(root.zone, row.index, 1)
-                    }
+                        NIcon {
+                            text: CcRegistry.icon(root.zone, row.modelData)
+                            size: Theme.z.icon
+                            color: Theme.c.onDim
+                        }
 
-                    CircleButton {
-                        icon: "󰅖"
-                        size: Theme.px(22)
-                        onActivated: Config.ccToggle(root.zone, row.modelData)
+                        NText {
+                            Layout.fillWidth: true
+                            text: CcRegistry.label(root.zone, row.modelData)
+                            elide: Text.ElideRight
+                        }
+
+                        CircleButton {
+                            icon: "󰅖"
+                            size: Theme.px(22)
+                            onActivated: Config.ccToggle(root.zone, row.modelData)
+                        }
                     }
                 }
             }
