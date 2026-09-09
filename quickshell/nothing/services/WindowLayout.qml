@@ -37,8 +37,27 @@ Singleton {
     readonly property bool scrolling:
         root.available && Config.windowLayout === "scrolling"
 
+    readonly property bool essential:
+        root.available && Config.windowLayout === "essential"
+
     // The layout name Hyprland knows, as opposed to the one settings shows.
-    readonly property string hyprName: root.scrolling ? "scrolling" : "dwindle"
+    //
+    // "lua:essential" is ours: hypr/hyprland/layouts/essential.lua
+    // registers it at config load. That file refuses to register on a
+    // Hyprland without Lua layouts, so the name would not resolve there,
+    // which is the same reason `available` gates it.
+    //
+    // Anything unknown falls to dwindle rather than being passed through.
+    // A config carried over from a version that had a layout this one does
+    // not would otherwise name a layout Hyprland cannot find, and an
+    // unresolvable layout is a workspace that does not tile.
+    readonly property string hyprName: {
+        switch (Config.windowLayout) {
+        case "scrolling": return root.available ? "scrolling" : "dwindle";
+        case "essential": return root.available ? "lua:essential" : "dwindle";
+        default:          return "dwindle";
+        }
+    }
 
     // 0 = centre the column, 1 = fit it into view.
     readonly property int fitMethod: Config.scrollFocusFit === "center" ? 0 : 1
@@ -55,7 +74,7 @@ Singleton {
                 // option" when it is not.
                 root.available = text.indexOf("no such option") < 0;
                 root.probed = true;
-                if (!root.available && Config.windowLayout === "scrolling") {
+                if (!root.available && Config.windowLayout !== "tiling") {
                     Config.windowLayout = "tiling";
                     Config.save();
                 }
@@ -67,7 +86,12 @@ Singleton {
     // The scrolling table is written whichever layout is on. It costs
     // nothing in dwindle and it means switching over lands on the settings
     // you already chose rather than on the defaults.
-    readonly property string settingsLua: `hl.config({
+    // The two globals the essential layout reads, written above the
+    // hl.config call because that is a plain Lua file and order is order.
+    readonly property string settingsLua: `ESSENTIAL_SIDE = "${Config.shelfSide}"
+ESSENTIAL_RATIO = ${Config.mainWidth.toFixed(3)}
+
+hl.config({
     general = { layout = "${root.hyprName}" },
     scrolling = {
         column_width = ${Config.scrollColumnWidth.toFixed(3)},
@@ -130,6 +154,8 @@ Singleton {
         function onScrollDirectionChanged() { settle.restart(); }
         function onScrollFullscreenOneChanged() { settle.restart(); }
         function onScrollFollowFocusChanged() { settle.restart(); }
+        function onShelfSideChanged() { settle.restart(); }
+        function onMainWidthChanged() { settle.restart(); }
     }
 
     // On startup Hyprland has already read layout.lua, so there is nothing

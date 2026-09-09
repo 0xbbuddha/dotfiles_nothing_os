@@ -53,6 +53,8 @@ Singleton {
     property alias scrollDirection: a.scrollDirection
     property alias scrollFullscreenOne: a.scrollFullscreenOne
     property alias scrollFollowFocus: a.scrollFollowFocus
+    property alias shelfSide: a.shelfSide
+    property alias mainWidth: a.mainWidth
 
     // ── Control centre ────────────────────────────────────────────────
     property alias ccTiles: a.ccTiles
@@ -842,6 +844,8 @@ Singleton {
         a.scrollDirection = "right";
         a.scrollFullscreenOne = true;
         a.scrollFollowFocus = true;
+        a.shelfSide = "right";
+        a.mainWidth = 0.62;
 
         a.ccTiles = ["wifi", "bluetooth", "warp", "sound", "light", "notify"];
         a.ccFooter = ["night", "settings", "reload", "lock", "power"];
@@ -1117,6 +1121,10 @@ Singleton {
             property string scrollDirection: "right" // right|left|down|up
             property bool   scrollFullscreenOne: true
             property bool   scrollFollowFocus: true
+            // The essential layout: which side the shelf of parked
+            // windows sits on, and what share the main pane takes.
+            property string shelfSide: "right"   // right | left
+            property real   mainWidth: 0.62      // 0.25 to 0.9
 
             // The defaults are the panel exactly as it was before any of
             // this was configurable: same six tiles, same five buttons,

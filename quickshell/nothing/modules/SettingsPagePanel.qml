@@ -42,7 +42,8 @@ SettingsPage {
             opacity: enabled ? 1 : 0.4
             options: [
                 { label: "Tiling",    value: "tiling" },
-                { label: "Scrolling", value: "scrolling" }
+                { label: "Scrolling", value: "scrolling" },
+                { label: "Essential", value: "essential" }
             ]
             current: Config.windowLayout
             onPicked: (v) => { Config.windowLayout = v; Config.save(); }
@@ -55,13 +56,24 @@ SettingsPage {
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
             color: Theme.c.onDim
-            text: Config.windowLayout === "scrolling"
-                ? "Windows sit side by side on a tape that runs off the "
-                  + "screen. A new one arrives at its own width and pushes "
-                  + "the rest along instead of taking space from them, and "
-                  + "you scroll to what you want."
-                : "The screen is divided. Every new window splits the space "
-                  + "again, so everything already open gets smaller."
+            text: {
+                switch (Config.windowLayout) {
+                case "scrolling":
+                    return "Windows sit side by side on a tape that runs off "
+                        + "the screen. A new one arrives at its own width and "
+                        + "pushes the rest along instead of taking space from "
+                        + "them, and you scroll to what you want.";
+                case "essential":
+                    return "One window in front of you, every other one "
+                        + "parked as a sliver down one side. You do not "
+                        + "arrange anything: you pick the next thing off "
+                        + "the shelf.";
+                default:
+                    return "The screen is divided. Every new window splits "
+                        + "the space again, so everything already open gets "
+                        + "smaller.";
+                }
+            }
         }
 
         SettingRow {
@@ -146,6 +158,48 @@ SettingsPage {
                     Config.save();
                 }
             }
+        }
+
+        SettingRow {
+            key: "shelfSide"
+            label: "The shelf sits on the"
+            hint: "Which side the parked windows go to"
+            visible: WindowLayout.essential
+        }
+
+        DotPicker {
+            visible: WindowLayout.essential
+            options: [
+                { label: "Right", value: "right" },
+                { label: "Left",  value: "left" }
+            ]
+            current: Config.shelfSide
+            onPicked: (v) => { Config.shelfSide = v; Config.save(); }
+        }
+
+        SettingRow {
+            key: "mainWidth"
+            label: "Main pane"
+            hint: "How much of the screen the window in front takes"
+            visible: WindowLayout.essential
+
+            DotSlider {
+                implicitWidth: Theme.px(190)
+                value: (Config.mainWidth - 0.25) / 0.65
+                display: Math.round(Config.mainWidth * 100) + " %"
+                onMoved: (v) => {
+                    Config.mainWidth = Math.round((0.25 + v * 0.65) * 20) / 20;
+                    Config.save();
+                }
+            }
+        }
+
+        SettingRow {
+            label: "Shortcuts"
+            visible: WindowLayout.essential
+            hint: "SUPER+J brings the focused window to the front. SUPER+, "
+                + "and SUPER+; make the main pane narrower and wider. The "
+                + "same keys the other layouts use."
         }
 
         SettingRow {
