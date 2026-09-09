@@ -83,17 +83,18 @@ end
 
 -- Comma and Semicolon, not Apostrophe and Semicolon.
 --
--- This config sets kb_layout = "fr", and on that layout the apostrophe is
--- keycode 13, which is the "4" key. SUPER + code:13 is already workspace
--- 4 and SUPER + ALT + code:13 already sends a window there, so a bind on
--- the apostrophe keysym fires on the same press as those and the result
--- is whichever Hyprland reaches first. Colon is no better: custom.lua
--- puts the shortcut sheet on it. Checked with
--- `xkbcli how-to-type --layout fr` and against `hyprctl binds`.
+-- On AZERTY the apostrophe is keycode 13, which is the "4" key. SUPER +
+-- code:13 is already workspace 4 and SUPER + ALT + code:13 already sends
+-- a window there, so a bind on the apostrophe keysym fires on the same
+-- press as those and the result is whichever Hyprland reaches first.
+-- Colon is no better: custom.lua puts the shortcut sheet on it. Checked
+-- with `xkbcli how-to-type --layout fr` and against `hyprctl binds`.
 --
--- Comma is keycode 58 and semicolon 59: two keys side by side, both
--- unmodified on AZERTY, neither claimed. Left one narrower, right one
--- wider, which is the way they read on the keyboard.
+-- The layout is detected now rather than hardcoded, so a bind here has to
+-- survive both. Comma and semicolon do: keycodes 58 and 59, unmodified
+-- and unclaimed on AZERTY, unmodified and unclaimed on QWERTY. On AZERTY
+-- they are also side by side, left one narrower and right one wider,
+-- which is the way they read on the keyboard.
 hl.bind(mainMod .. " + Comma",     ratio(-0.1), { repeating = true })
 hl.bind(mainMod .. " + Semicolon", ratio(0.1),  { repeating = true })
 

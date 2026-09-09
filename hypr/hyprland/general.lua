@@ -103,6 +103,10 @@ hl.config({
 
     input = {
         kb_layout    = kbLayout or "us",
+        -- Empty is the right value for "the layout's own default": fr is
+        -- AZERTY without asking, and passing nil here would leave whatever
+        -- a previous reload set.
+        kb_variant   = kbVariant or "",
         follow_mouse = 1,
         sensitivity  = 0,
 
