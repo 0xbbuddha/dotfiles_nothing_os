@@ -133,9 +133,18 @@ hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
 -- "scrolling" is Hyprland's own, built into the compositor since 0.54.
 -- It used to be the hyprscrolling hyprpm plugin; there is nothing to
 -- install any more.
-local chosen = (os.getenv("HOME") or "") .. "/.config/hypr/layout.lua"
-local lfh = io.open(chosen)
-if lfh then
-    lfh:close()
-    dofile(chosen)
+local function loadShellFile(name)
+    local path = (os.getenv("HOME") or "") .. "/.config/hypr/" .. name
+    local fh = io.open(path)
+    if not fh then return end
+    fh:close()
+    dofile(path)
 end
+
+loadShellFile("layout.lua")
+
+-- The window border, following the accent picked in the settings panel.
+-- Without this the frame Hyprland draws stays the red written above while
+-- everything inside it turns whatever colour you chose, which makes the
+-- compositor the one part of the desktop that does not follow.
+loadShellFile("accent.lua")

@@ -27,10 +27,14 @@ ShellRoot {
     }
 
     // A singleton is built the first time something reads it, and nothing
-    // reads this one until the settings page is opened. It has to be alive
-    // from the start instead: it is what puts the chosen layout back if
-    // ~/.config/hypr/layout.lua and the settings have drifted apart.
-    Component.onCompleted: WindowLayout.probed
+    // reads these two until the settings page is opened. They have to be
+    // alive from the start instead: between them they are what puts the
+    // chosen layout and the window border colour back when the files under
+    // ~/.config/hypr and the settings have drifted apart.
+    Component.onCompleted: {
+        void WindowLayout.probed;
+        void HyprAccent.saved;
+    }
 
     // ── Per screen ────────────────────────────────────────────────────
     Variants {
