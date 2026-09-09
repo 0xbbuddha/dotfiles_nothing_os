@@ -59,10 +59,77 @@ hl.bind(mainMod .. " + ALT + Space", hl.dsp.window.float({ action = "toggle" }))
 -- it does on every other desktop. Not SUPER+ALT+P either, which
 -- hypr/passthrough.lua claims for the nested session.
 hl.bind(mainMod .. " + SHIFT + ALT + P", hl.dsp.window.pin())
-hl.bind(mainMod .. " + J",          hl.dsp.layout("togglesplit"))
+--# Layout, in whichever layout you are in
+--
+-- The same three keys mean the same three things in both layouts, which
+-- is the point: switching to scrolling should not cost you the shortcuts
+-- you already have in your fingers. The message is chosen at press time
+-- rather than bound twice, because dwindle and scrolling do not answer to
+-- the same names and a bind that fires into the wrong layout does nothing
+-- and says nothing.
+local function scrollingNow()
+    return hl.get_config("general:layout") == "scrolling"
+end
 
-hl.bind(mainMod .. " + Semicolon",  hl.dsp.layout("splitratio -0.1"), { repeating = true })
-hl.bind(mainMod .. " + Apostrophe", hl.dsp.layout("splitratio +0.1"), { repeating = true })
+-- Wider and narrower. splitratio moves the split this window sits on;
+-- colresize moves the width of its column.
+local function ratio(delta)
+    return function()
+        local d = (delta > 0 and "+" or "") .. delta
+        hl.dispatch(hl.dsp.layout(
+            scrollingNow() and ("colresize " .. d) or ("splitratio " .. d)))
+    end
+end
+
+-- Comma and Semicolon, not Apostrophe and Semicolon.
+--
+-- This config sets kb_layout = "fr", and on that layout the apostrophe is
+-- keycode 13, which is the "4" key. SUPER + code:13 is already workspace
+-- 4 and SUPER + ALT + code:13 already sends a window there, so a bind on
+-- the apostrophe keysym fires on the same press as those and the result
+-- is whichever Hyprland reaches first. Colon is no better: custom.lua
+-- puts the shortcut sheet on it. Checked with
+-- `xkbcli how-to-type --layout fr` and against `hyprctl binds`.
+--
+-- Comma is keycode 58 and semicolon 59: two keys side by side, both
+-- unmodified on AZERTY, neither claimed. Left one narrower, right one
+-- wider, which is the way they read on the keyboard.
+hl.bind(mainMod .. " + Comma",     ratio(-0.1), { repeating = true })
+hl.bind(mainMod .. " + Semicolon", ratio(0.1),  { repeating = true })
+
+-- Rearrange this window. togglesplit turns the split; promote pulls the
+-- window out into a column of its own, which is the nearest thing
+-- scrolling has to "put this somewhere else".
+hl.bind(mainMod .. " + J", function()
+    hl.dispatch(hl.dsp.layout(scrollingNow() and "promote" or "togglesplit"))
+end)
+
+--# Scrolling only
+--
+-- Bound whichever layout is on: dwindle ignores a message it does not
+-- know, and binds that appear and disappear with a setting are worse than
+-- binds that quietly do nothing.
+--
+-- ALT with the arrows moves along the tape, SHIFT+ALT carries the column
+-- with you. Everything here is one hand on SUPER+ALT.
+hl.bind(mainMod .. " + ALT + Left",  hl.dsp.layout("move -col"), { repeating = true })
+hl.bind(mainMod .. " + ALT + Right", hl.dsp.layout("move +col"), { repeating = true })
+hl.bind(mainMod .. " + SHIFT + ALT + Left",  hl.dsp.layout("swapcol l"))
+hl.bind(mainMod .. " + SHIFT + ALT + Right", hl.dsp.layout("swapcol r"))
+
+-- Up takes the window out into its own column, Down folds it into the one
+-- before it. Stacking and unstacking, in the direction you would expect.
+hl.bind(mainMod .. " + ALT + Up",   hl.dsp.layout("expel"))
+hl.bind(mainMod .. " + ALT + Down", hl.dsp.layout("consume"))
+
+hl.bind(mainMod .. " + ALT + C",      hl.dsp.layout("center"))
+
+-- Full width, not "fit expand". Expand only takes the free space left on
+-- the monitor, and with fullscreen_on_one_column on there is almost never
+-- any: the key did nothing nearly every time it was pressed. colresize 1.0
+-- sets the column to the whole screen, which is what you actually want
+-- from a maximise. SUPER + Comma brings it back down.
+hl.bind(mainMod .. " + ALT + Return", hl.dsp.layout("colresize 1.0"))
 
 hl.bind(mainMod .. " + mouse:272",  hl.dsp.window.drag(),   { mouse = true })
 hl.bind(mainMod .. " + mouse:274",  hl.dsp.window.drag(),   { mouse = true })

@@ -120,3 +120,18 @@ hl.config({
 })
 
 hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
+
+-- The layout chosen in Settings > Interface > Windows, written by the
+-- shell as the same hl.config call. It comes last so it wins over the
+-- layout = "dwindle" above, and the file simply does not exist until you
+-- have changed the setting once.
+--
+-- "scrolling" is Hyprland's own, built into the compositor since 0.54.
+-- It used to be the hyprscrolling hyprpm plugin; there is nothing to
+-- install any more.
+local chosen = (os.getenv("HOME") or "") .. "/.config/hypr/layout.lua"
+local lfh = io.open(chosen)
+if lfh then
+    lfh:close()
+    dofile(chosen)
+end

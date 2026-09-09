@@ -26,6 +26,12 @@ ShellRoot {
         onTriggered: GlyphEvents.pulse("notify")
     }
 
+    // A singleton is built the first time something reads it, and nothing
+    // reads this one until the settings page is opened. It has to be alive
+    // from the start instead: it is what puts the chosen layout back if
+    // ~/.config/hypr/layout.lua and the settings have drifted apart.
+    Component.onCompleted: WindowLayout.probed
+
     // ── Per screen ────────────────────────────────────────────────────
     Variants {
         model: Config.drawWallpaper ? Quickshell.screens : []

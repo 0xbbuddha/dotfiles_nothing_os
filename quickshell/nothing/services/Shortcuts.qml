@@ -67,12 +67,26 @@ Singleton {
                 { keys: ["SUPER", "D"],      label: "Vesktop" },
                 { keys: ["SUPER", "F"],      label: "Fullscreen" },
                 { keys: ["SUPER", "SHIFT", "ALT", "P"], label: "Pin" },
-                { keys: ["SUPER", "J"],      label: "Toggle split" },
+                { keys: ["SUPER", "J"],      label: "Toggle split, or promote in scrolling" },
+                { keys: ["SUPER", ","],      label: "Narrower" },
+                { keys: ["SUPER", ";"],      label: "Wider" },
                 { keys: ["SUPER", "ALT", "Space"], label: "Floating" },
                 { keys: ["SUPER", "arrows"], label: "Move focus" },
                 { keys: ["SUPER", "SHIFT", "arrows"], label: "Move the window" },
                 { keys: ["SUPER", "click"],   label: "Move with the mouse" },
                 { keys: ["SUPER", "right click"], label: "Resize" }
+            ]
+        },
+        {
+            title: "Scrolling layout",
+            icon: "󰜨",
+            items: [
+                { keys: ["SUPER", "ALT", "arrows"], label: "Move along the tape" },
+                { keys: ["SUPER", "SHIFT", "ALT", "arrows"], label: "Carry the column with you" },
+                { keys: ["SUPER", "ALT", "Up"],     label: "Window into its own column" },
+                { keys: ["SUPER", "ALT", "Down"],   label: "Window into the column before it" },
+                { keys: ["SUPER", "ALT", "C"],      label: "Centre the column" },
+                { keys: ["SUPER", "ALT", "Return"], label: "Column to the full screen" }
             ]
         },
         {

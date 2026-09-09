@@ -27,6 +27,139 @@ SettingsPage {
     }
 
     SettingsSection {
+        title: "Windows"
+
+        SettingRow {
+            key: "windowLayout"
+            label: "Layout"
+            hint: WindowLayout.available
+                ? "How a new window takes its place on screen"
+                : "This Hyprland has no scrolling layout. 0.54 or newer has."
+        }
+
+        DotPicker {
+            enabled: WindowLayout.available
+            opacity: enabled ? 1 : 0.4
+            options: [
+                { label: "Tiling",    value: "tiling" },
+                { label: "Scrolling", value: "scrolling" }
+            ]
+            current: Config.windowLayout
+            onPicked: (v) => { Config.windowLayout = v; Config.save(); }
+        }
+
+        // Said in full rather than left to the two words above: these are
+        // two different ways to use a computer, and the choice is not
+        // obvious from their names.
+        NText {
+            Layout.fillWidth: true
+            wrapMode: Text.WordWrap
+            color: Theme.c.onDim
+            text: Config.windowLayout === "scrolling"
+                ? "Windows sit side by side on a tape that runs off the "
+                  + "screen. A new one arrives at its own width and pushes "
+                  + "the rest along instead of taking space from them, and "
+                  + "you scroll to what you want."
+                : "The screen is divided. Every new window splits the space "
+                  + "again, so everything already open gets smaller."
+        }
+
+        SettingRow {
+            key: "scrollColumnWidth"
+            label: "Column width"
+            hint: "How much of the screen a new column takes"
+            visible: WindowLayout.scrolling
+
+            DotSlider {
+                implicitWidth: Theme.px(190)
+                value: (Config.scrollColumnWidth - 0.1) / 0.9
+                display: Math.round(Config.scrollColumnWidth * 100) + " %"
+                onMoved: (v) => {
+                    Config.scrollColumnWidth =
+                        Math.round((0.1 + v * 0.9) * 20) / 20;
+                    Config.save();
+                }
+            }
+        }
+
+        SettingRow {
+            key: "scrollFocusFit"
+            label: "Following the focus"
+            hint: "Where a column lands when you move to it"
+            visible: WindowLayout.scrolling
+        }
+
+        DotPicker {
+            visible: WindowLayout.scrolling
+            options: [
+                { label: "Fit",    value: "fit" },
+                { label: "Centre", value: "center" }
+            ]
+            current: Config.scrollFocusFit
+            onPicked: (v) => { Config.scrollFocusFit = v; Config.save(); }
+        }
+
+        SettingRow {
+            key: "scrollDirection"
+            label: "New windows appear"
+            hint: "And the direction the tape runs in"
+            visible: WindowLayout.scrolling
+        }
+
+        DotPicker {
+            visible: WindowLayout.scrolling
+            options: [
+                { label: "Right", value: "right" },
+                { label: "Left",  value: "left" },
+                { label: "Down",  value: "down" },
+                { label: "Up",    value: "up" }
+            ]
+            current: Config.scrollDirection
+            onPicked: (v) => { Config.scrollDirection = v; Config.save(); }
+        }
+
+        SettingRow {
+            key: "scrollFullscreenOne"
+            label: "One window fills the screen"
+            hint: "A workspace with a single column ignores the width above"
+            visible: WindowLayout.scrolling
+
+            NSwitch {
+                checked: Config.scrollFullscreenOne
+                onToggled: (v) => {
+                    Config.scrollFullscreenOne = v;
+                    Config.save();
+                }
+            }
+        }
+
+        SettingRow {
+            key: "scrollFollowFocus"
+            label: "Scroll to the focused window"
+            hint: "Off keeps the tape still until you move it yourself"
+            visible: WindowLayout.scrolling
+
+            NSwitch {
+                checked: Config.scrollFollowFocus
+                onToggled: (v) => {
+                    Config.scrollFollowFocus = v;
+                    Config.save();
+                }
+            }
+        }
+
+        SettingRow {
+            label: "Shortcuts"
+            hint: "SUPER+, and SUPER+; make the column narrower and wider. "
+                + "SUPER+ALT+arrows moves along the tape, SHIFT carries the "
+                + "column with you. Up and down split a column and fold it "
+                + "back. SUPER+ALT+C centres the column, SUPER+ALT+Return "
+                + "gives it the whole screen."
+            visible: WindowLayout.scrolling
+        }
+    }
+
+    SettingsSection {
         title: "Control centre"
 
         CcPreview {}

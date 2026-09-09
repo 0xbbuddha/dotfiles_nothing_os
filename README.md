@@ -101,6 +101,12 @@ The host compositor eats `SUPER`. Optional passthrough: source
 
 ## What you get
 
+- **Two window layouts**: tiling (Hyprland's dwindle, the default) and
+  **scrolling**, the niri-style tape where windows sit side by side and
+  a new one arrives at its own width instead of shrinking everything
+  else. Settings > Interface > Windows, with column width, direction
+  and focus behaviour. No plugin: Hyprland has had the layout built in
+  since 0.54. SUPER+, and SUPER+; mean narrower and wider in both
 - **Bar, dock, control centre, settings** - one scale slider, one accent
 - **Nothing is hardcoded**: the bar's three islands and the control
   centre are both built from a registry. 19 bar elements across left,

@@ -42,6 +42,18 @@ Singleton {
     property alias barShowGpu: a.barShowGpu
     property alias barShowTemp: a.barShowTemp
 
+    // ── Windows ───────────────────────────────────────────────────────
+    // Which layout Hyprland arranges windows with, and the settings of the
+    // scrolling one. Written out to ~/.config/hypr/layout.lua by
+    // services/WindowLayout.qml, the way the display manager writes
+    // displays.lua.
+    property alias windowLayout: a.windowLayout
+    property alias scrollColumnWidth: a.scrollColumnWidth
+    property alias scrollFocusFit: a.scrollFocusFit
+    property alias scrollDirection: a.scrollDirection
+    property alias scrollFullscreenOne: a.scrollFullscreenOne
+    property alias scrollFollowFocus: a.scrollFollowFocus
+
     // ── Control centre ────────────────────────────────────────────────
     property alias ccTiles: a.ccTiles
     property alias ccFooter: a.ccFooter
@@ -824,6 +836,13 @@ Singleton {
         a.barShowGpu = true;
         a.barShowTemp = true;
 
+        a.windowLayout = "tiling";
+        a.scrollColumnWidth = 0.5;
+        a.scrollFocusFit = "fit";
+        a.scrollDirection = "right";
+        a.scrollFullscreenOne = true;
+        a.scrollFollowFocus = true;
+
         a.ccTiles = ["wifi", "bluetooth", "warp", "sound", "light", "notify"];
         a.ccFooter = ["night", "settings", "reload", "lock", "power"];
         a.ccColumns = 3;
@@ -1088,6 +1107,16 @@ Singleton {
             property bool barShowRam: true
             property bool barShowGpu: true
             property bool barShowTemp: true
+
+            // tiling is Hyprland's dwindle, which is what this rice has
+            // always used. scrolling is Hyprland's own scrolling layout,
+            // built into the compositor since 0.54 and needing no plugin.
+            property string windowLayout: "tiling"   // tiling | scrolling
+            property real   scrollColumnWidth: 0.5   // 0.1 to 1.0
+            property string scrollFocusFit: "fit"    // fit | center
+            property string scrollDirection: "right" // right|left|down|up
+            property bool   scrollFullscreenOne: true
+            property bool   scrollFollowFocus: true
 
             // The defaults are the panel exactly as it was before any of
             // this was configurable: same six tiles, same five buttons,

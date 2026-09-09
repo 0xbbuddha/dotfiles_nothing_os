@@ -37,6 +37,12 @@ Singleton {
 
         // ── Interface ─────────────────────────────────────────────────
         { key: "barLayout",       label: "Bar layout",         page: 1, words: "bar navbar island left centre right order move drag clock workspaces tray reorder customise", icon: "󰌉" },
+        { key: "windowLayout", label: "Window layout",  page: 1, words: "layout tiling scrolling dwindle niri paperwm columns tape windows arrange", icon: "󰜨" },
+        { key: "scrollColumnWidth", label: "Column width", page: 1, words: "scrolling column width tape size", icon: "󰡎" },
+        { key: "scrollFocusFit",    label: "Following the focus", page: 1, words: "scrolling focus fit centre center column", icon: "󰋱" },
+        { key: "scrollDirection",   label: "New windows appear",  page: 1, words: "scrolling direction right left up down tape", icon: "󰁔" },
+        { key: "scrollFullscreenOne", label: "One window fills the screen", page: 1, words: "scrolling fullscreen single column width", icon: "󰊓" },
+        { key: "scrollFollowFocus", label: "Scroll to the focused window", page: 1, words: "scrolling follow focus automatic move tape", icon: "󰆾" },
         { key: "ccTiles",   label: "Control centre tiles", page: 1, words: "control centre center cc tile toggle quick settings panel wifi bluetooth warp sound light notify game record microphone theme dock customise order drag reorder", icon: "󰘮" },
         { key: "ccColumns", label: "Tiles per row",        page: 1, words: "control centre grid columns width tiles per row", icon: "󰕳" },
         { key: "ccFooter",  label: "Control centre buttons", page: 1, words: "control centre footer buttons square lock reload power settings shortcuts screenshot displays", icon: "󱊨" },
@@ -124,6 +130,7 @@ Singleton {
         "Wallpaper": "󰋊",
         "Spotify": "󰓇",
         "Bar": "󰌉",
+        "Windows": "󰜨",
         "Control centre": "󰘮",
         "Workspaces": "󰖰",
         "Overview grid": "󰋉",
