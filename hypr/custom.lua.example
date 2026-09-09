@@ -6,6 +6,16 @@
 -- hl.bind("SUPER + D",        hl.dsp.exec_cmd("vesktop"))
 -- hl.bind("CTRL + SUPER + F", hl.dsp.exec_cmd("firefox"))
 
+-- Keyboard layout: automatically detected from system localectl or $XKB_DEFAULT_LAYOUT (falls back to "us").
+-- Override here if needed:
+-- hl.config({
+--     input = {
+--         kb_layout  = "us",
+--         -- kb_variant = "",
+--         -- kb_options = "grp:alt_shift_toggle,caps:escape",
+--     },
+-- })
+
 -- Cheat sheet (SUPER+colon on many layouts).
 hl.bind("SUPER + Colon", ipc("cheatsheet", "toggle"))
 

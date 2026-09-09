@@ -31,6 +31,25 @@ textEditor  = firstAvailable({ "kate", "gnome-text-editor", "gedit", "mousepad" 
 volumeMixer = firstAvailable({ "pavucontrol-qt", "pavucontrol" },
                              terminal .. " -e wpctl status")
 
+local function detectLayout()
+    local env = os.getenv("XKB_DEFAULT_LAYOUT")
+    if env and env ~= "" then return env end
+    local f = io.popen("localectl status 2>/dev/null")
+    if f then
+        for line in f:lines() do
+            local layout = line:match("X11 Layout:%s*(.-)%s*$")
+            if layout and layout ~= "" then
+                f:close()
+                return layout:gsub("%s+", "")
+            end
+        end
+        f:close()
+    end
+    return "us"
+end
+
+kbLayout    = detectLayout()
+
 function ipc(target, fn)
     return hl.dsp.exec_cmd("qs -p " .. shellDir .. " ipc call " .. target .. " " .. fn)
 end

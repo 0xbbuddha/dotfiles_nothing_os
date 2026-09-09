@@ -102,7 +102,7 @@ hl.config({
     },
 
     input = {
-        kb_layout    = "fr",
+        kb_layout    = kbLayout or "us",
         follow_mouse = 1,
         sensitivity  = 0,
 
