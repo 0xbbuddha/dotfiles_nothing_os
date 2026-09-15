@@ -1,0 +1,180 @@
+/**
+ * @name Nothing
+ * @description Matte black, one red, and JetBrains Mono - the same three
+ *   ingredients as the rest of this rice (bar, dock, spicetify). Built on
+ *   system24's engine (unrounded panels, ascii titles, text-mode feel);
+ *   only the palette and typography are Nothing's own.
+ * @author 0xbbuddha
+ * @version 1.0.0
+ * @source https://github.com/0xbbuddha/dotfiles_nothing_os/blob/main/theme/vesktop/nothing.theme.css
+ */
+
+@import url('https://refact0r.github.io/system24/build/system24.css');
+
+/* Every literal colour below matches Theme.qml's dark palette and the
+ * spicetify "nothing" theme's color.ini exactly - one accent read from
+ * three places, not three different reds that drift apart over time. */
+body {
+    /* --font-display (Discord's own "headings" hook) turned out not to be
+     * read anywhere that actually shows on screen - checked by rendering
+     * the font directly, glyphs are fine, the hook just isn't wired up in
+     * the current client. --font is the one variable proven to reach real
+     * UI text (usernames, channel names, buttons, message text, all of
+     * it), so Ndot goes there instead, falling back per-glyph to
+     * JetBrains for anything it doesn't cover (accents, wide Unicode).
+     * This does mean message text is dotted now too - say if that reads
+     * worse than it sounds and it can stay display-only instead. */
+    --font: 'Ndot77JPExtended', 'JetBrainsMono NF';
+    --code-font: 'JetBrainsMono NF';
+    font-weight: 400;
+    letter-spacing: 0;
+
+    --gap: 12px;
+    --border-thickness: 2px;
+
+    /* Nothing rounds pills and leaves panels square - see Theme.qml's `r`
+     * (panel: 4px, chip/pill: fully round). system24's --unrounding is the
+     * closest single switch to that. */
+    --unrounding: on;
+    --round-pfp: off;
+    --small-user-panel: on;
+
+    --custom-spotify-bar: on;
+    --ascii-titles: on;
+    --ascii-loader: system24;
+
+    --panel-labels: on;
+    --label-color: var(--text-5);
+}
+
+:root {
+    --colors: on;
+
+    /* text-0 is text ON a coloured surface. system24's accents are pale
+     * pastels that want dark text; the Nothing accent is a saturated red
+     * that wants white, same as the play icon on it in Spotify. */
+    --text-0: #ffffff;
+    --text-1: #ffffff;
+    --text-2: #ffffff;
+    --text-3: #ffffff;
+    --text-4: #8a8a8a;
+    --text-5: #454545;
+
+    --bg-1: #2a2a2a;
+    --bg-2: #212121;
+    --bg-3: #161616;
+    --bg-4: #0b0b0b;
+    --hover: rgba(255, 255, 255, 0.06);
+    --active: rgba(255, 255, 255, 0.1);
+    --active-2: rgba(255, 255, 255, 0.14);
+    --message-hover: var(--hover);
+
+    --accent-1: #d71921;
+    --accent-2: #d71921;
+    --accent-3: #d71921;
+    --accent-4: #e5323c;
+    --accent-5: #b01319;
+    --accent-new: #d71921;
+    --mention: linear-gradient(to right, color-mix(in hsl, var(--accent-2), transparent 90%) 40%, transparent);
+    --mention-hover: linear-gradient(to right, color-mix(in hsl, var(--accent-2), transparent 95%) 40%, transparent);
+    --reply: linear-gradient(to right, color-mix(in hsl, var(--text-3), transparent 90%) 40%, transparent);
+    --reply-hover: linear-gradient(to right, color-mix(in hsl, var(--text-3), transparent 95%) 40%, transparent);
+
+    /* Presence dots stay legible colours rather than joining the brand:
+     * DND already wants red, and that happens to be the one accent Nothing
+     * has. Streaming has no purple to reuse, so it takes the accent too. */
+    --online: #3ba55d;
+    --dnd: var(--accent-2);
+    --idle: #cc954c;
+    --streaming: var(--accent-2);
+    --offline: var(--text-4);
+
+    --border-light: rgba(255, 255, 255, 0.06);
+    --border: #2a2a2a;
+    --border-hover: var(--accent-2);
+    --button-border: rgba(255, 255, 255, 0.08);
+}
+
+/* ── Nothing identity, past the palette ──────────────────────────────────
+ * A recoloured system24 is still system24. Everything below is picked for
+ * being a stable target - a real HTML tag or an ARIA attribute Discord's
+ * own accessibility code depends on - rather than one of Discord's hashed
+ * classnames, which system24 itself has to keep republishing as they
+ * shift. Two exceptions say so at the point they take the risk.
+ */
+
+/* The dot matrix from the wallpaper and the bar's clock, not a flat void.
+ * system24's own --gap is what makes this visible at all: the space it
+ * opens between the sidebar, chat and member list is body showing through,
+ * so the texture only reads in a WM-style gapped layout, not by accident
+ * in a solid one. */
+body {
+    background-color: var(--bg-4);
+    background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 15px 15px;
+}
+
+/* Real tags Discord renders straight out of message markdown - stable
+ * across redesigns because they carry meaning, not styling hooks. */
+code, pre {
+    font-family: 'JetBrainsMono NF' !important;
+    border-left: 2px solid var(--accent-2);
+}
+blockquote {
+    border-left: 2px solid var(--accent-2);
+}
+a {
+    color: var(--accent-1);
+    text-decoration: none;
+}
+a:hover {
+    text-decoration: underline;
+}
+
+/* Timestamps are the one place Discord already reaches for a <time>
+ * element. The Nothing shell reads its own clock the same way (the
+ * DisplayText component behind Time.hhmm in the control centre) - same
+ * font, same idea, here on every message instead of one clock. */
+time {
+    font-family: 'Ndot77JPExtended', var(--font);
+    letter-spacing: 0.5px;
+}
+
+/* Selection and scrollbar are real CSS, not a guess at markup - the
+ * lowest-risk, most-seen accent placement there is. */
+::selection {
+    background: var(--accent-2);
+    color: #ffffff;
+}
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--bg-1);
+    border-radius: 0;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-2);
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* The bar's own tell for "this one" is a red line, not a filled pill (see
+ * the workspace indicator under the active one). aria-selected is
+ * Discord's own bookkeeping for the sidebar list, so this survives a
+ * redesign that would break a hashed classname outright. */
+[aria-selected="true"] {
+    box-shadow: inset 3px 0 0 0 var(--accent-2);
+}
+
+/* The one deliberate exception to "square everything": Theme.qml gives
+ * every pill a full radius and every panel almost none (r.panel: 4px,
+ * r.pill: round), and system24's --unrounding flattens both alike with
+ * !important. [role="textbox"] is the chat composer - Discord's own ARIA
+ * role, so this is pinned to behaviour, not a classname, even though it
+ * fights the engine's !important to get there. */
+[role="textbox"] {
+    border-radius: 999px !important;
+}

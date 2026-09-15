@@ -16,6 +16,7 @@ restore() {
     fi
 }
 
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONF="${XDG_CONFIG_HOME:-$HOME/.config}"
 DATA="${XDG_DATA_HOME:-$HOME/.local/share}"
 
@@ -48,6 +49,13 @@ if command -v spicetify >/dev/null 2>&1; then
     echo "-> Restore Spotify"
     spicetify restore >/dev/null 2>&1 && echo "  spotify unpatched" \
         || echo "  spotify was not patched"
+fi
+
+if [[ -d "$CONF/vesktop" ]]; then
+    echo "-> Remove the Vesktop theme"
+    bash "$ROOT/scripts/apply-vesktop-theme.sh" --revert >/dev/null 2>&1 \
+        && echo "  nothing.theme.css removed" \
+        || echo "  vesktop theme was not installed"
 fi
 
 echo "Left in place: $CONF/hypr/custom.lua"

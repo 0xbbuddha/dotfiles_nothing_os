@@ -8,11 +8,11 @@ import "../services"
 SettingsPage {
     id: page
 
-    onCurrentChanged: if (current) { Walls.refresh(); Spicetify.refresh(); }
-    // Also on creation: whether Spotify is themed is not something the
-    // panel can guess, and a page that opens straight onto index 0 never
-    // sees its own currentChanged.
-    Component.onCompleted: Spicetify.refresh()
+    onCurrentChanged: if (current) { Walls.refresh(); Spicetify.refresh(); Vesktop.refresh(); }
+    // Also on creation: whether Spotify or Vesktop is themed is not
+    // something the panel can guess, and a page that opens straight onto
+    // index 0 never sees its own currentChanged.
+    Component.onCompleted: { Spicetify.refresh(); Vesktop.refresh(); }
 
     NProcess { id: sh; function run(cmd) { command = ["sh", "-c", cmd]; running = true; } }
 
@@ -317,6 +317,52 @@ SettingsPage {
             label: "What gets installed"
             hint: "spicetify-cli, from the AUR. The Install button opens your "
                 + "terminal so you can read the build and answer its prompts."
+        }
+    }
+
+    // ── Vesktop ───────────────────────────────────────────────────────
+    // No accent to fall out of sync with and no root needed to write into
+    // ~/.config, so this is the whole state: on, off, or not installed.
+    SettingsSection {
+        title: "Vesktop"
+
+        SettingRow {
+            key: "vesktopTheme"
+            label: "Nothing theme for Vesktop"
+            hint: {
+                switch (Vesktop.state) {
+                case "unknown":   return "Looking…";
+                case "noVesktop": return "Vesktop is not installed on this machine";
+                case "on":        return "Applied. Restart Vesktop to see it.";
+                default:          return "Matte black, one red, and the dot-matrix "
+                                       + "face from the rest of this desktop";
+                }
+            }
+
+            NPillButton {
+                visible: Vesktop.state !== "noVesktop"
+                    && Vesktop.state !== "unknown"
+                text: {
+                    if (Vesktop.busy) return "Working…";
+                    switch (Vesktop.state) {
+                    case "on": return "Remove";
+                    default:   return "Install";
+                    }
+                }
+                danger: Vesktop.state === "on"
+                onActivated: {
+                    if (Vesktop.busy) return;
+                    if (Vesktop.state === "on") Vesktop.revert();
+                    else Vesktop.apply();
+                }
+            }
+        }
+
+        SettingRow {
+            visible: Vesktop.error !== ""
+            label: "It did not go through"
+            hint: Vesktop.error
+            NIcon { text: "󰀦"; size: Theme.z.icon; color: Theme.c.red }
         }
     }
 }

@@ -91,6 +91,14 @@ install_files() {
         bash "$ROOT/scripts/apply-spicetify.sh" \
             || warn "spotify left alone: ./scripts/apply-spicetify.sh --fix-perms"
     fi
+
+    # Same rule as Spotify: only for a client that is already there, and a
+    # failure here never takes the rest of the install down with it.
+    if [[ -d "$HOME/.config/vesktop" ]] || command -v vesktop >/dev/null 2>&1; then
+        log "Vesktop theme (Nothing)"
+        bash "$ROOT/scripts/apply-vesktop-theme.sh" \
+            || warn "vesktop left alone: ./scripts/apply-vesktop-theme.sh"
+    fi
 }
 
 install_session() {

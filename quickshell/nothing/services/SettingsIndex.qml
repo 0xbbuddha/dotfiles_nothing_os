@@ -34,6 +34,7 @@ Singleton {
         { key: "wallpaperSet",  label: "Nothing dot-matrix wallpaper", page: 0, words: "background dots anime manga bundled shipped", icon: "󰋊" },
         { key: "wallpaperFormat", label: "Wallpaper format",  page: 0, words: "background aspect ratio 16 10 9 screen shape", icon: "󰕴" },
         { key: "spotifyTheme", label: "Nothing theme for Spotify", page: 0, words: "spotify spicetify music theme green player apply patch", icon: "󰓇" },
+        { key: "vesktopTheme", label: "Nothing theme for Vesktop", page: 0, words: "vesktop discord vencord theme quickcss apply", icon: "󰙯" },
 
         // ── Interface ─────────────────────────────────────────────────
         { key: "barLayout",       label: "Bar layout",         page: 1, words: "bar navbar island left centre right order move drag clock workspaces tray reorder customise", icon: "󰌉" },
