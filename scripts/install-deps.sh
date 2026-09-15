@@ -260,8 +260,28 @@ offer_warp() {
     ok "WARP is ready. Toggle it from the control centre (SUPER+N)."
 }
 
+offer_bluetooth() {
+    if systemctl is-enabled --quiet bluetooth.service 2>/dev/null; then
+        ok "bluetooth.service already enabled"
+        return
+    fi
+    if ! systemctl list-unit-files bluetooth.service >/dev/null 2>&1; then
+        warn "bluetooth.service not found; enable it by hand if you need it"
+        return
+    fi
+
+    log "Bluetooth"
+    if ! ask_yn "Enable Bluetooth at startup?" y; then
+        warn "Skipped. Later: sudo systemctl enable --now bluetooth.service"
+        return
+    fi
+    run sudo systemctl enable --now bluetooth.service \
+        || warn "could not enable bluetooth.service"
+}
+
 offer_ear_native
 offer_rog
 offer_warp
+offer_bluetooth
 
 ok "Dependencies are in place."

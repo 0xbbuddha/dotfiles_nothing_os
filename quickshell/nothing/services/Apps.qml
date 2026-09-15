@@ -151,6 +151,13 @@ Singleton {
         ],
         cursor: [
             "file:///usr/share/pixmaps/co.anysphere.cursor.png"
+        ],
+        // AUR-only, so Qogir/breeze-dark never carry it. hasThemeIcon()
+        // does not walk down to hicolor for these, even though the icon
+        // is really there: same story as zen-browser and helium-browser.
+        "burpsuite-pro": [
+            "file:///usr/share/icons/hicolor/scalable/apps/burpsuite-pro.svg",
+            "file:///usr/share/icons/hicolor/128x128/apps/burpsuite-pro.png"
         ]
     })
 

@@ -40,7 +40,6 @@ ColumnLayout {
         onTriggered: if (!Net.btScanning) Net.scanBt(true)
     }
 
-    anchors.fill: parent
     spacing: Theme.px(8)
 
     RowLayout {

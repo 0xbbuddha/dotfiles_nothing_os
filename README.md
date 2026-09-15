@@ -31,7 +31,7 @@ Written for **Arch / EndeavourOS**, **Hyprland ≥ 0.56** (Lua config) and
 ## Install
 
 ```bash
-git clone https://github.com/0xbbuddha.fr/dotfiles_nothing_os.git ~/hypr_nothing
+git clone https://github.com/0xbbuddha/dotfiles_nothing_os.git ~/hypr_nothing
 cd hypr_nothing
 ./install
 ```

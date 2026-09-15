@@ -30,6 +30,11 @@ local function startup()
     -- running it twice is harmless.
     hl.exec_cmd(ROOT .. "/scripts/bt-agent.sh")
 
+    -- Some headsets connect over BLE only and never bring up A2DP on
+    -- their own; this nudges that profile every time one connects. Also
+    -- lock-guarded, also harmless to run twice.
+    hl.exec_cmd(ROOT .. "/scripts/bt-a2dp-fix.sh")
+
     hl.exec_cmd("hyprctl setcursor " .. cursorTheme .. " " .. cursorSize)
 
     if exists("hypridle") and not pidof("hypridle") then

@@ -124,7 +124,7 @@ ColumnLayout {
                     DotSwitch {
                         checked: source.on
                         onToggled: Config.toggleGlyphEvent(
-                            source.modelData.id)
+                            root.surface, source.modelData.id)
                     }
                 }
             }
@@ -209,7 +209,7 @@ ColumnLayout {
                             let at = list.findIndex(c => c.id === cur);
                             if (at < 0)
                                 at = 0;
-                            Config.setGlyphChannel(slot.index,
+                            Config.setGlyphChannel(root.surface, slot.index,
                                 list[(at + 1) % list.length].id);
                         }
                     }
