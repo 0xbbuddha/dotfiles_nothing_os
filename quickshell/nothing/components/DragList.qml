@@ -10,11 +10,10 @@ import ".."
 // Column: the hole has to travel with the pointer, so a row's place
 // depends on where the drag currently is and not only on its index.
 //
-// The rows are the caller's, not this component's. The four lists that
-// use it look nothing alike past the first two columns, and a shared
-// delegate would have needed a way to pass a ZonePicker into one and an
-// application icon into another. So a call site keeps its own Repeater
-// and wraps each row in a DragRow.
+// The rows are the caller's, not this component's. The lists that use it
+// look nothing alike past the first two columns, and a shared delegate
+// would have needed a way to pass a different row layout into each one.
+// So a call site keeps its own Repeater and wraps each row in a DragRow.
 //
 // Nothing here writes the order. A drag ends in one `reordered` signal
 // and the owner of the list decides what that means, which is what keeps

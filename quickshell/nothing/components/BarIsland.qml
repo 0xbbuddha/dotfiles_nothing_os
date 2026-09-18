@@ -13,7 +13,7 @@ NCard {
     signal secondary()
     signal scrolled(int direction)
 
-    radius: Theme.r.panel
+    radius: Config.barRadius
     height: Theme.z.bar
     implicitWidth: row.implicitWidth + pad * 2
     clip: true

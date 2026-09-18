@@ -42,6 +42,14 @@ Singleton {
     property alias barShowGpu: a.barShowGpu
     property alias barShowTemp: a.barShowTemp
 
+    // Corner radius of the bar's islands, in real screen pixels - not run
+    // through Theme.px, on purpose: the whole point is a value the slider
+    // label and the actual corner agree on at any UI scale, rather than
+    // one that drifts by the time it is drawn. Independent of
+    // Theme.r.panel (the CC, windows and everything else keep sharing
+    // that one); this only ever touches the bar.
+    property alias barRadius: a.barRadius
+
     // ── Windows ───────────────────────────────────────────────────────
     // Which layout Hyprland arranges windows with, and the settings of the
     // scrolling one. Written out to ~/.config/hypr/layout.lua by
@@ -837,6 +845,7 @@ Singleton {
         a.barShowRam = true;
         a.barShowGpu = true;
         a.barShowTemp = true;
+        a.barRadius = 4;
 
         a.windowLayout = "tiling";
         a.scrollColumnWidth = 0.5;
@@ -1111,6 +1120,7 @@ Singleton {
             property bool barShowRam: true
             property bool barShowGpu: true
             property bool barShowTemp: true
+            property int  barRadius: 4   // screen px, matches Theme.r.panel's default
 
             // tiling is Hyprland's dwindle, which is what this rice has
             // always used. scrolling is Hyprland's own scrolling layout,

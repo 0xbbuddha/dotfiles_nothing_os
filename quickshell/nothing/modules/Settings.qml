@@ -46,14 +46,36 @@ PanelWindow {
             "1111001",
             "0111010",
             "0011100"] },
-        { key: "panel", label: "Interface", glyph: [
+        // Three islands floating along the top, same shape as the real
+        // thing.
+        { key: "bar", label: "Bar", glyph: [
+            "1101011",
+            "1101011",
+            "0000000",
+            "0000000",
+            "0000000",
+            "0000000",
+            "0000000"] },
+        // Four tiles split by a cross - the same idea whichever layout is
+        // actually picked on the page itself.
+        { key: "windows", label: "Windows", glyph: [
+            "1110111",
+            "1110111",
+            "1110111",
+            "0000000",
+            "1110111",
+            "1110111",
+            "1110111"] },
+        // A monitor on a stand: everything on this page is something the
+        // screen itself does over time, not a window or the bar.
+        { key: "screen", label: "Screen", glyph: [
             "1111111",
+            "1000001",
+            "1000001",
+            "1000001",
             "1111111",
-            "1000001",
-            "1000001",
-            "1000001",
-            "1000001",
-            "1111111"] },
+            "0001000",
+            "0011100"] },
         { key: "essential", label: "Essential", glyph: [
             "0011100",
             "0110110",
@@ -381,7 +403,9 @@ PanelWindow {
                             }
 
                             SettingsPageLook {}
-                            SettingsPagePanel {}
+                            SettingsPageBar {}
+                            SettingsPageWindows {}
+                            SettingsPageScreen {}
                             SettingsPageEssential {}
                                             SettingsPageDock {}
                             SettingsPageNet {}

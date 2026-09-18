@@ -181,7 +181,7 @@ PanelWindow {
             NCard {
                 id: centreCard
                 required property string modelData
-                radius: Theme.r.panel
+                radius: Config.barRadius
                 height: Theme.z.bar
                 // A wide element sizes to its own content plus breathing
                 // room; a square one keeps the bar's height, so it comes
