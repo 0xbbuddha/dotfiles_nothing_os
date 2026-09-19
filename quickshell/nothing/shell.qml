@@ -5,6 +5,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
+import "components"
 import "modules"
 import "services"
 
@@ -126,23 +127,102 @@ ShellRoot {
         Notifications {}
     }
 
-    Variants { model: Quickshell.screens; Settings {} }
-    Variants { model: Quickshell.screens; NothingLauncher {} }
-    Variants { model: Quickshell.screens; Launcher {} }
-    Variants { model: Quickshell.screens; Session {} }
-    Variants { model: Quickshell.screens; Screenshot {} }
-    Variants { model: Quickshell.screens; GameBar {} }
-    Variants { model: Quickshell.screens; RegionPicker {} }
-    Variants { model: Quickshell.screens; Cheatsheet {} }
-    Variants { model: Quickshell.screens; DisplayPanel {} }
+    // Built the first time each is actually opened, not at shell launch:
+    // these 14 sat fully instantiated on every screen from the start,
+    // most of them untouched for the whole session. OpenLatch remembers
+    // "opened at least once" so closing one again does not tear its tree
+    // down and rebuild it on the next open.
+    OpenLatch { id: settingsLatch; open: GlobalState.settingsOpen }
+    LazyLoader {
+        active: settingsLatch.touched
+        Variants { model: Quickshell.screens; Settings {} }
+    }
+
+    OpenLatch { id: nothingLauncherLatch; open: GlobalState.launcherNothingOpen }
+    LazyLoader {
+        active: nothingLauncherLatch.touched
+        Variants { model: Quickshell.screens; NothingLauncher {} }
+    }
+
+    OpenLatch { id: launcherLatch; open: GlobalState.launcherOpen }
+    LazyLoader {
+        active: launcherLatch.touched
+        Variants { model: Quickshell.screens; Launcher {} }
+    }
+
+    OpenLatch { id: sessionLatch; open: GlobalState.sessionOpen }
+    LazyLoader {
+        active: sessionLatch.touched
+        Variants { model: Quickshell.screens; Session {} }
+    }
+
+    OpenLatch { id: screenshotLatch; open: GlobalState.screenshotOpen }
+    LazyLoader {
+        active: screenshotLatch.touched
+        Variants { model: Quickshell.screens; Screenshot {} }
+    }
+
+    OpenLatch { id: gameBarLatch; open: GlobalState.gameBarOpen }
+    LazyLoader {
+        active: gameBarLatch.touched
+        Variants { model: Quickshell.screens; GameBar {} }
+    }
+
+    OpenLatch { id: regionPickerLatch; open: Shot.picking || Recorder.picking }
+    LazyLoader {
+        active: regionPickerLatch.touched
+        Variants { model: Quickshell.screens; RegionPicker {} }
+    }
+
+    OpenLatch { id: cheatsheetLatch; open: GlobalState.cheatsheetOpen }
+    LazyLoader {
+        active: cheatsheetLatch.touched
+        Variants { model: Quickshell.screens; Cheatsheet {} }
+    }
+
+    OpenLatch { id: displaysLatch; open: GlobalState.displaysOpen }
+    LazyLoader {
+        active: displaysLatch.touched
+        Variants { model: Quickshell.screens; DisplayPanel {} }
+    }
+
     // On every screen, deliberately: the one that went dark is the one
     // that cannot show you the way back.
-    Variants { model: Quickshell.screens; DisplayConfirm {} }
-    Variants { model: Quickshell.screens; Essential {} }
-    Variants { model: Quickshell.screens; EssentialApps {} }
-    Variants { model: Quickshell.screens; EssentialFly {} }
-    Variants { model: Quickshell.screens; NotificationCenter {} }
-    Variants { model: Quickshell.screens; PolkitDialog {} }
+    OpenLatch { id: displayConfirmLatch; open: Displays.confirming }
+    LazyLoader {
+        active: displayConfirmLatch.touched
+        Variants { model: Quickshell.screens; DisplayConfirm {} }
+    }
+
+    OpenLatch { id: essentialLatch; open: GlobalState.essentialOpen }
+    LazyLoader {
+        active: essentialLatch.touched
+        Variants { model: Quickshell.screens; Essential {} }
+    }
+
+    OpenLatch { id: essentialAppsLatch; open: GlobalState.appsOpen }
+    LazyLoader {
+        active: essentialAppsLatch.touched
+        Variants { model: Quickshell.screens; EssentialApps {} }
+    }
+
+    OpenLatch { id: essentialFlyLatch; open: GlobalState.essentialFlyPath !== "" }
+    LazyLoader {
+        active: essentialFlyLatch.touched
+        Variants { model: Quickshell.screens; EssentialFly {} }
+    }
+
+    OpenLatch { id: notifCenterLatch; open: GlobalState.notifCenterOpen }
+    LazyLoader {
+        active: notifCenterLatch.touched
+        Variants { model: Quickshell.screens; NotificationCenter {} }
+    }
+
+    OpenLatch { id: polkitLatch; open: GlobalState.polkitOpen }
+    LazyLoader {
+        active: polkitLatch.touched
+        Variants { model: Quickshell.screens; PolkitDialog {} }
+    }
 
     // One instance only: WlSessionLock raises a surface per monitor
     // by itself.
