@@ -8,9 +8,32 @@ CONF="${XDG_CONFIG_HOME:-$HOME/.config}"
 DATA="${XDG_DATA_HOME:-$HOME/.local/share}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 
+# What backup() has moved aside this run. A copy failing partway (disk
+# full, one file denied, Ctrl-C) must not leave the old config gone and
+# the new one half-written with no way back short of digging through
+# *.bak-$STAMP by hand, so the exact undo is printed for every path that
+# was actually touched, not just the one that failed.
+BACKED_UP=()
+
+rollback_hint() {
+    local status=$?
+    (( status == 0 )) && return
+    (( ${#BACKED_UP[@]} == 0 )) && return
+    echo >&2
+    echo "Install stopped partway through. Nothing was deleted:" \
+        "what was replaced is under *.bak-$STAMP." >&2
+    echo "To put the previous config back:" >&2
+    local p
+    for p in "${BACKED_UP[@]}"; do
+        printf '  rm -rf %q && mv %q %q\n' "$p" "$p.bak-$STAMP" "$p" >&2
+    done
+}
+trap rollback_hint EXIT
+
 backup() {
     [[ -e "$1" || -L "$1" ]] || return 0
     mv "$1" "$1.bak-$STAMP"
+    BACKED_UP+=("$1")
     echo "  backed up -> $1.bak-$STAMP"
 }
 
