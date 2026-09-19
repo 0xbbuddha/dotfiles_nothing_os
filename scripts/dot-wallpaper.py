@@ -4,9 +4,9 @@
     scripts/dot-wallpaper.py in.png out.png
     scripts/dot-wallpaper.py in.png out.png --size 1920x1080 --circle
 
-Black ground, a dot grid, and exactly one colour beside white: the red is
-kept where the source is genuinely red, so the accent comes out of the
-picture rather than being painted onto it.
+Black ground, a dot grid, and white ink, plus red and (optionally) green
+accents kept only where the source is genuinely that colour, so the
+accent comes out of the picture rather than being painted onto it.
 
 The signal driving each dot is distance from the picture's own paper
 colour, not luminance. Luminance does not work on a drawing: read
@@ -17,14 +17,17 @@ What a dot panel should light is the ink, so that is what is measured.
 No image is shipped with this. Point it at your own.
 """
 import argparse
+import colorsys
 import math
 import sys
 
+import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 BG    = (11, 11, 11)
 WHITE = (255, 255, 255)
 RED   = (215, 25, 33)
+GREEN = (40, 195, 150)
 UNLIT    = (32, 32, 32)
 GRID_MIN = 26      # an unlit dot far from the figure
 GRID_MAX = 96      # an unlit dot right beside it
@@ -60,9 +63,25 @@ def paper_colour(rgb, alpha):
     return (r // n, g // n, b // n)
 
 
+def vivid(r, g, b):
+    """A source colour pushed just far enough to read on a black panel.
+
+    A drawing's colour is usually mixed with its own shading, and a navy
+    collar or a muted iris painted straight would be closer to the
+    background than to itself. Saturation and a lightness floor bring
+    the picture's own hues up to LED brightness without changing what
+    hue they are.
+    """
+    h, s, v = colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)
+    s = min(1.0, s * 1.15)
+    v = max(v, 0.55)
+    r2, g2, b2 = colorsys.hsv_to_rgb(h, s, v)
+    return (int(r2 * 255), int(g2 * 255), int(b2 * 255))
+
+
 def build(src_path, out, W, H, pitch, subject_h, cx, cy, label, sub,
-          gain, red_at, floor, circle, halo, grid, specs, rays, jp,
-          papers=None):
+          gain, red_at, green_at, floor, circle, halo, grid, specs, rays, jp,
+          papers=None, true_color=False):
     src = Image.open(src_path).convert("RGBA")
 
     if circle:
@@ -99,6 +118,24 @@ def build(src_path, out, W, H, pitch, subject_h, cx, cy, label, sub,
     small = plate.resize((cols, rows), Image.BOX)
     rgb = small.convert("RGB")
     alpha = small.split()[3]
+
+    # A small accent - a bead, an iris - can be smaller than one cell.
+    # Averaged into its neighbours it dims below any sane threshold, and
+    # which side of a symmetric pair survives becomes a coin flip. Testing
+    # colour at full resolution first and only then boxing it down to a
+    # coverage fraction keeps a one-pixel bead from depending on where
+    # the grid happened to land.
+    full = np.asarray(plate.convert("RGB"), dtype=np.int16)
+    fr, fg, fb = full[..., 0], full[..., 1], full[..., 2]
+    red_frac = green_frac = None
+    if not true_color:
+        red_hit = ((fr - np.maximum(fg, fb)) / 255.0 > red_at)
+        red_frac = Image.fromarray(red_hit.astype(np.uint8) * 255, "L") \
+            .resize((cols, rows), Image.BOX)
+        if green_at is not None:
+            green_hit = ((np.minimum(fg, fb) - fr) / 255.0 > green_at)
+            green_frac = Image.fromarray(green_hit.astype(np.uint8) * 255, "L") \
+                .resize((cols, rows), Image.BOX)
 
     # The empty half of a wallpaper should not be empty, it should be an
     # unlit panel. A heavy blur of the subject's own mask gives a field
@@ -147,8 +184,14 @@ def build(src_path, out, W, H, pitch, subject_h, cx, cy, label, sub,
                 # fogs the empty half of the screen.
                 dist = max(0.0, dist - floor) / max(1e-6, 1.0 - floor)
                 lit = min(1.0, dist * gain) * (a / 255)
-                if (r - max(g, b)) / 255 > red_at:
+                if true_color:
+                    if lit > 0.04:
+                        colour = vivid(r, g, b)
+                elif red_frac.getpixel((gx, gy)) > 32:
                     colour = RED
+                    lit = max(lit, 0.55)
+                elif green_frac is not None and green_frac.getpixel((gx, gy)) > 32:
+                    colour = GREEN
                     lit = max(lit, 0.55)
 
             rad = rmax * lit
@@ -288,6 +331,12 @@ def main():
     p.add_argument("--gain", type=float, default=2.6)
     p.add_argument("--red-at", type=float, default=0.30,
                    help="how red a pixel must be to stay red")
+    p.add_argument("--green-at", type=float, default=None,
+                   help="how green/teal a pixel must be to render green; "
+                        "unset disables the green accent")
+    p.add_argument("--true-color", action="store_true",
+                   help="light each dot in the picture's own colour "
+                        "instead of white plus one or two accents")
     p.add_argument("--floor", type=float, default=0.09,
                    help="dead zone around the paper colour")
     p.add_argument("--circle", action="store_true",
@@ -322,9 +371,9 @@ def main():
         return tuple(int(t[i:i + 2], 16) for i in (0, 2, 4))
 
     build(a.source, a.out, W, H, a.pitch, a.scale, a.x, a.y,
-          a.label, a.sub, a.gain, a.red_at, a.floor, a.circle,
+          a.label, a.sub, a.gain, a.red_at, a.green_at, a.floor, a.circle,
           a.halo, a.grid, specs, a.rays, a.jp,
-          [rgb(c) for c in a.paper] or None)
+          [rgb(c) for c in a.paper] or None, a.true_color)
 
 
 if __name__ == "__main__":
