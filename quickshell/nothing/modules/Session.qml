@@ -60,20 +60,38 @@ PanelWindow {
 
     NCard {
         anchors.centerIn: parent
-        implicitWidth: row.implicitWidth + Theme.px(28)
-        implicitHeight: Theme.px(128)
+        implicitWidth: row.implicitWidth + Theme.px(56)
+        implicitHeight: col.implicitHeight + Theme.px(48)
 
         scale: win.visible ? 1 : 0.96
         Behavior on scale { NumberAnimation { duration: Theme.med; easing.type: Theme.ease } }
 
         ColumnLayout {
+            id: col
             anchors.centerIn: parent
-            spacing: Theme.px(12)
+            spacing: Theme.px(28)
+
+            ColumnLayout {
+                Layout.alignment: Qt.AlignHCenter
+                spacing: Theme.px(2)
+
+                DisplayText {
+                    Layout.alignment: Qt.AlignHCenter
+                    text: Time.hhmm
+                    size: Theme.px(52)
+                }
+
+                NLabel {
+                    Layout.alignment: Qt.AlignHCenter
+                    text: Time.dateLong
+                    font.pixelSize: Theme.f.body
+                }
+            }
 
             RowLayout {
                 id: row
                 Layout.alignment: Qt.AlignHCenter
-                spacing: Theme.px(10)
+                spacing: Theme.px(16)
 
                 Repeater {
                     model: win.actions
@@ -84,32 +102,36 @@ PanelWindow {
                         required property int index
                         readonly property bool waiting: win.armed === index
 
-                        implicitWidth: Theme.px(64)
-                        implicitHeight: Theme.px(64)
+                        implicitWidth: Theme.px(112)
+                        implicitHeight: Theme.px(112)
 
                         Rectangle {
+                            id: plate
                             anchors.fill: parent
                             radius: Theme.r.chip
                             color: btn.waiting ? Theme.c.red
                                  : (bma.containsMouse ? Theme.c.surface3 : Theme.c.surface2)
+                            border.width: bma.containsMouse && !btn.waiting ? 1 : 0
+                            border.color: Theme.c.red
                             Behavior on color { ColorAnimation { duration: Theme.fast } }
+                            Behavior on border.width { NumberAnimation { duration: Theme.fast } }
                         }
 
                         ColumnLayout {
                             anchors.centerIn: parent
-                            spacing: Theme.px(6)
+                            spacing: Theme.px(10)
 
                             NIcon {
                                 Layout.alignment: Qt.AlignHCenter
                                 text: btn.modelData.icon
-                                size: Theme.px(20)
+                                size: Theme.px(34)
                             }
 
                             NText {
                                 Layout.alignment: Qt.AlignHCenter
                                 text: btn.waiting ? "Confirm?" : btn.modelData.label
                                 color: btn.waiting ? Theme.c.on : Theme.c.onDim
-                                font.pixelSize: Theme.f.tiny
+                                font.pixelSize: Theme.f.small
                             }
                         }
 
@@ -122,8 +144,8 @@ PanelWindow {
                             onExited: if (btn.waiting) win.armed = -1
                         }
 
-                        scale: bma.pressed ? 0.94 : 1
-                        Behavior on scale { NumberAnimation { duration: Theme.fast } }
+                        scale: bma.pressed ? 0.94 : (bma.containsMouse ? 1.04 : 1)
+                        Behavior on scale { NumberAnimation { duration: Theme.fast; easing.type: Theme.ease } }
                     }
                 }
             }
