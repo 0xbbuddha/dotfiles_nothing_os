@@ -76,6 +76,21 @@ Loader {
         }
     }
 
+    // Where this element actually is right now, in the bar window's own
+    // coordinate space - read fresh at the moment a flyout opens rather
+    // than assumed, because the element opening it can be dragged to any
+    // of the three islands and a fixed corner is only ever right for one
+    // of them.
+    function anchorX(): real {
+        // Not mapToItem(slot.win, ...): win is a PanelWindow, not a plain
+        // Item, and QML refuses to convert one for a C++ call - it threw
+        // on every hover instead of returning a position. mapToGlobal
+        // needs no target at all, and the bar and its overlay window
+        // both start at the same corner of the same output, so a global
+        // point already lands exactly where a bar-local one would.
+        return slot.mapToGlobal(slot.width / 2, 0).x;
+    }
+
     sourceComponent: {
         switch (slot.itemId) {
         case "workspaces": return workspacesPart;
@@ -124,7 +139,7 @@ Loader {
             visible: Player.active
 
             readonly property bool hovered: mediaMa.containsMouse
-            onHoveredChanged: slot.win.holdMedia(hovered)
+            onHoveredChanged: slot.win.holdMedia(hovered, slot.anchorX())
 
             Row {
                 id: mediaRow
@@ -454,8 +469,8 @@ Loader {
             icon: Net.glyph
             showValue: false
             accent: Net.kind === "none" ? Theme.c.onFaint : Theme.c.on
-            onActivated: GlobalState.openNet("wifi")
-            onSecondary: GlobalState.openNet("wifi")
+            onActivated: GlobalState.openNet("wifi", slot.anchorX())
+            onSecondary: GlobalState.openNet("wifi", slot.anchorX())
         }
     }
 
@@ -465,8 +480,8 @@ Loader {
             icon: Net.btConnected.length > 0 ? "󰂱" : "󰂯"
             showValue: false
             accent: Net.btPowered ? Theme.c.on : Theme.c.onFaint
-            onActivated: GlobalState.openNet("bt")
-            onSecondary: GlobalState.openNet("bt")
+            onActivated: GlobalState.openNet("bt", slot.anchorX())
+            onSecondary: GlobalState.openNet("bt", slot.anchorX())
         }
     }
 
@@ -482,7 +497,7 @@ Loader {
             valueHint: "100%"
             accent: Sys.cpu > 0.85 ? Theme.c.red : Theme.c.onDim
             onActivated: slot.win.openCc()
-            onHoveredChanged: slot.win.holdRecap(hovered)
+            onHoveredChanged: slot.win.holdRecap(hovered, slot.anchorX())
         }
     }
 
@@ -494,7 +509,7 @@ Loader {
             valueHint: "100%"
             accent: Sys.ram > 0.9 ? Theme.c.red : Theme.c.onDim
             onActivated: slot.win.openCc()
-            onHoveredChanged: slot.win.holdRecap(hovered)
+            onHoveredChanged: slot.win.holdRecap(hovered, slot.anchorX())
         }
     }
 
@@ -506,7 +521,7 @@ Loader {
             valueHint: "100%"
             accent: Sys.gpu > 0.85 ? Theme.c.red : Theme.c.onDim
             onActivated: slot.win.openCc()
-            onHoveredChanged: slot.win.holdRecap(hovered)
+            onHoveredChanged: slot.win.holdRecap(hovered, slot.anchorX())
         }
     }
 
@@ -518,7 +533,7 @@ Loader {
             valueHint: "100\u00b0"
             accent: Sys.hot ? Theme.c.red : Theme.c.onDim
             onActivated: slot.win.openCc()
-            onHoveredChanged: slot.win.holdRecap(hovered)
+            onHoveredChanged: slot.win.holdRecap(hovered, slot.anchorX())
         }
     }
 
@@ -552,7 +567,7 @@ Loader {
             valueHint: "100%"
             accent: Audio.muted ? Theme.c.red : Theme.c.on
             onActivated: if (Audio.audio) Audio.audio.muted = !Audio.audio.muted
-            onSecondary: GlobalState.openAudio()
+            onSecondary: GlobalState.openAudio(slot.anchorX())
             onScrolled: (d) => {
                 if (!Audio.audio) return;
                 Audio.audio.volume =
@@ -570,7 +585,7 @@ Loader {
             value: Math.round((slot.win.batt?.percentage ?? 0) * 100) + "%"
             valueHint: "100%"
             accent: (slot.win.batt?.percentage ?? 1) < 0.2 ? Theme.c.red : Theme.c.on
-            onHoveredChanged: slot.win.holdBatt(hovered)
+            onHoveredChanged: slot.win.holdBatt(hovered, slot.anchorX())
         }
     }
 

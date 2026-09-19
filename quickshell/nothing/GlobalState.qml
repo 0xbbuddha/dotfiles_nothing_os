@@ -60,24 +60,36 @@ Singleton {
     property bool audioPanel: false
     property bool lightPanel: false
 
-    function openNet(kind: string): void {
+    // Where the flyout that is about to open should sit, in the bar
+    // window's own coordinate space. The bar is a reorderable row now -
+    // the element that opens one of these can be in any of the three
+    // islands - so a fixed screen edge cannot be right for all of them
+    // the way it was back when volume, for instance, always lived on the
+    // right. The caller hands over its own position; the flyout reads it
+    // back instead of anchoring to a corner.
+    property real popupX: 0
+
+    function openNet(kind: string, anchorX: real): void {
         controlCenterOpen = false;
         audioPanel = false;
         lightPanel = false;
+        popupX = anchorX;
         netPanel = (netPanel === kind) ? "" : kind;
     }
 
-    function openAudio(): void {
+    function openAudio(anchorX: real): void {
         controlCenterOpen = false;
         netPanel = "";
         lightPanel = false;
+        popupX = anchorX;
         audioPanel = !audioPanel;
     }
 
-    function openLight(): void {
+    function openLight(anchorX: real): void {
         controlCenterOpen = false;
         netPanel = "";
         audioPanel = false;
+        popupX = anchorX;
         lightPanel = !lightPanel;
     }
 

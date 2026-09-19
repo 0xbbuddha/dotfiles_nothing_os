@@ -83,21 +83,34 @@ PanelWindow {
     readonly property real rightMax: Math.max(Theme.px(72),
         width - edge - midX - midCluster.width - islandGap)
 
+    // Where each recap sits, read from whichever element last asked to
+    // hold it open. CPU, RAM, GPU and temperature all share one recap
+    // panel, so this is not "the position of the CPU element" specifically
+    // - it is "wherever the pointer currently is", which is the same
+    // thing while only one of them can be hovered at a time.
+    property real recapAnchorX: 0
+    property real battAnchorX: 0
+    property real mediaAnchorX: 0
+
     // The flyouts are held open by whatever is hovering, and what hovers
     // now lives in a component that cannot see the timers. One call each
-    // rather than a reach into this window's internals.
-    function holdRecap(on: bool): void {
-        if (on) { recapHide.stop(); bar.recapKeep = true; }
+    // rather than a reach into this window's internals. The position is
+    // only meaningful on the way in - the recap hovering itself passes
+    // its own last-known anchor back unchanged, not its own geometry, so
+    // moving the pointer from the element down into the panel it opened
+    // does not make the panel jump out from under it.
+    function holdRecap(on: bool, x: real): void {
+        if (on) { recapHide.stop(); bar.recapKeep = true; bar.recapAnchorX = x; }
         else recapHide.restart();
     }
 
-    function holdBatt(on: bool): void {
-        if (on) { battHide.stop(); bar.battKeep = true; }
+    function holdBatt(on: bool, x: real): void {
+        if (on) { battHide.stop(); bar.battKeep = true; bar.battAnchorX = x; }
         else battHide.restart();
     }
 
-    function holdMedia(on: bool): void {
-        if (on) { mediaHide.stop(); bar.mediaKeep = true; }
+    function holdMedia(on: bool, x: real): void {
+        if (on) { mediaHide.stop(); bar.mediaKeep = true; bar.mediaAnchorX = x; }
         else mediaHide.restart();
     }
 
@@ -277,12 +290,19 @@ PanelWindow {
         anchors.horizontalCenter: parent.horizontalCenter
     }
 
+    // Centred under whichever element opened it (GlobalState.popupX, set
+    // at the moment of opening) rather than pinned to the right edge: net,
+    // bluetooth and volume can each be dragged to any island now, and a
+    // flyout that stays in the corner they used to default to is a
+    // flyout that opens under the wrong thing the moment they are not.
+    // Clamped so it still lands fully on screen from an island near
+    // either edge.
     NetFlyout {
         id: flyout
         anchors.top: parent.top
         anchors.topMargin: dropLayer.dropY
-        anchors.right: parent.right
-        anchors.rightMargin: bar.edge
+        x: Math.max(bar.edge, Math.min(GlobalState.popupX - width / 2,
+                                        dropLayer.width - bar.edge - width))
         visible: bar.onFocusedMonitor && (open || opacity > 0.01)
     }
 
@@ -290,8 +310,8 @@ PanelWindow {
         id: audioFlyout
         anchors.top: parent.top
         anchors.topMargin: dropLayer.dropY
-        anchors.right: parent.right
-        anchors.rightMargin: bar.edge
+        x: Math.max(bar.edge, Math.min(GlobalState.popupX - width / 2,
+                                        dropLayer.width - bar.edge - width))
         visible: bar.onFocusedMonitor && (open || opacity > 0.01)
     }
 
@@ -299,39 +319,45 @@ PanelWindow {
         id: lightFlyout
         anchors.top: parent.top
         anchors.topMargin: dropLayer.dropY
-        anchors.right: parent.right
-        anchors.rightMargin: bar.edge
+        x: Math.max(bar.edge, Math.min(GlobalState.popupX - width / 2,
+                                        dropLayer.width - bar.edge - width))
         visible: bar.onFocusedMonitor && (open || opacity > 0.01)
     }
 
+    // Centred under whichever gauge, battery or now-playing element is
+    // actually being hovered (bar.recapAnchorX etc., set at that moment),
+    // not pinned to the right edge or to the left island specifically:
+    // any of these can be dragged to any island, same reasoning as the
+    // three flyouts above.
     SysRecap {
         id: recap
-        onHoveredChanged: bar.holdRecap(hovered)
+        onHoveredChanged: bar.holdRecap(hovered, bar.recapAnchorX)
         shown: bar.recapKeep && !cc.open && !flyout.open && !audioFlyout.open && !lightFlyout.open && bar.onFocusedMonitor
         anchors.top: parent.top
         anchors.topMargin: dropLayer.dropY
-        anchors.right: parent.right
-        anchors.rightMargin: bar.edge
+        x: Math.max(bar.edge, Math.min(bar.recapAnchorX - width / 2,
+                                        dropLayer.width - bar.edge - width))
     }
 
     BattRecap {
         id: battRecap
         batt: bar.batt
-        onHoveredChanged: bar.holdBatt(hovered)
+        onHoveredChanged: bar.holdBatt(hovered, bar.battAnchorX)
         shown: bar.battKeep && !cc.open && !flyout.open && !audioFlyout.open && !lightFlyout.open && bar.onFocusedMonitor
         anchors.top: parent.top
         anchors.topMargin: dropLayer.dropY
-        anchors.right: parent.right
-        anchors.rightMargin: bar.edge
+        x: Math.max(bar.edge, Math.min(bar.battAnchorX - width / 2,
+                                        dropLayer.width - bar.edge - width))
     }
 
     MediaRecap {
         id: mediaRecap
-        onHoveredChanged: bar.holdMedia(hovered)
+        onHoveredChanged: bar.holdMedia(hovered, bar.mediaAnchorX)
         shown: bar.mediaKeep && Player.active && !cc.open && !flyout.open && !audioFlyout.open && !lightFlyout.open && bar.onFocusedMonitor
         anchors.top: parent.top
         anchors.topMargin: dropLayer.dropY
-        x: leftIsland.x + leftIsland.width - width
+        x: Math.max(bar.edge, Math.min(bar.mediaAnchorX - width / 2,
+                                        dropLayer.width - bar.edge - width))
     }
 
     HyprlandFocusGrab {
