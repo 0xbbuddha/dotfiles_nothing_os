@@ -31,11 +31,18 @@ Singleton {
         { label: "Frieren", value: "frieren" }
     ]
 
-    function dotWallpaperPath(wide: bool): string {
-        const c = (Config.dotWallpaperChar || "tamaki");
+    // The character is explicit, not read off Config, so a picker can
+    // ask "what does Tamaki look like" without that answer changing to
+    // whichever character happens to be chosen at the moment.
+    function dotWallpaperPathFor(character: string, wide: bool): string {
+        const c = (character || "tamaki");
         const suffix = c === "tamaki" ? "" : ("-" + c);
         return Quickshell.shellPath("../../hypr/wallpapers/nothing-dots"
             + suffix + "-" + (wide ? "16-9" : "16-10") + ".png");
+    }
+
+    function dotWallpaperPath(wide: bool): string {
+        return root.dotWallpaperPathFor(Config.dotWallpaperChar, wide);
     }
 
     // Absolute path, ~ allowed. Empty (and the old Documents path) = bundled.

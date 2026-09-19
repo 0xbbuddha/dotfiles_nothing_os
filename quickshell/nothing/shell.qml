@@ -229,6 +229,12 @@ ShellRoot {
         Variants { model: Quickshell.screens; PolkitDialog {} }
     }
 
+    OpenLatch { id: wallpaperPickerLatch; open: GlobalState.wallpaperPickerOpen }
+    LazyLoader {
+        active: wallpaperPickerLatch.touched
+        Variants { model: Quickshell.screens; WallpaperPicker {} }
+    }
+
     // One instance only: WlSessionLock raises a surface per monitor
     // by itself.
     LockScreen {}
@@ -391,6 +397,13 @@ ShellRoot {
         function extend(): void { Displays.extend(); }
         function duplicate(): void { Displays.duplicate(); }
         function only(name: string): void { Displays.only(name); }
+    }
+
+    IpcHandler {
+        target: "wallpaperpicker"
+        function toggle(): void { GlobalState.wallpaperPickerOpen = !GlobalState.wallpaperPickerOpen; }
+        function open(): void { GlobalState.wallpaperPickerOpen = true; }
+        function hide(): void { GlobalState.wallpaperPickerOpen = false; }
     }
 
     IpcHandler {

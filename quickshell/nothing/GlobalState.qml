@@ -56,6 +56,10 @@ Singleton {
     // The Nothing Launcher: widgets and glyph surfaces in one place.
     property bool launcherNothingOpen: false
 
+    // Which dot-matrix figure to draw, full-bleed previews, no trip
+    // through Settings: SUPER+SHIFT+T.
+    property bool wallpaperPickerOpen: false
+
     property string netPanel: ""
     property bool audioPanel: false
     property bool lightPanel: false
@@ -114,5 +118,6 @@ Singleton {
         netPanel = "";
         audioPanel = false;
         lightPanel = false;
+        wallpaperPickerOpen = false;
     }
 }

@@ -27,6 +27,7 @@ Singleton {
                 { keys: ["SUPER", "ALT", "L"], label: "Nothing Launcher" },
                 { keys: ["SUPER", "SHIFT", "G"], label: "Next Glyph surface" },
                 { keys: ["SUPER", "P"],     label: "Displays" },
+                { keys: ["SUPER", "SHIFT", "T"], label: "Wallpaper picker" },
                 { keys: ["SUPER", "/"],     label: "This cheatsheet" },
                 { keys: ["CTRL", "ALT", "Del"], label: "Session menu" }
             ]
