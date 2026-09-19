@@ -160,11 +160,34 @@ Item {
                             model: Config.ccTiles ? Config.ccZone("tiles") : []
 
                             CcTile {
+                                id: tile
                                 required property string modelData
+                                required property int index
                                 width: grid.cellWidth
                                 height: Theme.px(42)
                                 itemId: modelData
                                 cc: root
+
+                                // A grid that all lit up on the same frame
+                                // read as one flat block; a cascade, tile
+                                // by tile, reads as a panel switching on.
+                                // Still no bounce - the delay is the only
+                                // thing that varies, the curve underneath
+                                // is the shell's usual one.
+                                opacity: root.open ? 1 : 0
+                                scale: root.open ? 1 : 0.92
+                                Behavior on opacity {
+                                    SequentialAnimation {
+                                        PauseAnimation { duration: tile.index * 18 }
+                                        NumberAnimation { duration: Theme.med; easing.type: Theme.ease }
+                                    }
+                                }
+                                Behavior on scale {
+                                    SequentialAnimation {
+                                        PauseAnimation { duration: tile.index * 18 }
+                                        NumberAnimation { duration: Theme.med; easing.type: Theme.ease }
+                                    }
+                                }
                             }
                         }
                     }
