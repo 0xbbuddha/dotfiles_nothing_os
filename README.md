@@ -28,6 +28,12 @@ Written for **Arch / EndeavourOS**, **Hyprland ≥ 0.56** (Lua config) and
 | **fastfetch** | |
 | ![fastfetch](assets/fetch.png) | |
 
+## Wallpapers
+
+| Tamaki | Frieren |
+|:---:|:---:|
+| ![Tamaki](hypr/wallpapers/nothing-dots-16-9.png) | ![Frieren](hypr/wallpapers/nothing-dots-frieren-16-9.png) |
+
 ## Install
 
 ```bash
