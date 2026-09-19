@@ -25,6 +25,7 @@ Singleton {
     property alias drawWallpaper: a.drawWallpaper
     property alias wallpaper: a.wallpaper
     property alias wallpaperFormat: a.wallpaperFormat
+    property alias dotWallpaperChar: a.dotWallpaperChar
 
     // ── Shown elements ────────────────────────────────────────────────
     property alias showDock: a.showDock
@@ -612,9 +613,19 @@ Singleton {
     readonly property bool dotWallpaperOn:
         (a.wallpaper ?? "").trim() === root.dotWallpaperKey
 
+    // Known characters ship as a named list rather than a free-text field:
+    // typing a name that has no file behind it would silently fall back to
+    // Tamaki with no sign anything was wrong.
+    readonly property var dotWallpaperChars: [
+        { label: "Tamaki",  value: "tamaki" },
+        { label: "Frieren", value: "frieren" }
+    ]
+
     function dotWallpaperPath(wide: bool): string {
-        return Quickshell.shellPath("../../hypr/wallpapers/nothing-dots-"
-            + (wide ? "16-9" : "16-10") + ".png");
+        const c = (a.dotWallpaperChar || "tamaki");
+        const suffix = c === "tamaki" ? "" : ("-" + c);
+        return Quickshell.shellPath("../../hypr/wallpapers/nothing-dots"
+            + suffix + "-" + (wide ? "16-9" : "16-10") + ".png");
     }
 
     // Absolute path, ~ allowed. Empty (and the old Documents path) = bundled.
@@ -828,6 +839,7 @@ Singleton {
         a.drawWallpaper = true;
         a.wallpaper = "";
         a.wallpaperFormat = "auto";
+        a.dotWallpaperChar = "tamaki";
 
         a.barLeft = ["workspaces", "media"];
         a.barCentre = ["apps", "clock", "essential"];
@@ -1052,6 +1064,11 @@ Singleton {
             // Which of the dot-matrix pair to use: "auto", "16-10" or
             // "16-9". Only consulted when the pair is the chosen image.
             property string wallpaperFormat: "auto"
+            // Which dot-matrix figure: "tamaki" (the original pair, no
+            // suffix on disk) or any other name dropped into
+            // hypr/wallpapers/ as nothing-dots-<char>-16-9.png /
+            // -16-10.png. Only consulted when the pair is the chosen image.
+            property string dotWallpaperChar: "tamaki"
 
             // The bar, one ordered list per island. Empty is a legitimate
             // answer: an island with nothing in it simply does not draw.

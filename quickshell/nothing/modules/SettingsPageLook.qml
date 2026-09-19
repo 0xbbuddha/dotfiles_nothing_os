@@ -159,6 +159,20 @@ SettingsPage {
         }
 
         SettingRow {
+            key: "wallpaperChar"
+            label: "Character"
+            hint: "Which figure the dot-matrix pair draws"
+            visible: Config.dotWallpaperOn
+        }
+
+        DotPicker {
+            visible: Config.dotWallpaperOn
+            options: Config.dotWallpaperChars
+            current: Config.dotWallpaperChar
+            onPicked: (v) => { Config.dotWallpaperChar = v; Config.save(); }
+        }
+
+        SettingRow {
             key: "wallpaperFormat"
             label: "Format"
             hint: "Auto gives every screen the frame drawn for its own shape"
