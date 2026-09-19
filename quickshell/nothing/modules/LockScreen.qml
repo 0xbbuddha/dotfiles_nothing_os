@@ -37,8 +37,8 @@ Scope {
                 anchors.fill: parent
                 visible: pane.onWallpaper
                 source: pane.onWallpaper
-                    ? Config.wallpaperUrlFor(pane.screen?.width ?? 0,
-                                             pane.screen?.height ?? 0)
+                    ? Wallpapers.wallpaperUrlFor(pane.screen?.width ?? 0,
+                                                 pane.screen?.height ?? 0)
                     : ""
                 fillMode: Image.PreserveAspectCrop
                 asynchronous: true

@@ -124,7 +124,7 @@ SettingsPage {
             Image {
                 anchors.fill: parent
                 anchors.margins: Theme.px(10)
-                source: Config.wallpaperUrl
+                source: Wallpapers.wallpaperUrl
                 fillMode: Image.PreserveAspectCrop
                 asynchronous: true
                 opacity: Config.drawWallpaper ? 1 : 0.25
@@ -147,12 +147,12 @@ SettingsPage {
             label: "Nothing dots"
             hint: "The dot-matrix pair shipped in hypr/wallpapers"
             NPillButton {
-                text: Config.dotWallpaperOn ? "In use" : "Use"
-                opacity: Config.dotWallpaperOn ? 0.45 : 1
+                text: Wallpapers.dotWallpaperOn ? "In use" : "Use"
+                opacity: Wallpapers.dotWallpaperOn ? 0.45 : 1
                 onActivated: {
-                    if (Config.dotWallpaperOn)
+                    if (Wallpapers.dotWallpaperOn)
                         return;
-                    Config.wallpaper = Config.dotWallpaperKey;
+                    Config.wallpaper = Wallpapers.dotWallpaperKey;
                     Config.save();
                 }
             }
@@ -162,12 +162,12 @@ SettingsPage {
             key: "wallpaperChar"
             label: "Character"
             hint: "Which figure the dot-matrix pair draws"
-            visible: Config.dotWallpaperOn
+            visible: Wallpapers.dotWallpaperOn
         }
 
         DotPicker {
-            visible: Config.dotWallpaperOn
-            options: Config.dotWallpaperChars
+            visible: Wallpapers.dotWallpaperOn
+            options: Wallpapers.dotWallpaperChars
             current: Config.dotWallpaperChar
             onPicked: (v) => { Config.dotWallpaperChar = v; Config.save(); }
         }
@@ -176,11 +176,11 @@ SettingsPage {
             key: "wallpaperFormat"
             label: "Format"
             hint: "Auto gives every screen the frame drawn for its own shape"
-            visible: Config.dotWallpaperOn
+            visible: Wallpapers.dotWallpaperOn
         }
 
         DotPicker {
-            visible: Config.dotWallpaperOn
+            visible: Wallpapers.dotWallpaperOn
             options: [
                 { label: "Auto",  value: "auto" },
                 { label: "16:10", value: "16-10" },

@@ -114,7 +114,7 @@ Item {
 
                 Image {
                     anchors.fill: parent
-                    source: Config.wallpaperUrl
+                    source: Wallpapers.wallpaperUrl
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
                     opacity: 0.4
