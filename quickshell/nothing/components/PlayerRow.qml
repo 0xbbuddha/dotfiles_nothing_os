@@ -78,7 +78,7 @@ Item {
             Rectangle {
                 Layout.preferredWidth: Theme.px(34)
                 Layout.preferredHeight: Theme.px(34)
-                radius: Theme.r.tiny
+                radius: Theme.r.chip
                 color: Theme.shade(0.35)
                 clip: true
 
