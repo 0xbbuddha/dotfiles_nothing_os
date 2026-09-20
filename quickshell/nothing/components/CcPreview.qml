@@ -373,10 +373,15 @@ Rectangle {
                     required property var modelData
                     kind: "tiles"
                     itemId: modelData.id
-                    implicitWidth: ic.implicitWidth + Theme.px(20)
+                    // The icon alone sized this: right for the footer
+                    // chips below, which have no label, wrong here, where
+                    // a wide title like "Night light" overflowed into the
+                    // chip after it instead of setting the chip's width.
+                    implicitWidth: content.implicitWidth + Theme.px(20)
                     implicitHeight: Theme.px(26)
                     radius: height / 2
                     RowLayout {
+                        id: content
                         anchors.centerIn: parent
                         spacing: Theme.px(5)
                         NIcon {
