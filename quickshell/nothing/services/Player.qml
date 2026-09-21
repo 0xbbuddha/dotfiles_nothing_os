@@ -102,6 +102,16 @@ Singleton {
 
     function score(p: var): int {
         let s = 0;
+        // Worth more than every other point below combined: a native
+        // player outranks a browser tab right up until it is the one
+        // that cannot say how long the track is. Seen with Spotify just
+        // after a track change - its own MPRIS length sticks at 0 for a
+        // moment, correct at the bus level (playerctl reads it fine) but
+        // stale through Quickshell's binding, while the browser tab
+        // playing the same song already has it. Losing the seek band to
+        // a source ranked "better" but unusable is worse than losing
+        // the tie-break.
+        if (root.lengthOf(p) > 0) s += 16;
         if (root.isSite(p)) s += 8;
         if (!root.isBrowser(p)) s += 4;
         if ((p?.trackArtUrl ?? "") !== "") s += 2;
