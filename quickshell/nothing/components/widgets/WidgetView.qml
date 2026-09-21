@@ -55,6 +55,7 @@ Loader {
         case "media":          return cMedia;
         case "mediaList":      return cMediaList;
         case "mediaSquare":    return cMediaSquare;
+        case "mediaVinyl":     return cMediaVinyl;
         case "worldClockSimple":
         case "worldClock":     return cWorldClock;
         case "worldClockOne":  return cWorldClockOne;
@@ -102,6 +103,7 @@ Loader {
     Component { id: cMedia;          WMedia {} }
     Component { id: cMediaList;      WMediaList {} }
     Component { id: cMediaSquare;    WMediaSquare {} }
+    Component { id: cMediaVinyl;     WMediaVinyl {} }
     Component { id: cWorldClock;     WWorldClock {} }
     Component { id: cWorldClockOne;  WWorldClockOne {} }
     Component { id: cPhoto;          WPhoto {} }

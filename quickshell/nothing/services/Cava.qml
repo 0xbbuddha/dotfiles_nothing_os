@@ -15,23 +15,21 @@ Singleton {
     id: root
 
     property bool available: false
-    property bool listening: false
     property var values: root._zeros()
+
+    // A second reason to run it besides the Glyph toy: a widget that
+    // wants to move with the music sets this itself while it is on
+    // screen, the same "nobody is looking, stop reading the mixer"
+    // reasoning extended to a second listener rather than duplicated
+    // for it.
+    property bool widgetWantsIt: false
+
+    readonly property bool listening:
+        (Config.glyphEnabled && Config.glyphToy === "visualizer")
+            || root.widgetWantsIt
 
     readonly property int bars: 25
     readonly property string confPath: `${Config.dir}/cava.conf`
-
-    function sync(): void {
-        root.listening = Config.glyphEnabled && Config.glyphToy === "visualizer";
-    }
-
-    Component.onCompleted: root.sync()
-
-    Connections {
-        target: Config
-        function onGlyphToyChanged(): void { root.sync(); }
-        function onGlyphEnabledChanged(): void { root.sync(); }
-    }
 
     function _zeros(): var {
         const a = [];
@@ -67,6 +65,15 @@ Singleton {
         }
     }
 
+    // The config never changes between one start and the next, so
+    // pausing and resuming asks to write the same bytes twice. A
+    // FileView has nothing to do on the second call and `onSaved`
+    // stays quiet - which, if that were the only thing starting cava,
+    // left it dead after a pause. This remembers what is already on
+    // disk so a resume can start the process directly instead of
+    // waiting on a write that is not going to happen.
+    property string _written: ""
+
     FileView {
         id: confFile
         printErrors: false
@@ -76,15 +83,27 @@ Singleton {
         }
     }
 
-    onListeningChanged: {
+    function _apply(): void {
         if (root.listening && root.available) {
             confFile.path = root.confPath;
-            confFile.setText(root.confText);
+            if (root._written === root.confText) {
+                cava.running = true;
+            } else {
+                root._written = root.confText;
+                confFile.setText(root.confText);
+            }
         } else {
             cava.running = false;
             root.values = root._zeros();
         }
     }
+
+    onListeningChanged: root._apply()
+    onAvailableChanged: root._apply()
+    // A binding's own first value is not a "change": without this, a
+    // config that already starts with the visualiser toy chosen would
+    // sit silent until something else happened to flip the property.
+    Component.onCompleted: root._apply()
 
     NProcess {
         id: cava

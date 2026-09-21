@@ -135,6 +135,9 @@ Singleton {
         { id: "mediaList",    label: "Playing, sources", icon: "󰲹",
           hint: "A row per source, two at a time",     group: "Media",
           height: Theme.px(140) },
+        { id: "mediaVinyl",   label: "Playing, vinyl", icon: "󰝚",
+          hint: "The cover on a turning record, ringed by the mix itself", group: "Media",
+          size: "small", height: root.smallWidth },
 
         { id: "net",          label: "Network",       icon: "󰀂",
           hint: "Down and up, over the last minute",   group: "System",
