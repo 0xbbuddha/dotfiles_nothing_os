@@ -95,6 +95,14 @@ PanelWindow {
 
     property bool armed: false
 
+    // Held off the frame the window itself maps: the dock's opacity is
+    // already driven by `revealed`, which starts true on most setups
+    // (auto-hide off, or an empty workspace), so without this it would
+    // just be there from the first frame rather than arriving with
+    // everything else.
+    property bool booted: false
+    Timer { interval: 1; running: true; onTriggered: win.booted = true }
+
     readonly property bool hovered: hotzone.containsMouse || dockArea.containsMouse
 
     readonly property bool revealed: !autoHide || !win.workspaceOccupied
@@ -388,7 +396,7 @@ PanelWindow {
             height: Theme.z.dock
             width: apps.implicitWidth + Theme.px(16)
 
-            opacity: win.revealed ? 1 : 0
+            opacity: (win.revealed && win.booted) ? 1 : 0
             Behavior on opacity { NumberAnimation { duration: Theme.fast } }
 
             RowLayout {

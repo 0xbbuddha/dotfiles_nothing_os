@@ -50,6 +50,27 @@ PanelWindow {
                               duration: Theme.med; easing.type: Theme.ease }
         }
 
+        // `add` only covers a widget arriving after the column already
+        // exists, from the picker. Session launch populates the whole
+        // Flow in one frame instead, which is what this covers - each
+        // widget a beat behind the last rather than the column just
+        // being there.
+        populate: Transition {
+            SequentialAnimation {
+                // Index has come back -1 here at least once - a Flow
+                // populating is not a ListView, and nothing guarantees
+                // it hands every item a real one. A negative duration
+                // is a hard Qt warning, not a clamp, so this floors it
+                // itself rather than trusting the value.
+                PauseAnimation { duration: Math.max(0, ViewTransition.index) * 45 }
+                ParallelAnimation {
+                    NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.med }
+                    NumberAnimation { property: "scale"; from: 0.92; to: 1
+                                      duration: Theme.med; easing.type: Theme.ease }
+                }
+            }
+        }
+
         move: Transition {
             NumberAnimation { properties: "x,y"; duration: Theme.med; easing.type: Theme.ease }
             NumberAnimation { property: "opacity"; to: 1; duration: Theme.fast }

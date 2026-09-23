@@ -42,6 +42,23 @@ PanelWindow {
         width: Theme.z.widgets
         spacing: Theme.gap
 
+        // Only the session-launch case: the Flow populating for the
+        // first time. Tiles pinned afterward from Essential Apps just
+        // appear, same as before.
+        populate: Transition {
+            SequentialAnimation {
+                // See Desktop.qml's copy of this: index has come back
+                // -1 here before, and a negative duration is a hard Qt
+                // warning rather than something it clamps for itself.
+                PauseAnimation { duration: Math.max(0, ViewTransition.index) * 45 }
+                ParallelAnimation {
+                    NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.med }
+                    NumberAnimation { property: "scale"; from: 0.92; to: 1
+                                      duration: Theme.med; easing.type: Theme.ease }
+                }
+            }
+        }
+
         Repeater {
             model: win.pinned
 
