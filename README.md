@@ -17,20 +17,20 @@ Written for **Arch / EndeavourOS**, **Hyprland ≥ 0.56** (Lua config) and
 | Desktop | Nothing Launcher |
 |:---:|:---:|
 | ![Desktop](assets/global.png) | ![Nothing Launcher](assets/nothing-launcher.png) |
-| **Settings** | **Settings, System** |
-| ![Settings](assets/settings.png) | ![System](assets/settings-system.png) |
-| **Glyph Bar** | **Glyph Strip** |
-| ![Glyph Bar](assets/glyph-bar.png) | ![Glyph Strip](assets/glyph-strip.png) |
-| **Glyph, in the launcher** | **Control centre** |
-| ![Glyph settings](assets/glyph-settings.png) | ![Control centre](assets/cc.png) |
-| **Essential Search** | **Essential Space + Key** |
-| ![Essential Search](assets/essential-search.png) | ![Essential Space + Key](assets/essential-space-key.png) |
-| **Essential Apps** | **Game bar** |
-| ![Essential Apps](assets/essential-apps.png) | ![Game bar](assets/game-bar.png) |
-| **Dolphin** | **Displays** |
-| ![File explorer](assets/file-explorer.png) | ![Displays](assets/displays.png) |
-| **fastfetch** | |
-| ![fastfetch](assets/fetch.png) | |
+| **Glyph Matrix** | **Glyph Bar** |
+| ![Glyph Matrix](assets/glyph-matrix.png) | ![Glyph Bar](assets/glyph-bar.png) |
+| **Glyph Strip** | **Glyph, in the launcher** |
+| ![Glyph Strip](assets/glyph-strip.png) | ![Glyph settings](assets/glyph-settings.png) |
+| **Control centre** | **Settings** |
+| ![Control centre](assets/cc.png) | ![Settings](assets/settings.png) |
+| **Settings, System** | **Essential Search** |
+| ![System](assets/settings-system.png) | ![Essential Search](assets/essential-search.png) |
+| **Essential Space + Key** | **Essential Apps** |
+| ![Essential Space + Key](assets/essential-space-key.png) | ![Essential Apps](assets/essential-apps.png) |
+| **Game bar** | **Dolphin** |
+| ![Game bar](assets/game-bar.png) | ![File explorer](assets/file-explorer.png) |
+| **Displays** | **fastfetch** |
+| ![Displays](assets/displays.png) | ![fastfetch](assets/fetch.png) |
 
 ## Wallpapers
 
