@@ -30,6 +30,11 @@ PanelWindow {
     property alias sheetWidth: card.width
     property alias sheetHeight: card.height
     property real topBias: 0.5          // 0.5 = vertically centred
+    // Transparent for a sheet whose whole point is showing what is
+    // behind it - the wallpaper picker, previewing a change against
+    // the desktop it is about to become rather than a dimmed memory
+    // of it.
+    property color scrim: Theme.c.scrim
     default property alias content: card.data
 
     // 'opened' and 'closed' already exist on Window: other names are required.
@@ -57,7 +62,7 @@ PanelWindow {
 
     Rectangle {
         anchors.fill: parent
-        color: Theme.c.scrim
+        color: win.scrim
         MouseArea { anchors.fill: parent; onClicked: win.requestClose() }
     }
 

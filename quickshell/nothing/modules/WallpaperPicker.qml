@@ -15,7 +15,13 @@ OverlayWindow {
     onCloseRequested: GlobalState.wallpaperPickerOpen = false
     sheetWidth: Math.min(Theme.px(720), screen.width * 0.9)
     sheetHeight: col.implicitHeight + Theme.pad * 2
-    topBias: 0.42
+    // Low and out of the way: the choice made here plays out as the
+    // wallpaper reveal, which grows from the centre of the screen, so
+    // the sheet asking for the choice cannot sit there too. No scrim
+    // either - a preview that dims the very thing it is previewing
+    // defeats its own point.
+    topBias: 0.9
+    scrim: "transparent"
 
     ColumnLayout {
         id: col
