@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.png" width="160" alt="Nothing dotfiles logo">
+</p>
+
 # Nothing
 
 Hyprland + Quickshell rice inspired by **Nothing OS**: matte black,
