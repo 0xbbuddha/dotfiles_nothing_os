@@ -153,9 +153,6 @@ PanelWindow {
         onActivated: bar.openCc()
         onSecondary: GlobalState.toggleLauncher()
 
-        opacity: 0
-        BootIn { target: leftIsland }
-
         Repeater {
             model: bar.leftIds
 
@@ -189,9 +186,6 @@ PanelWindow {
         anchors.topMargin: Theme.px(5)
         height: Theme.z.bar
         spacing: bar.islandGap
-
-        opacity: 0
-        BootIn { target: midCluster; delay: 60 }
 
         Repeater {
             id: centreRep
@@ -232,9 +226,6 @@ PanelWindow {
         visible: bar.rightIds.length > 0
         onActivated: bar.openCc()
         onSecondary: GlobalState.toggleLauncher()
-
-        opacity: 0
-        BootIn { target: rightIsland; delay: 120 }
         onScrolled: (d) => {
             if (!Audio.audio) return;
             Audio.audio.volume = Math.max(0, Math.min(1, Audio.audio.volume + d * 0.05));

@@ -43,6 +43,14 @@ ShellRoot {
         Wallpaper {}
     }
 
+    // The one thing every fresh launch gets that nothing else here
+    // does: everything else below already exists by the time this
+    // reads, whole and in place, waiting on this to let it be seen.
+    Variants {
+        model: root.shellHidden ? [] : Quickshell.screens
+        BootCurtain {}
+    }
+
     Variants {
         model: root.shellHidden ? [] : Quickshell.screens
         Bar {}
