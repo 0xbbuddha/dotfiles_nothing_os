@@ -38,6 +38,25 @@ Written for **Arch / EndeavourOS**, **Hyprland ≥ 0.56** (Lua config) and
 |:---:|:---:|
 | ![Tamaki](hypr/wallpapers/nothing-dots-16-9.png) | ![Frieren](hypr/wallpapers/nothing-dots-frieren-16-9.png) |
 
+## Performance
+
+Measured on an AMD Ryzen 9 6900HS, in PSS (RSS counts each shared
+library in full inside every process that maps it, so it is the
+wrong metric here):
+
+| Process | RAM |
+|:---|:---:|
+| Hyprland | ~118 MB |
+| Quickshell (the rice itself) | ~470 MB |
+| hypridle | ~1 MB |
+
+Call it 600 MB total. Quickshell's own CPU sits at 2–5% idle, and
+climbs to 20–25% while a widget is actively animating (media
+playing, the vinyl disc turning, its bars moving) - bar, dock,
+desktop widgets, Glyph Matrix and the wallpaper reveal all running
+either way. Hyprland's CPU load is left out: it is whatever the
+windows open on top of it are doing, not the config.
+
 ## Install
 
 ```bash
