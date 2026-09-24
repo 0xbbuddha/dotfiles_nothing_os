@@ -1,0 +1,7 @@
+# Dépendances Python installées dans .venv
+# PyGObject (GTK4 + libadwaita) vient des paquets système : le venv est
+# créé avec --system-site-packages.
+python-mpv>=1.0.7
+ytmusicapi>=1.12
+yt-dlp>=2026.8.19
+keyring>=25

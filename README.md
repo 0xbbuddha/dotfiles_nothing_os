@@ -57,6 +57,13 @@ desktop widgets, Glyph Matrix and the wallpaper reveal all running
 either way. Hyprland's CPU load is left out: it is whatever the
 windows open on top of it are doing, not the config.
 
+
+## Optional: Triat, a music player
+
+`apps/triat` is a small YouTube music player made to fit this rice (GTK4,
+same black and red, a bar module with a playback panel). It is optional and
+installs separately. It was vibe coded, see [its README](apps/triat/README.md).
+
 ## Install
 
 ```bash
