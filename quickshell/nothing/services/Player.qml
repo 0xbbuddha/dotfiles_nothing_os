@@ -77,6 +77,15 @@ Singleton {
                 && n.indexOf("plasma-browser-integration") === -1
                 && root.isBrowser(p))
             return false;
+        // A browser registers an MPRIS source for a tab the moment
+        // anything on the page could play audio, whether or not it
+        // ever actually did - closed video, a muted autoplay, an ad
+        // that finished. Those sit at Stopped with nothing real behind
+        // them, but title and art can still hold whatever they last
+        // saw, real enough to outscore, or falsely dedupe against, the
+        // source that is actually playing. Paused is left alone: that
+        // one usually means something a person actually queued up.
+        if (p?.playbackState === MprisPlaybackState.Stopped) return false;
         return true;
     }
 
