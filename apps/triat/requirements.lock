@@ -1,0 +1,14 @@
+# Versions figées pour l'installation (install.sh). Régénérer après une mise
+# à jour volontaire des dépendances, tests verts à l'appui.
+# yt-dlp reste en plancher : YouTube change souvent, il faut pouvoir suivre
+# (voir docs/po-token.md).
+jaraco.classes==3.4.0
+jaraco.context==6.1.2
+jaraco.functools==4.6.0
+jeepney==0.9.0
+keyring==25.7.0
+more-itertools==11.1.0
+python-mpv==1.0.8
+SecretStorage==3.5.0
+ytmusicapi==1.12.3
+yt-dlp>=2026.8.19

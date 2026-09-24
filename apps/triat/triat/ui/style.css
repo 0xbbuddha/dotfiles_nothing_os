@@ -1,0 +1,47 @@
+/* Triat — habillage minimal posé sur Adwaita. */
+
+.now-playing {
+  padding: 28px 24px 8px 24px;
+}
+
+.cover {
+  border-radius: 12px;
+  background-color: alpha(currentColor, .08);
+  box-shadow: 0 2px 6px alpha(black, .18), 0 12px 32px alpha(black, .22);
+}
+
+.cover-placeholder {
+  border-radius: 12px;
+  background-color: alpha(currentColor, .08);
+}
+
+.track-title {
+  font-size: 19pt;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+
+.track-artist {
+  font-size: 12pt;
+  opacity: .62;
+}
+
+.time-label {
+  font-size: 9pt;
+  font-feature-settings: "tnum";
+  opacity: .55;
+}
+
+.player-bar {
+  padding: 10px 18px 14px 18px;
+  border-top: 1px solid alpha(currentColor, .12);
+}
+
+.play-button {
+  min-width: 46px;
+  min-height: 46px;
+  border-radius: 999px;
+}
+
+.seek-scale trough { min-height: 5px; }
+.seek-scale highlight { min-height: 5px; }

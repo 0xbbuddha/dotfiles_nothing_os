@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>org.triat.Triat</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+
+  <name>Triat</name>
+  <summary>Toute la musique de YouTube, sans publicité</summary>
+
+  <description>
+    <p>
+      Triat est un lecteur de musique de bureau qui puise dans YouTube.
+      Il saute automatiquement les passages non musicaux grâce à
+      SponsorBlock, conserve bibliothèque et historique en local, et
+      s'intègre au bureau par MPRIS.
+    </p>
+    <p>Fonctionnalités :</p>
+    <ul>
+      <li>Lecture audio sans publicité</li>
+      <li>Saut automatique des sections non musicales (SponsorBlock)</li>
+      <li>Bibliothèque, playlists et historique conservés localement</li>
+      <li>Recommandations, avec ou sans compte Google</li>
+      <li>Aucune télémétrie</li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">org.triat.Triat.desktop</launchable>
+  <content_rating type="oars-1.1"/>
+
+  <categories>
+    <category>AudioVideo</category>
+    <category>Audio</category>
+  </categories>
+
+  <requires>
+    <display_length compare="ge">360</display_length>
+  </requires>
+  <supports>
+    <control>keyboard</control>
+    <control>pointing</control>
+  </supports>
+
+  <releases>
+    <release version="0.1.0" date="2026-09-23">
+      <description>
+        <p>Première ébauche : squelette d'interface et moteur de lecture.</p>
+      </description>
+    </release>
+  </releases>
+</component>
