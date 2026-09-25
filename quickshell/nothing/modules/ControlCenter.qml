@@ -24,6 +24,65 @@ Item {
         root.expanded = (root.expanded === k) ? "" : k;
     }
 
+    // Which tab the body shows. "main" is the grid this panel has
+    // always had; the rest are additions living beside it rather than
+    // inside it, so nothing about the main tab had to move to make
+    // room for them.
+    property string ccTab: "main"
+    readonly property var ccTabs: [
+        // The one dot this house draws everywhere it means "the whole
+        // thing at once" - the launcher's own mark, the disc on the
+        // vinyl widget, a Glyph waking up.
+        { label: "Main", value: "main", glyph: [
+            "0011100",
+            "0111110",
+            "1111111",
+            "1111111",
+            "1111111",
+            "0111110",
+            "0011100"] },
+        // Three bars climbing left to right - load over time, the same
+        // idea the history bars next to every stat already draw.
+        { label: "Usage", value: "sys", glyph: [
+            "0000000",
+            "0000010",
+            "0000010",
+            "0001010",
+            "0001010",
+            "0101010",
+            "0101010"] },
+        // Straight from Settings' own Network page, unchanged: the same
+        // mark ought to mean the same thing wherever it turns up.
+        { label: "Net", value: "net", glyph: [
+            "1111111",
+            "1000001",
+            "0111110",
+            "0100010",
+            "0011100",
+            "0000000",
+            "0001000"] },
+        // A ring opening outward - sound leaving a source, rather than
+        // a literal speaker cone that a 7-dot grid cannot really draw.
+        { label: "Sound", value: "audio", glyph: [
+            "0011000",
+            "0100100",
+            "1000010",
+            "1000010",
+            "1000010",
+            "0100100",
+            "0011000"] },
+        // The bind-rune the Bluetooth mark itself is built from,
+        // simplified to fit the grid rather than redrawn from scratch.
+        { label: "BT", value: "bt", glyph: [
+            "0010000",
+            "0011000",
+            "0101100",
+            "1001010",
+            "0101100",
+            "0011000",
+            "0010000"] }
+    ]
+
     property real maxHeight: Theme.px(720)
     signal requestClose()
 
@@ -38,6 +97,7 @@ Item {
         if (!open) {
             calOpen = false;
             root.expanded = "";
+            root.ccTab = "main";
         } else {
             Warp.refresh();
         }
@@ -48,8 +108,9 @@ Item {
     Behavior on y { NumberAnimation { duration: Theme.med; easing.type: Theme.ease } }
 
     readonly property real naturalHeight:
-        Theme.pad * 2 + header.implicitHeight + bodyCol.implicitHeight
-        + footer.implicitHeight + Theme.gap * 2
+        Theme.pad * 2 + header.implicitHeight + tabBar.implicitHeight
+        + (root.ccTab === "main" ? bodyCol.implicitHeight : extraCol.implicitHeight)
+        + footer.implicitHeight + Theme.gap * 3
 
     NCard {
         id: card
@@ -116,11 +177,20 @@ Item {
                 }
             }
 
+            CcTabBar {
+                id: tabBar
+                Layout.fillWidth: true
+                options: root.ccTabs
+                current: root.ccTab
+                onPicked: (v) => root.ccTab = v
+            }
+
             Flickable {
                 id: bodyFlick
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.preferredHeight: bodyCol.implicitHeight
+                visible: root.ccTab === "main"
                 clip: true
                 contentWidth: width
                 contentHeight: bodyCol.implicitHeight
@@ -314,6 +384,49 @@ Item {
                     }
                 }
             }
+
+            // ── The other tabs ───────────────────────────────────────
+            // One Flickable, its content swapped by a Loader: the four
+            // added tabs are not shown at once, so nothing is lost by
+            // measuring and holding only whichever is current.
+            Flickable {
+                id: extraFlick
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.preferredHeight: extraCol.implicitHeight
+                visible: root.ccTab !== "main"
+                clip: true
+                contentWidth: width
+                contentHeight: extraCol.implicitHeight
+                boundsBehavior: Flickable.StopAtBounds
+                interactive: contentHeight > height + 1
+
+                Item {
+                    id: extraCol
+                    width: extraFlick.width
+                    implicitHeight: extraLoader.item?.implicitHeight ?? 0
+
+                    Loader {
+                        id: extraLoader
+                        width: parent.width
+                        active: root.ccTab !== "main"
+                        sourceComponent: {
+                            switch (root.ccTab) {
+                            case "sys":   return sysC;
+                            case "net":   return netC;
+                            case "audio": return audioC;
+                            case "bt":    return btC;
+                            default:      return null;
+                            }
+                        }
+                    }
+                }
+            }
+
+            Component { id: sysC; CcConsumption {} }
+            Component { id: netC; NetPanel { kind: "wifi"; active: root.open && root.ccTab === "net" } }
+            Component { id: audioC; AudioPanel {} }
+            Component { id: btC; NetPanel { kind: "bt"; active: root.open && root.ccTab === "bt" } }
 
             // ── Footer ────────────────────────────────────────────────
             // Caffeine keeps its own full width row rather than joining

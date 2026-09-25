@@ -17,6 +17,16 @@ Singleton {
     property bool gpuSeen: false
     property string kernel: ""
 
+    // Per core, 0..1 each. A snapshot, not a history: the aggregate
+    // already carries the trend, and forty samples times a dozen cores
+    // is a lot of array to keep for a row that only ever shows "now".
+    property var cpuCores: []
+
+    // Read once alongside distro/kernel below - a CPU or GPU does not
+    // change model mid-session.
+    property string cpuModel: ""
+    property string gpuModel: ""
+
     // Which distribution this is, from os-release. Its ID_LIKE matters as
     // much as its name: EndeavourOS is Arch underneath, and the mark worth
     // showing is the one the system actually descends from.
@@ -60,6 +70,15 @@ Singleton {
     property real zramUsedKb: 0
     property real diskSwapTotalKb: 0
     property real diskSwapUsedKb: 0
+
+    // The root filesystem, not every mount: a figure meant to answer
+    // "am I running out of space" cares about the one disk everything
+    // actually lands on by default, not a list of every mount point.
+    property real diskTotalKb: 0
+    property real diskUsedKb: 0
+    readonly property real disk: diskTotalKb > 0 ? diskUsedKb / diskTotalKb : 0
+    readonly property real diskFreeKb: Math.max(0, diskTotalKb - diskUsedKb)
+    readonly property string diskDetail: root.detailLine(diskUsedKb, diskFreeKb, diskTotalKb)
 
     readonly property bool hasZram: zramTotalKb > 0
     readonly property bool hasDiskSwap: diskSwapTotalKb > 0
@@ -106,6 +125,7 @@ Singleton {
 
     property int _prevTotal: 0
     property int _prevIdle: 0
+    property var _prevCore: ({})
 
     // Read once. None of it changes while the session runs, so polling it
     // beside the CPU would be four processes an hour for nothing.
@@ -115,7 +135,10 @@ Singleton {
             ". /etc/os-release 2>/dev/null;"
             + " printf '%s\\n%s\\n%s\\n%s\\n'"
             + " \"${PRETTY_NAME:-$NAME}\" \"$ID\" \"$ID_LIKE\" \"$(uname -r)\";"
-            + " uname -n; cut -d. -f1 /proc/uptime"]
+            + " uname -n; cut -d. -f1 /proc/uptime;"
+            + " grep -m1 'model name' /proc/cpuinfo | cut -d: -f2 | sed 's/^ *//';"
+            + " lspci -mm 2>/dev/null | grep -E 'VGA compatible controller|3D controller'"
+            + " | head -1 | awk -F'\"' '{print $6}'"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const l = text.split("\n");
@@ -126,15 +149,42 @@ Singleton {
                 root.host = (l[4] ?? "").trim();
                 root.bootUptime = parseFloat(l[5] ?? "0") || 0;
                 root.bootReadAt = Date.now() / 1000;
+                root.cpuModel = (l[6] ?? "").trim();
+                root.gpuModel = (l[7] ?? "").trim();
             }
         }
+    }
+
+    // Disk usage changes slowly - a download, a build, a Steam install -
+    // so it is read on its own, much slower timer rather than beside
+    // the CPU every two seconds.
+    NProcess {
+        id: diskProbe
+        running: true
+        command: ["sh", "-c",
+            "df -k --output=used,size / | tail -1"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const p = text.trim().split(/\s+/);
+                root.diskUsedKb = Number(p[0]) || 0;
+                root.diskTotalKb = Number(p[1]) || 0;
+            }
+        }
+    }
+
+    Timer {
+        interval: 20000
+        running: true
+        repeat: true
+        onTriggered: diskProbe.running = true
     }
 
     NProcess {
         id: probe
         running: true
         command: ["sh", "-c", `
-            awk '/^cpu /{t=0; for(i=2;i<=NF;i++) t+=$i; print "CPU", t, $5+$6}' /proc/stat
+            awk '/^cpu /{t=0; for(i=2;i<=NF;i++) t+=$i; print "CPU", t, $5+$6}
+                 /^cpu[0-9]/{t=0; for(i=2;i<=NF;i++) t+=$i; print "CORE", $1, t, $5+$6}' /proc/stat
             awk '/MemTotal/{t=$2} /MemAvailable/{a=$2} END{print "MEM", t+0, a+0}' /proc/meminfo
             awk 'NR>1 {
                 if ($1 ~ /zram/) { zt+=$3; zu+=$4 }
@@ -169,6 +219,7 @@ Singleton {
                     root.zramHistory = root.pushed(root.zramHistory, root.zram);
                     root.swapHistory = root.pushed(root.swapHistory, root.diskSwap);
                 };
+                const cores = [];
                 for (const line of text.trim().split("\n")) {
                     const p = line.trim().split(/\s+/);
                     switch (p[0]) {
@@ -178,6 +229,17 @@ Singleton {
                         if (root._prevTotal > 0 && dt > 0)
                             root.cpu = Math.max(0, Math.min(1, 1 - di / dt));
                         root._prevTotal = total; root._prevIdle = idle;
+                        break;
+                    }
+                    case "CORE": {
+                        const name = p[1];
+                        const total = parseInt(p[2]), idle = parseInt(p[3]);
+                        const prev = root._prevCore[name];
+                        if (prev && total - prev.t > 0)
+                            cores.push(Math.max(0, Math.min(1, 1 - (idle - prev.i) / (total - prev.t))));
+                        else
+                            cores.push(0);
+                        root._prevCore[name] = { t: total, i: idle };
                         break;
                     }
                     case "MEM": {
@@ -203,6 +265,8 @@ Singleton {
                         break;
                     }
                 }
+                if (cores.length > 0)
+                    root.cpuCores = cores;
                 sample();
             }
         }
