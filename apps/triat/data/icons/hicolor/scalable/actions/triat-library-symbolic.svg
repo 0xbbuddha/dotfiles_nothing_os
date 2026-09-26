@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
+  <circle cx="2.80" cy="2.80" r="0.95" fill="currentColor"/>
+  <circle cx="2.80" cy="5.20" r="0.95" fill="currentColor"/>
+  <circle cx="2.80" cy="7.60" r="0.95" fill="currentColor"/>
+  <circle cx="2.80" cy="10.00" r="0.95" fill="currentColor"/>
+  <circle cx="2.80" cy="12.40" r="0.95" fill="currentColor"/>
+  <circle cx="6.20" cy="2.40" r="0.95" fill="currentColor"/>
+  <circle cx="6.20" cy="4.90" r="0.95" fill="currentColor"/>
+  <circle cx="6.20" cy="7.40" r="0.95" fill="currentColor"/>
+  <circle cx="6.20" cy="9.90" r="0.95" fill="currentColor"/>
+  <circle cx="6.20" cy="12.40" r="0.95" fill="currentColor"/>
+  <circle cx="9.60" cy="2.80" r="0.95" fill="currentColor"/>
+  <circle cx="9.60" cy="5.20" r="0.95" fill="currentColor"/>
+  <circle cx="9.60" cy="7.60" r="0.95" fill="currentColor"/>
+  <circle cx="9.60" cy="10.00" r="0.95" fill="currentColor"/>
+  <circle cx="9.60" cy="12.40" r="0.95" fill="currentColor"/>
+  <circle cx="13.00" cy="3.40" r="0.95" fill="currentColor"/>
+  <circle cx="13.00" cy="5.65" r="0.95" fill="currentColor"/>
+  <circle cx="13.00" cy="7.90" r="0.95" fill="currentColor"/>
+  <circle cx="13.00" cy="10.15" r="0.95" fill="currentColor"/>
+  <circle cx="13.00" cy="12.40" r="0.95" fill="currentColor"/>
+  <circle cx="2.40" cy="13.60" r="0.95" fill="currentColor"/>
+  <circle cx="5.15" cy="13.60" r="0.95" fill="currentColor"/>
+  <circle cx="7.90" cy="13.60" r="0.95" fill="currentColor"/>
+  <circle cx="10.65" cy="13.60" r="0.95" fill="currentColor"/>
+  <circle cx="13.40" cy="13.60" r="0.95" fill="currentColor"/>
+  
+</svg>

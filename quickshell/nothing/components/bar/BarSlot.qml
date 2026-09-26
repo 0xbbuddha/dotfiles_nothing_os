@@ -59,6 +59,7 @@ Loader {
         switch (slot.itemId) {
         case "apps":      return Config.appsKey;
         case "essential": return Config.essentialEnabled;
+        case "triat":     return true;
         case "media":     return Player.active;
         case "tray":      return Config.showTray && slot.win.trayItems.length > 0;
         case "cpu":       return Config.barShowCpu;
@@ -99,6 +100,7 @@ Loader {
         case "apps":       return appsPart;
         case "clock":      return clockPart;
         case "essential":  return essentialPart;
+        case "triat":      return triatPart;
         case "tray":       return trayPart;
         case "net":        return netPart;
         case "bluetooth":  return btPart;
@@ -248,6 +250,13 @@ Loader {
                 shown: appsMa.containsMouse && !GlobalState.appsOpen
             }
         }
+    }
+
+    // ── Triat ─────────────────────────────────────────────────────────
+    // Lecteur Triat (TriatBarItem.qml, posé par son script d'installation).
+    Component {
+        id: triatPart
+        TriatBarItem {}
     }
 
     // ── Clock ─────────────────────────────────────────────────────────

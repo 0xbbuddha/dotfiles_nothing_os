@@ -41,6 +41,8 @@ Singleton {
 
         { id: "apps",       label: "Essential Apps", icon: "󰀻", zone: "centre",
           hint: "The dot grid that opens the apps shelf" },
+        { id: "triat",      label: "Triat",       icon: "󰝚", zone: "centre",
+          hint: "Lecteur Triat : ouvrir, pause, suivante", wide: true },
         { id: "clock",      label: "Clock",       icon: "󰥔", zone: "centre",
           hint: "Time, and the date on hover",             wide: true },
         { id: "essential",  label: "Essential Key", icon: "󰋼", zone: "centre",
