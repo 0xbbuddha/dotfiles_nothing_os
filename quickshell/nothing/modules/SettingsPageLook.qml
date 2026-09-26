@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import ".."
 import "../components"
 import "../services"
@@ -190,15 +191,55 @@ SettingsPage {
             onPicked: (v) => { Config.wallpaperFormat = v; Config.save(); }
         }
 
+        // The file's own picker, not a path typed by hand: zenity opens
+        // the same dialog every other app on the system already uses,
+        // so finding an image means browsing to it rather than knowing
+        // or copying its absolute path first.
+        NProcess {
+            id: filePicker
+            command: ["zenity", "--file-selection", "--title=Choose a wallpaper",
+                      "--file-filter=Images | *.png *.jpg *.jpeg *.webp *.bmp"]
+            stdout: StdioCollector {
+                onStreamFinished: {
+                    const p = text.trim();
+                    if (p !== "") {
+                        Config.wallpaper = p;
+                        Config.save();
+                    }
+                }
+            }
+        }
+
         SettingRow {
             key: "wallpaper"
             label: "Image"
-            hint: "Absolute path, empty = the image shipped in hypr/"
-            NField {
-                implicitWidth: Theme.px(210)
-                text: Config.wallpaper
-                placeholder: "hypr/wallpaper.png"
-                onCommitted: (v) => { Config.wallpaper = v.trim(); Config.save(); }
+            hint: Config.wallpaper !== "" ? Config.wallpaper
+                : "Empty = the image shipped in hypr/"
+
+            RowLayout {
+                spacing: Theme.px(6)
+
+                NField {
+                    implicitWidth: Theme.px(150)
+                    text: Config.wallpaper
+                    placeholder: "hypr/wallpaper.png"
+                    onCommitted: (v) => { Config.wallpaper = v.trim(); Config.save(); }
+                }
+
+                NPillButton {
+                    text: "Browse"
+                    // Settings renders on Wayland's Overlay layer, above
+                    // every ordinary window there is - including the
+                    // picker Zenity is about to open. No window rule
+                    // reaches over that: the layer itself outranks it,
+                    // not its stacking position within one. Closing
+                    // Settings first is what actually lets the dialog
+                    // be seen rather than opened behind it.
+                    onActivated: {
+                        GlobalState.settingsOpen = false;
+                        filePicker.running = true;
+                    }
+                }
             }
         }
 

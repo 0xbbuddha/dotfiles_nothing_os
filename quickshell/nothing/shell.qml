@@ -139,6 +139,7 @@ ShellRoot {
     // has to be ready is exactly the moment a reload just failed, which
     // is a bad time to be building a QML tree for the first time.
     Variants { model: Quickshell.screens; ReloadPopup {} }
+    Variants { model: Quickshell.screens; WallpaperPopup {} }
 
     // Built the first time each is actually opened, not at shell launch:
     // these 14 sat fully instantiated on every screen from the start,

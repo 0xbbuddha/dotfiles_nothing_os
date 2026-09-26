@@ -87,4 +87,27 @@ Singleton {
         ? root.wallpaperUrlFor(Quickshell.screens[0]?.width ?? 1920,
                                Quickshell.screens[0]?.height ?? 1200)
         : root.plainWallpaperUrl
+
+    // A popup on every real change, the same way a reload that failed
+    // tells you rather than leaving you to notice. Lives here rather
+    // than in Wallpaper.qml: that one is instantiated once per screen,
+    // and a change would otherwise say so once per monitor rather than
+    // once per change.
+    function announce(): void {
+        const label = root.dotWallpaperOn
+            ? (root.dotWallpaperChars.find(c => c.value === Config.dotWallpaperChar)?.label ?? "Custom")
+            : "Custom";
+        const thumb = root.dotWallpaperOn
+            ? root.dotWallpaperPath(true)
+            : String(root.plainWallpaperUrl).replace("file://", "");
+        WallpaperAnnounce.announce(label, thumb);
+    }
+
+    Connections {
+        target: Config
+        function onWallpaperChanged(): void { root.announce(); }
+        function onDotWallpaperCharChanged(): void {
+            if (root.dotWallpaperOn) root.announce();
+        }
+    }
 }
