@@ -41,7 +41,6 @@ PanelWindow {
             cache: true
             asynchronous: true
             smooth: true
-            Component.onCompleted: source = stage.wallUrl
         }
 
         // Never shown directly - a status probe for the copy inside
@@ -114,7 +113,30 @@ PanelWindow {
             }
         }
 
-        onWallUrlChanged: incoming.source = stage.wallUrl
+        // Config reads its saved choice from disk after the window
+        // itself already exists, so the very first value `wallUrl`
+        // takes is the schema's own default, not what was actually
+        // picked - and only settles once `Config.ready` turns true.
+        // Waiting for that here is what keeps the boot from showing the
+        // default for a moment and then playing the reveal to correct
+        // it: the correct picture is what `base` ever gets to show.
+        function applyWall(): void {
+            if (!Config.ready)
+                return;
+            if (base.source == "") {
+                base.source = stage.wallUrl;
+            } else if (stage.wallUrl != base.source
+                    && stage.wallUrl != incoming.source) {
+                incoming.source = stage.wallUrl;
+            }
+        }
+
+        onWallUrlChanged: stage.applyWall()
+        Component.onCompleted: stage.applyWall()
+        Connections {
+            target: Config
+            function onReadyChanged(): void { stage.applyWall(); }
+        }
 
         Connections {
             target: incoming
