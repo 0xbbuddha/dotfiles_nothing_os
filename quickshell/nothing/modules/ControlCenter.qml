@@ -61,26 +61,30 @@ Item {
             "0011100",
             "0000000",
             "0001000"] },
-        // A ring opening outward - sound leaving a source, rather than
-        // a literal speaker cone that a 7-dot grid cannot really draw.
+        // A solid wedge rather than a ring of single dots: a thin
+        // outline held up at this size than as a scatter of dots that
+        // needed the eye to connect them into a shape at all.
         { label: "Sound", value: "audio", glyph: [
-            "0011000",
-            "0100100",
-            "1000010",
-            "1000010",
-            "1000010",
-            "0100100",
-            "0011000"] },
-        // The bind-rune the Bluetooth mark itself is built from,
-        // simplified to fit the grid rather than redrawn from scratch.
+            "0000000",
+            "0100000",
+            "0110000",
+            "0111110",
+            "0110000",
+            "0100000",
+            "0000000"] },
+        // Rasterised straight from the Bluetooth glyph already in the
+        // Nerd Font this shell uses elsewhere (see NetPanel.qml), the
+        // same way the README's own logo comes from a real vector
+        // rather than a guess at one: freehand, the bowtie kept coming
+        // out as an abstract shape instead of the actual mark.
         { label: "BT", value: "bt", glyph: [
-            "0010000",
-            "0011000",
+            "0001000",
             "0101100",
-            "1001010",
+            "0011100",
+            "0001100",
+            "0011100",
             "0101100",
-            "0011000",
-            "0010000"] }
+            "0001000"] }
     ]
 
     property real maxHeight: Theme.px(720)

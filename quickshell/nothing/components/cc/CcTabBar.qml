@@ -47,11 +47,11 @@ RowLayout {
                 DotMatrix {
                     Layout.alignment: Qt.AlignHCenter
                     pattern: seg.modelData.glyph
-                    dot: Theme.px(2.2)
-                    gap: Theme.px(1.6)
+                    dot: Theme.px(1.6)
+                    gap: Theme.px(1.1)
                     onColor: seg.active ? Theme.c.red : Theme.c.on
                     offColor: Theme.c.onFaint
-                    offOpacity: 0.22
+                    offOpacity: 0.16
                     Behavior on onColor { ColorAnimation { duration: Theme.fast } }
                 }
 

@@ -342,11 +342,11 @@ PanelWindow {
                                     DotMatrix {
                                         Layout.alignment: Qt.AlignVCenter
                                         pattern: nav.modelData.glyph
-                                        dot: Theme.px(2.5)
-                                        gap: Theme.px(2)
+                                        dot: Theme.px(1.6)
+                                        gap: Theme.px(1.1)
                                         onColor: nav.active ? Theme.c.red : Theme.c.on
                                         offColor: Theme.c.onFaint
-                                        offOpacity: 0.22
+                                        offOpacity: 0.16
                                     }
 
                                     NText {
