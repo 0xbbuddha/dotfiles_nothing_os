@@ -385,7 +385,10 @@ Singleton {
 
         // Captures and settings sit above apps: Essential Search is
         // meant to find a note or a toggle before launching Firefox.
-        if (mode === "" && text !== "") {
+        // Off, none of the three belong here at all - the setting's own
+        // hint promises a normal app launcher, not app results with
+        // Settings still mixed in.
+        if (mode === "" && text !== "" && Config.essentialSearch) {
             const _ = Essentials.stamp;
             const caps = root.matchCaptures(text).slice(0, 6);
             for (const it of caps) {
