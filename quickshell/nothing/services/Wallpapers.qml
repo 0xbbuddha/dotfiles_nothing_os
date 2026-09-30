@@ -28,7 +28,8 @@ Singleton {
     // Tamaki with no sign anything was wrong.
     readonly property var dotWallpaperChars: [
         { label: "Tamaki",  value: "tamaki" },
-        { label: "Frieren", value: "frieren" }
+        { label: "Frieren", value: "frieren" },
+        { label: "Waguri",  value: "waguri" }
     ]
 
     // The character is explicit, not read off Config, so a picker can

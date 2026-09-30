@@ -81,7 +81,7 @@ def vivid(r, g, b):
 
 def build(src_path, out, W, H, pitch, subject_h, cx, cy, label, sub,
           gain, red_at, green_at, floor, circle, halo, grid, specs, rays, jp,
-          papers=None, true_color=False):
+          papers=None, true_color=False, luminance=False):
     src = Image.open(src_path).convert("RGBA")
 
     if circle:
@@ -176,14 +176,26 @@ def build(src_path, out, W, H, pitch, subject_h, cx, cy, label, sub,
 
             lit, colour = 0.0, WHITE
             if a > 20:
-                # Distance to the nearest declared background.
-                dist = min(((r - p[0]) ** 2 + (g - p[1]) ** 2
-                            + (b - p[2]) ** 2) ** 0.5 for p in papers) / far
-                # A dead zone around the paper colour: a background is
-                # rarely perfectly flat, and without this its vignette
-                # fogs the empty half of the screen.
-                dist = max(0.0, dist - floor) / max(1e-6, 1.0 - floor)
-                lit = min(1.0, dist * gain) * (a / 255)
+                if luminance:
+                    # Brightness itself, not distance from a background:
+                    # a close-up with no paper to speak of - a face
+                    # filling the whole frame - has nothing flat for the
+                    # usual model to measure distance from, and it read
+                    # skin and hair backwards for exactly that reason.
+                    # A halftone doesn't need a background; it only
+                    # needs light and dark.
+                    lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255.0
+                    lum = max(0.0, lum - floor) / max(1e-6, 1.0 - floor)
+                    lit = min(1.0, lum * gain) * (a / 255)
+                else:
+                    # Distance to the nearest declared background.
+                    dist = min(((r - p[0]) ** 2 + (g - p[1]) ** 2
+                                + (b - p[2]) ** 2) ** 0.5 for p in papers) / far
+                    # A dead zone around the paper colour: a background is
+                    # rarely perfectly flat, and without this its vignette
+                    # fogs the empty half of the screen.
+                    dist = max(0.0, dist - floor) / max(1e-6, 1.0 - floor)
+                    lit = min(1.0, dist * gain) * (a / 255)
                 if true_color:
                     if lit > 0.04:
                         colour = vivid(r, g, b)
@@ -337,6 +349,12 @@ def main():
     p.add_argument("--true-color", action="store_true",
                    help="light each dot in the picture's own colour "
                         "instead of white plus one or two accents")
+    p.add_argument("--luminance", action="store_true",
+                   help="light each dot by brightness instead of "
+                        "distance from a detected background - for a "
+                        "picture with no real paper to measure from, "
+                        "a close-up filling the whole frame chief "
+                        "among them")
     p.add_argument("--floor", type=float, default=0.09,
                    help="dead zone around the paper colour")
     p.add_argument("--circle", action="store_true",
@@ -373,7 +391,7 @@ def main():
     build(a.source, a.out, W, H, a.pitch, a.scale, a.x, a.y,
           a.label, a.sub, a.gain, a.red_at, a.green_at, a.floor, a.circle,
           a.halo, a.grid, specs, a.rays, a.jp,
-          [rgb(c) for c in a.paper] or None, a.true_color)
+          [rgb(c) for c in a.paper] or None, a.true_color, a.luminance)
 
 
 if __name__ == "__main__":

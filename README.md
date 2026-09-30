@@ -34,9 +34,9 @@ Written for **Arch / EndeavourOS**, **Hyprland ≥ 0.56** (Lua config) and
 
 ## Wallpapers
 
-| Tamaki | Frieren |
-|:---:|:---:|
-| ![Tamaki](hypr/wallpapers/nothing-dots-16-9.png) | ![Frieren](hypr/wallpapers/nothing-dots-frieren-16-9.png) |
+| Tamaki | Frieren | Waguri |
+|:---:|:---:|:---:|
+| ![Tamaki](hypr/wallpapers/nothing-dots-16-9.png) | ![Frieren](hypr/wallpapers/nothing-dots-frieren-16-9.png) | ![Waguri](hypr/wallpapers/nothing-dots-waguri-16-9.png) |
 
 ## Performance
 
