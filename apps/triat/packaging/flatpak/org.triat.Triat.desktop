@@ -1,0 +1,27 @@
+[Desktop Entry]
+Type=Application
+Name=Triat
+GenericName=Lecteur de musique
+GenericName[en]=Music Player
+Comment=Toute la musique de YouTube, sans publicité
+Comment[en]=All of YouTube's music, without ads
+Exec=triat %U
+Icon=org.triat.Triat
+Terminal=false
+Categories=AudioVideo;Audio;Player;GTK;
+Keywords=musique;audio;youtube;lecteur;sponsorblock;
+StartupNotify=true
+StartupWMClass=org.triat.Triat
+X-GNOME-UsesNotifications=true
+MimeType=x-scheme-handler/triat;
+Actions=mini;search;
+
+[Desktop Action mini]
+Name=Mini-lecteur
+Name[en]=Mini player
+Exec=triat --mini
+
+[Desktop Action search]
+Name=Rechercher
+Name[en]=Search
+Exec=triat --search

@@ -1,0 +1,124 @@
+# Triat — manifeste Flatpak durci
+#
+# Principe : aucune permission qui ne soit strictement nécessaire, et un
+# libmpv réduit à l'audio. Le confinement est la principale protection
+# contre les deux risques résiduels de l'audit (docs/security/) : yt-dlp et
+# ffmpeg analysent tous deux des données distantes non fiables.
+#
+# Construction :
+#   flatpak install org.gnome.Platform//51 org.gnome.Sdk//51
+#   flatpak-builder --user --install --force-clean build packaging/flatpak/org.triat.Triat.yml
+
+app-id: org.triat.Triat
+runtime: org.gnome.Platform
+runtime-version: '51'
+sdk: org.gnome.Sdk
+command: rien
+
+finish-args:
+  # --- Indispensable ------------------------------------------------------
+  - --share=network                 # YouTube, SponsorBlock, pochettes
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --share=ipc                     # requis par X11
+  - --device=dri                    # rendu GTK4
+
+  # --- Audio --------------------------------------------------------------
+  # Le socket « pulseaudio » couvre aussi PipeWire via sa couche de
+  # compatibilité. Aucun accès micro n'est demandé.
+  - --socket=pulseaudio
+
+  # --- Trousseau ----------------------------------------------------------
+  # Nécessaire au stockage chiffré des cookies. C'est la permission la plus
+  # sensible du manifeste : elle donne accès au Secret Service, donc à
+  # d'autres secrets de la session. À remplacer par le portail
+  # org.freedesktop.portal.Secret dès que `keyring` le prendra en charge.
+  - --talk-name=org.freedesktop.secrets
+
+  # --- MPRIS --------------------------------------------------------------
+  # Publication seulement : `own-name` sur notre propre préfixe, jamais
+  # `talk-name=*` qui permettrait de piloter les autres lecteurs.
+  - --own-name=org.mpris.MediaPlayer2.triat.*
+
+  # --- Fichiers -----------------------------------------------------------
+  # Un seul sous-dossier, créé au besoin. Surtout PAS --filesystem=home :
+  # cela donnerait accès aux profils de navigateur, aux clés SSH, à tout.
+  - --filesystem=xdg-music/Triat:create
+  # L'import d'un cookies.txt passe par le portail de fichiers (une
+  # autorisation ponctuelle, accordée fichier par fichier par l'utilisateur).
+
+  # --- Veille -------------------------------------------------------------
+  - --talk-name=org.freedesktop.ScreenSaver   # inhiber la veille en lecture
+
+# PERMISSIONS VOLONTAIREMENT ABSENTES — ne pas ajouter sans raison écrite :
+#   --filesystem=home           → accès aux profils navigateur et aux clés
+#   --filesystem=host           → idem, en pire
+#   --talk-name=org.freedesktop.Flatpak → évasion triviale du bac à sable
+#   --device=all                → accès à tous les périphériques
+#   --socket=session-bus        → contourne le filtrage D-Bus
+#   --allow=devel               → ptrace et compagnie
+
+cleanup:
+  - /include
+  - /lib/pkgconfig
+  - /share/man
+  - /share/doc
+  - '*.a'
+  - '*.la'
+
+modules:
+  # --- libmpv, réduit à l'audio ------------------------------------------
+  # Le lecteur en ligne de commande, les scripts Lua et JavaScript, et le
+  # crochet yt-dlp intégré sont désactivés : autant de code en moins exposé
+  # à des flux distants. Triat pilote libmpv par son API et résout les URL
+  # lui-même.
+  - name: libmpv
+    buildsystem: meson
+    config-opts:
+      - -Dlibmpv=true
+      - -Dcplayer=false
+      - -Dlua=disabled
+      - -Djavascript=disabled
+      - -Dlibarchive=disabled
+      - -Dmanpage-build=disabled
+      - -Dvideotoolbox-gl=disabled
+    sources:
+      - type: git
+        url: https://github.com/mpv-player/mpv.git
+        tag: v0.41.0
+        # Renseigner le commit exact avant publication : un tag peut être
+        # déplacé, un commit non.
+        # commit: <à figer>
+    modules:
+      - name: libplacebo
+        buildsystem: meson
+        config-opts:
+          - -Dvulkan=disabled
+          - -Dopengl=enabled
+          - -Ddemos=false
+        sources:
+          - type: git
+            url: https://code.videolan.org/videolan/libplacebo.git
+            tag: v7.349.0
+
+  # --- Dépendances Python -------------------------------------------------
+  # À générer avec flatpak-pip-generator pour figer les empreintes :
+  #   python3 flatpak-pip-generator --requirements-file=requirements.txt
+  # Ne jamais laisser pip télécharger à la construction : le dépôt doit
+  # être reproductible et vérifiable.
+  - python3-requirements.json
+
+  # --- Triat ---------------------------------------------------------------
+  - name: rien
+    buildsystem: simple
+    build-commands:
+      - install -Dm755 packaging/flatpak/triat.sh /app/bin/triat
+      - mkdir -p /app/share/triat
+      - cp -r rien data /app/share/triat/
+      - install -Dm644 packaging/flatpak/org.triat.Triat.desktop
+          /app/share/applications/org.triat.Triat.desktop
+      - install -Dm644 packaging/flatpak/org.triat.Triat.metainfo.xml
+          /app/share/metainfo/org.triat.Triat.metainfo.xml
+    sources:
+      - type: dir
+        path: ../..
