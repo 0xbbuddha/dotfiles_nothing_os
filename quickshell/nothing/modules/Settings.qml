@@ -94,6 +94,15 @@ PanelWindow {
             "1111001",
             "0011010",
             "0001000"] },
+        // Bars of different heights: what is using the machine.
+        { key: "processes", label: "Processes", glyph: [
+            "0000001",
+            "0000001",
+            "0001001",
+            "0001011",
+            "0101011",
+            "1101111",
+            "1111111"] },
         { key: "essential", label: "Essential", glyph: [
             "0011100",
             "0110110",
@@ -428,6 +437,7 @@ PanelWindow {
                             SettingsPageScreen {}
                             SettingsPageInput {}
                             SettingsPageSound {}
+                            SettingsPageProcesses {}
                             SettingsPageEssential {}
                                             SettingsPageDock {}
                             SettingsPageNet {}

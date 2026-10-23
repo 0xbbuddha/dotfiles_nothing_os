@@ -75,7 +75,9 @@ Singleton {
         { id: "recording",  label: "Recording",   icon: "󰑊", zone: "right",
           hint: "Shown while a screen recording is running" },
         { id: "caffeine",   label: "Caffeine",    icon: "󰅶", zone: "right",
-          hint: "Shown while the screen is kept awake (SUPER+ALT+I)" }
+          hint: "Shown while the screen is kept awake (SUPER+ALT+I)" },
+        { id: "drives",     label: "Drives",      icon: "󰕓", zone: "right",
+          hint: "Shown while a USB stick or disk is mounted; click to eject it" }
     ]
 
     function meta(id: string): var {

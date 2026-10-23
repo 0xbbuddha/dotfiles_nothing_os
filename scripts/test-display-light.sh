@@ -126,5 +126,12 @@ else
 fi
 if have powerprofilesctl && p=$(powerprofilesctl get 2>/dev/null); then ok "power profile: $p"; else nope "no power-profiles-daemon answering"; fi
 
+echo "== tools for the newer pages"
+for t in udisksctl udevadm lsblk fd plocate powerprofilesctl notify-send; do
+    have "$t" && ok "$t present" || nope "$t missing (the matching feature says so instead)"
+done
+python3 -I "$(dirname "$0")/mime-defaults.py" list >/dev/null && ok "default apps readable" || bad "mime-defaults.py list failed"
+python3 -I "$(dirname "$0")/procs.py" cpu 3 >/dev/null && ok "process sampler runs" || bad "procs.py failed"
+
 echo "== $pass passed, $fail failed, $skip skipped"
 (( fail == 0 ))

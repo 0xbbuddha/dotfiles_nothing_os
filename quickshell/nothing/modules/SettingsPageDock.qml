@@ -238,4 +238,118 @@ SettingsPage {
             }
         }
     }
+
+    // Which app opens which kind of file: ~/.config/mimeapps.list, the
+    // file xdg-open, the portals and file managers all read. Each row
+    // opens the list of installed apps that say they handle that kind.
+    property string mimeOpen: ""
+    onCurrentChanged: if (page.current) MimeDefaults.refresh()
+
+    SettingsSection {
+        title: "Default apps"
+
+        SettingRow {
+            key: "mimeDefaults"
+            label: "Opens files and links"
+            hint: MimeDefaults.error !== "" ? MimeDefaults.error
+                : "SUPER+W follows the web browser chosen here"
+        }
+
+        Repeater {
+            model: MimeDefaults.categories
+
+            ColumnLayout {
+                id: cat
+                required property var modelData
+                readonly property bool open: page.mimeOpen === modelData.key
+                Layout.fillWidth: true
+                spacing: Theme.px(3)
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: Theme.px(34)
+                    radius: Theme.r.tiny
+                    color: catMa.containsMouse || cat.open ? Theme.c.surface3 : Theme.c.surface2
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: Theme.px(10)
+                        anchors.rightMargin: Theme.px(10)
+                        spacing: Theme.px(9)
+
+                        NText { text: cat.modelData.label; Layout.preferredWidth: Theme.px(110) }
+                        AppIcon {
+                            visible: cat.modelData.current !== ""
+                            iconName: Apps.entry(cat.modelData.current)?.icon ?? ""
+                            size: Theme.px(16)
+                        }
+                        NText {
+                            Layout.fillWidth: true
+                            text: cat.modelData.current !== "" ? cat.modelData.currentName : "Not set"
+                            color: cat.modelData.current !== "" ? Theme.c.on : Theme.c.onFaint
+                            elide: Text.ElideRight
+                        }
+                        NLabel {
+                            text: cat.modelData.candidates.length + " apps"
+                        }
+                        NIcon { text: cat.open ? "󰅃" : "󰅀"; size: Theme.z.icon; color: Theme.c.onDim }
+                    }
+
+                    MouseArea {
+                        id: catMa
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: page.mimeOpen = cat.open ? "" : cat.modelData.key
+                    }
+                }
+
+                Repeater {
+                    model: cat.open ? cat.modelData.candidates : []
+
+                    Rectangle {
+                        id: cand2
+                        required property var modelData
+                        readonly property bool chosen: modelData.id === cat.modelData.current
+                        Layout.fillWidth: true
+                        Layout.leftMargin: Theme.px(18)
+                        implicitHeight: Theme.px(30)
+                        radius: Theme.r.tiny
+                        color: c2ma.containsMouse ? Theme.c.surface3 : "transparent"
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: Theme.px(10)
+                            anchors.rightMargin: Theme.px(10)
+                            spacing: Theme.px(9)
+                            AppIcon { iconName: Apps.entry(cand2.modelData.id)?.icon ?? ""; size: Theme.px(15) }
+                            NText {
+                                Layout.fillWidth: true
+                                text: cand2.modelData.name
+                                elide: Text.ElideRight
+                                color: cand2.chosen ? Theme.c.on : Theme.c.onDim
+                            }
+                            Text {
+                                visible: cand2.chosen
+                                text: "ON"
+                                color: Theme.c.red
+                                font.family: Theme.f.mono
+                                font.pixelSize: Theme.f.micro
+                                font.letterSpacing: Theme.f.track
+                            }
+                        }
+
+                        MouseArea {
+                            id: c2ma
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            enabled: !MimeDefaults.busy && !cand2.chosen
+                            onClicked: MimeDefaults.set(cat.modelData.key, cand2.modelData.id)
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

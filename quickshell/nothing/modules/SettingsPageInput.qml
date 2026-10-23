@@ -10,8 +10,22 @@ import "../services"
 SettingsPage {
     id: page
 
+    // Named one by one: Config's own notes say a property reached through
+    // a built string reads as its default, so no Config[key] here.
     function set(key: string, v: var): void {
-        Config[key] = v;
+        switch (key) {
+        case "inputSensitivity":      Config.inputSensitivity = v; break;
+        case "inputAccel":            Config.inputAccel = v; break;
+        case "inputNaturalScroll":    Config.inputNaturalScroll = v; break;
+        case "inputFollowMouse":      Config.inputFollowMouse = v; break;
+        case "inputRepeatRate":       Config.inputRepeatRate = v; break;
+        case "inputRepeatDelay":      Config.inputRepeatDelay = v; break;
+        case "inputNumlock":          Config.inputNumlock = v; break;
+        case "touchpadNaturalScroll": Config.touchpadNaturalScroll = v; break;
+        case "touchpadDisableTyping": Config.touchpadDisableTyping = v; break;
+        case "touchpadScrollFactor":  Config.touchpadScrollFactor = v; break;
+        default: return;
+        }
         Config.save();
         Input.apply();
     }

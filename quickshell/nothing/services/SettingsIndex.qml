@@ -25,11 +25,12 @@ Singleton {
     readonly property int pageScreen: 3
     readonly property int pageInput: 4
     readonly property int pageSound: 5
-    readonly property int pageEssential: 6
-    readonly property int pageDock: 7
-    readonly property int pageNet: 8
-    readonly property int pageGame: 9
-    readonly property int pageAbout: 10
+    readonly property int pageProcesses: 6
+    readonly property int pageEssential: 7
+    readonly property int pageDock: 8
+    readonly property int pageNet: 9
+    readonly property int pageGame: 10
+    readonly property int pageAbout: 11
 
     readonly property var entries: [
         // ── Appearance ────────────────────────────────────────────────
@@ -102,6 +103,10 @@ Singleton {
         { key: "soundInputDevice", label: "Input device",      page: root.pageSound, words: "microphone mic input device source default webcam headset", icon: "󰍬" },
         { key: "soundApps",       label: "Per-app volume",     page: root.pageSound, words: "app application volume mixer stream", icon: "󰎆" },
         // ── Backups (System page) ─────────────────────────────────────
+        { key: "processes",       label: "Processes",          page: root.pageProcesses, words: "process task manager kill end close frozen cpu memory ram usage program app htop top", icon: "󰍛" },
+        { key: "mimeDefaults",    label: "Default apps for files and links", page: root.pageDock, words: "default app browser pdf image video music open with mime xdg mimeapps associations", icon: "󰘔" },
+        { key: "drivesAutomount", label: "Mount drives when plugged in", page: root.pageAbout, words: "usb stick disk drive mount automount sd card removable udisks", icon: "󰕓" },
+        { key: "drivesNotify",    label: "Drive notifications", page: root.pageAbout, words: "usb drive notification eject mount plug", icon: "󰕓" },
         { key: "autostartApps",   label: "Startup apps",       page: root.pageAbout, words: "autostart startup login boot open apps exec-once launch discord steam", icon: "󰐊" },
         { key: "autostartDelay",  label: "Wait after login",   page: root.pageAbout, words: "autostart startup delay login seconds", icon: "󰐊" },
         { key: "settingsBackup",  label: "Back up settings",   page: root.pageAbout, words: "backup export save settings config json copy", icon: "󰁯" },
@@ -193,6 +198,9 @@ Singleton {
         "Applications": "󰎆",
         "Backups": "󰁯",
         "Startup apps": "󰐊",
+        "Default apps": "󰘔",
+        "Removable drives": "󰕓",
+        "Processes": "󰍛",
         "Add a startup app": "󰐕",
         "Space": "󰋖",
         "Search": "󰍉",

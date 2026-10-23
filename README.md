@@ -229,6 +229,7 @@ Settings live in `~/.config/nothing/config.json`.
 | `SUPER+P` | displays: arrangement, resolution, scale, rotation; Light page: monitor brightness (DDC/CI), night light, software dim |
 | `SUPER+ALT+B` | night light on/off |
 | `SUPER+ALT+I` | caffeine: keep the screen awake |
+| `CTRL+SHIFT+Esc` | processes: what uses CPU/memory, end a frozen app |
 | `SUPER+SHIFT+G` | next Glyph surface |
 | `SUPER+G` | game bar |
 | `SUPER+V` / `SUPER+.` | clipboard / emoji |

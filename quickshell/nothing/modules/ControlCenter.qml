@@ -315,6 +315,55 @@ Item {
                 }
             }
 
+            // ── Drives ────────────────────────────────────────────────
+            // Only while something removable is plugged in.
+            NCard {
+                Layout.fillWidth: true
+                visible: Config.ccDrives && Drives.list.length > 0
+                implicitHeight: drivesCol.implicitHeight + Theme.px(16)
+                color: Theme.c.surface2
+                radius: Theme.r.chip
+
+                ColumnLayout {
+                    id: drivesCol
+                    anchors.fill: parent
+                    anchors.margins: Theme.px(8)
+                    spacing: Theme.px(4)
+
+                    Repeater {
+                        model: Drives.list
+
+                        RowLayout {
+                            id: drive
+                            required property var modelData
+                            Layout.fillWidth: true
+                            spacing: Theme.px(7)
+
+                            NIcon {
+                                text: drive.modelData.encrypted ? "󰯄" : "󰕓"
+                                size: Theme.z.icon
+                                color: drive.modelData.mount !== "" ? Theme.c.on : Theme.c.onDim
+                            }
+                            NText {
+                                Layout.fillWidth: true
+                                text: drive.modelData.label + "  ·  " + drive.modelData.size
+                                elide: Text.ElideRight
+                            }
+                            NPillButton {
+                                text: Drives.busyPath === drive.modelData.path ? "…"
+                                    : (drive.modelData.mount !== "" ? "Open" : "Mount")
+                                visible: !drive.modelData.encrypted
+                                onActivated: Drives.open(drive.modelData)
+                            }
+                            NPillButton {
+                                text: Drives.busyPath === drive.modelData.disk ? "…" : "Eject"
+                                onActivated: Drives.eject(drive.modelData)
+                            }
+                        }
+                    }
+                }
+            }
+
             // ── Footer ────────────────────────────────────────────────
             // Caffeine keeps its own full width row rather than joining
             // the grid: it is a switch with a label, not a state you read

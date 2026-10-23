@@ -29,6 +29,7 @@ Singleton {
                 { keys: ["SUPER", "P"],     label: "Displays, brightness, night light" },
                 { keys: ["SUPER", "ALT", "B"], label: "Night light on or off" },
                 { keys: ["SUPER", "ALT", "I"], label: "Keep the screen awake" },
+                { keys: ["CTRL", "SHIFT", "Esc"], label: "Processes" },
                 { keys: ["SUPER", "SHIFT", "T"], label: "Wallpaper picker" },
                 { keys: ["SUPER", "/"],     label: "This cheatsheet" },
                 { keys: ["CTRL", "ALT", "Del"], label: "Session menu" }

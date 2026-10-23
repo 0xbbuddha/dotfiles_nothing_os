@@ -72,6 +72,7 @@ Loader {
         case "privacy":   return Privacy.any;
         case "recording": return Recorder.recording;
         case "caffeine":  return Idle.inhibited;
+        case "drives":    return Drives.mounted.length > 0;
         case "window":    return (Hyprland.activeToplevel?.title ?? "") !== "";
         default:          return true;
         }
@@ -115,6 +116,7 @@ Loader {
         case "privacy":    return privacyPart;
         case "recording":  return recordingPart;
         case "caffeine":   return caffeinePart;
+        case "drives":     return drivesPart;
         default:           return null;
         }
     }
@@ -715,6 +717,41 @@ Loader {
     // ── Recording ─────────────────────────────────────────────────────
     // Only there while sleep is held off, so a forgotten caffeine is
     // visible rather than a laptop that never suspends. Click lets go.
+    // A stick while one is mounted. Left click opens it, right click ejects
+    // the most recent; the control centre lists them all.
+    Component {
+        id: drivesPart
+        Item {
+            implicitWidth: Theme.px(18)
+            implicitHeight: Theme.px(14)
+            readonly property var last: Drives.mounted[Drives.mounted.length - 1] ?? null
+
+            NIcon {
+                anchors.centerIn: parent
+                size: Theme.px(11)
+                text: "󰕓"
+                color: drvMa.containsMouse ? Theme.c.on : Theme.c.onDim
+            }
+
+            MouseArea {
+                id: drvMa
+                anchors.fill: parent
+                anchors.margins: -Theme.px(3)
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                onClicked: (m) => {
+                    if (!parent.last)
+                        return;
+                    if (m.button === Qt.RightButton)
+                        Drives.eject(parent.last);
+                    else
+                        Drives.open(parent.last);
+                }
+            }
+        }
+    }
+
     Component {
         id: caffeinePart
         Item {

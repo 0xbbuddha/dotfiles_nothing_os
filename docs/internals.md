@@ -95,6 +95,19 @@ SUPER+ALT+I toggles caffeine (`Idle.apply`); the bar's `caffeine` item
 shows only while it holds, and was added once to existing bars
 (`barCaffeineAdded`).
 
+**Default apps, drives, files, processes.** Settings > Dock > Default
+apps lists and sets `~/.config/mimeapps.list` through
+`scripts/mime-defaults.py` (only the app's own declared types, other
+lines kept); SUPER+W runs `scripts/open-default.sh web`, which uses that
+choice when you made one. `services/Drives.qml` re-reads `lsblk` on
+`udevadm monitor` block events, mounts newly plugged USB/SD partitions
+with `udisksctl` (never at login, never encrypted ones) and ejects by
+unmounting every partition then powering the disk off. Essential Search
+`~query` runs `fd` (or `plocate`) over `$HOME`. Settings > Processes
+(CTRL+SHIFT+Esc) samples `/proc` twice per refresh with
+`scripts/procs.py`, only while on screen, groups by program and sends
+TERM, then KILL on request, to your own processes only.
+
 **Idle.** hypridle reads one config file when it starts and has no
 runtime interface, so `services/Idle.qml` generates
 `~/.config/nothing/hypridle.conf` from the four timings in Settings and

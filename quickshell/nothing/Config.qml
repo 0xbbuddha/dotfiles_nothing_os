@@ -74,6 +74,9 @@ Singleton {
     property alias ccUpdates: a.ccUpdates
     property alias ccStats: a.ccStats
     property alias ccCaffeine: a.ccCaffeine
+    property alias ccDrives: a.ccDrives
+    property alias drivesAutomount: a.drivesAutomount
+    property alias drivesNotify: a.drivesNotify
 
     // ── Behaviour ─────────────────────────────────────────────────────
     property alias notificationsEnabled: a.notificationsEnabled
@@ -742,6 +745,7 @@ Singleton {
         case "ccUpdates":  return a.ccUpdates;
         case "ccStats":    return a.ccStats;
         case "ccCaffeine": return a.ccCaffeine;
+        case "ccDrives":   return a.ccDrives;
         default:           return false;
         }
     }
@@ -753,6 +757,7 @@ Singleton {
         case "ccUpdates":  a.ccUpdates = on; break;
         case "ccStats":    a.ccStats = on; break;
         case "ccCaffeine": a.ccCaffeine = on; break;
+        case "ccDrives":   a.ccDrives = on; break;
         default:           return;
         }
         root.save();
@@ -797,7 +802,7 @@ Singleton {
         a.barCentre = ["apps", "clock", "essential"];
         a.barRight = ["tray", "net", "bluetooth", "cpu", "ram", "gpu", "temp",
                       "updates", "mic", "volume", "battery",
-                      "notifications", "privacy", "recording", "caffeine"];
+                      "notifications", "privacy", "recording", "caffeine", "drives"];
 
         a.showDock = true;
         a.showDesktopWidgets = true;
@@ -828,6 +833,9 @@ Singleton {
         a.ccUpdates = true;
         a.ccStats = true;
         a.ccCaffeine = true;
+        a.ccDrives = true;
+        a.drivesAutomount = true;
+        a.drivesNotify = true;
 
         a.notificationsEnabled = true;
         a.notificationTimeout = 5;
@@ -862,6 +870,7 @@ Singleton {
         a.nightRestore = false;
         a.ddcLinked = false;
         a.barCaffeineAdded = true;
+        a.barDrivesAdded = true;
         a.autostartApps = [];
         a.autostartDelay = 3;
         a.displayGrace = 15;
@@ -943,9 +952,18 @@ Singleton {
     // Migration: early versions stored objects
     // { icon, exec, match }. Convert them to .desktop identifiers.
     function migrate(): void {
-        // The caffeine indicator only shows while sleep is held off, so it
-        // is added to bars saved before it existed, once. Taking it out in
-        // Settings > Bar is respected after that.
+        // The caffeine and drives indicators only show while sleep is held
+        // off or a drive is mounted, so each is added to bars saved before
+        // it existed, once. Taking one out in Settings > Bar is respected
+        // after that.
+        if (!a.barDrivesAdded) {
+            const right = root._list(a.barRight) ?? [];
+            const all = right.concat(root._list(a.barLeft) ?? [], root._list(a.barCentre) ?? []);
+            if (all.indexOf("drives") < 0)
+                a.barRight = right.concat(["drives"]);
+            a.barDrivesAdded = true;
+            root.save();
+        }
         if (!a.barCaffeineAdded) {
             const right = root._list(a.barRight) ?? [];
             const all = right.concat(root._list(a.barLeft) ?? [], root._list(a.barCentre) ?? []);
@@ -1063,7 +1081,7 @@ Singleton {
             property var barRight: ["tray", "net", "bluetooth", "cpu", "ram",
                                     "gpu", "temp", "updates", "mic", "volume",
                                     "battery", "notifications", "privacy",
-                                    "recording", "caffeine"]
+                                    "recording", "caffeine", "drives"]
 
             property bool showDock: true
             property bool showDesktopWidgets: true
@@ -1146,6 +1164,10 @@ Singleton {
             property bool ccUpdates: true
             property bool ccStats: true
             property bool ccCaffeine: true
+            // Removable drives: the section only shows with one plugged in.
+            property bool ccDrives: true
+            property bool drivesAutomount: true
+            property bool drivesNotify: true
 
             property bool notificationsEnabled: true
             property int  notificationTimeout: 5
@@ -1188,6 +1210,7 @@ Singleton {
             property bool   ddcLinked: false
             // The caffeine bar item was added to an existing bar once.
             property bool   barCaffeineAdded: false
+            property bool   barDrivesAdded: false
             // Settings > System > Startup: .desktop ids started once per
             // Hyprland session, a few seconds after login.
             property var    autostartApps: []

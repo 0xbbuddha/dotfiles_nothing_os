@@ -52,6 +52,16 @@ FILES=(
     "quickshell/nothing/components/cc/CcTile.qml:$QS/components/cc/CcTile.qml"
     "quickshell/nothing/components/BarRegistry.qml:$QS/components/BarRegistry.qml"
     "quickshell/nothing/components/bar/BarSlot.qml:$QS/components/bar/BarSlot.qml"
+    "quickshell/nothing/services/MimeDefaults.qml:$QS/services/MimeDefaults.qml"
+    "quickshell/nothing/services/Drives.qml:$QS/services/Drives.qml"
+    "quickshell/nothing/services/Processes.qml:$QS/services/Processes.qml"
+    "quickshell/nothing/services/Search.qml:$QS/services/Search.qml"
+    "quickshell/nothing/modules/SettingsPageProcesses.qml:$QS/modules/SettingsPageProcesses.qml"
+    "quickshell/nothing/modules/SettingsPageDock.qml:$QS/modules/SettingsPageDock.qml"
+    "quickshell/nothing/modules/ControlCenter.qml:$QS/modules/ControlCenter.qml"
+    "scripts/mime-defaults.py:$CONF/scripts/mime-defaults.py"
+    "scripts/open-default.sh:$CONF/scripts/open-default.sh"
+    "scripts/procs.py:$CONF/scripts/procs.py"
 )
 
 say() { printf '%s\n' "$*"; }

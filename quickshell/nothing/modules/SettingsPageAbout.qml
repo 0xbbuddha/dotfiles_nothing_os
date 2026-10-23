@@ -291,6 +291,30 @@ SettingsPage {
         }
     }
 
+    SettingsSection {
+        title: "Removable drives"
+
+        SettingRow {
+            key: "drivesAutomount"
+            label: "Mount when plugged in"
+            hint: !Drives.available ? "Needs udisks2 (udisksctl)"
+                : "USB sticks and SD cards, not encrypted ones; Eject in the control centre or the bar"
+            DotSwitch {
+                checked: Config.drivesAutomount
+                onToggled: (v) => { Config.drivesAutomount = v; Config.save(); }
+            }
+        }
+
+        SettingRow {
+            key: "drivesNotify"
+            label: "Notify on plug, mount and eject"
+            DotSwitch {
+                checked: Config.drivesNotify
+                onToggled: (v) => { Config.drivesNotify = v; Config.save(); }
+            }
+        }
+    }
+
     // Copies of config.json: one click to save, one to put back. Restoring
     // keeps what it replaces, so it can be undone from the same list.
     SettingsSection {

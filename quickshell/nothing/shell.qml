@@ -41,6 +41,7 @@ ShellRoot {
         void HyprAccent.saved;
         void NightLight.available;
         void Autostart.ran;
+        void Drives.available;
     }
 
     // ── Per screen ────────────────────────────────────────────────────
@@ -316,6 +317,12 @@ ShellRoot {
         function toggle(): void { GlobalState.settingsOpen = !GlobalState.settingsOpen; }
         function open(): void { GlobalState.settingsOpen = true; }
         function hide(): void { GlobalState.settingsOpen = false; }
+        // CTRL+SHIFT+Escape: straight to Processes, open or not.
+        function processes(): void {
+            GlobalState.settingsOpen = false;
+            GlobalState.settingsPage = SettingsIndex.pageProcesses;
+            GlobalState.settingsOpen = true;
+        }
     }
 
     IpcHandler {
@@ -501,6 +508,15 @@ ShellRoot {
         }
         function hide(): void { GlobalState.appsOpen = false; }
         function refresh(): void { MiniApps.refresh(); }
+        // By exact .desktop id, as the launcher would. "ok" or "missing":
+        // scripts/open-default.sh falls back on anything but ok.
+        function launch(id: string): string {
+            const e = DesktopEntries.byId(id);
+            if (!e)
+                return "missing";
+            e.execute();
+            return "ok";
+        }
     }
 
     IpcHandler {

@@ -95,7 +95,9 @@ Singleton {
         { id: "ccStats",    label: "System",      icon: "󰻠",
           hint: "CPU, memory and GPU gauges" },
         { id: "ccCaffeine", label: "Caffeine",    icon: "󰅶",
-          hint: "The sleep inhibitor, above the buttons" }
+          hint: "The sleep inhibitor, above the buttons" },
+        { id: "ccDrives",   label: "Drives",      icon: "󰕓",
+          hint: "USB sticks and external disks, with Open and Eject" }
     ]
 
     function meta(zone: string, id: string): var {
