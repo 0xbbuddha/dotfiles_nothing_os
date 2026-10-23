@@ -99,9 +99,7 @@ SettingsPage {
                 value: (Config.nightTemperature - 2500) / 4000
                 display: Config.nightTemperature + " K"
                 onMoved: (v) => {
-                    Config.nightTemperature = Math.round((2500 + v * 4000) / 100) * 100;
-                    Config.save();
-                    if (NightLight.active) NightLight.apply(true);
+                    NightLight.setTemperature(2500 + v * 4000);
                 }
             }
         }

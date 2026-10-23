@@ -202,6 +202,21 @@ PanelWindow {
 
                     Item { Layout.fillWidth: true }
 
+                    // Where the screens are, and how bright and warm they
+                    // are: two pages of one panel, not two panels.
+                    SegmentedControl {
+                        Layout.fillWidth: false
+                        Layout.preferredWidth: Theme.px(190)
+                        options: [
+                            { label: "Layout", value: "layout" },
+                            { label: "Light", value: "light" }
+                        ]
+                        current: GlobalState.displaysTab
+                        onPicked: (v) => GlobalState.displaysTab = v
+                    }
+
+                    Item { Layout.fillWidth: true }
+
                     NLabel {
                         text: Displays.active.length + " of " + Displays.screens.length + " on"
                         font.pixelSize: Theme.f.small
@@ -222,410 +237,446 @@ PanelWindow {
 
                 Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Theme.c.outline }
 
-                RowLayout {
+                StackLayout {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    spacing: 0
+                    currentIndex: GlobalState.displaysTab === "light" ? 1 : 0
 
-                    // ── Arrangement and map ───────────────────────────
-                    ColumnLayout {
+                    RowLayout {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        Layout.margins: Theme.pad
-                        spacing: Theme.px(10)
+                        spacing: 0
 
-                        NLabel { text: "Arrangement" }
-
-                        GridLayout {
+                        // ── Arrangement and map ───────────────────────────
+                        ColumnLayout {
                             Layout.fillWidth: true
-                            columns: 4
-                            columnSpacing: Theme.px(6)
-                            rowSpacing: Theme.px(6)
+                            Layout.fillHeight: true
+                            Layout.margins: Theme.pad
+                            spacing: Theme.px(10)
 
-                            Repeater {
-                                model: win.arrangements
+                            NLabel { text: "Arrangement" }
 
-                                Rectangle {
-                                    id: tile
-                                    required property var modelData
-                                    readonly property bool active: win.mode === modelData.key
+                            GridLayout {
+                                Layout.fillWidth: true
+                                columns: 4
+                                columnSpacing: Theme.px(6)
+                                rowSpacing: Theme.px(6)
 
-                                    Layout.fillWidth: true
-                                    implicitHeight: Theme.px(72)
-                                    radius: Theme.r.chip
-                                    color: tile.active ? Theme.c.on
-                                         : (tma.containsMouse ? Theme.c.surface3 : Theme.c.surface2)
-                                    Behavior on color { ColorAnimation { duration: Theme.fast } }
+                                Repeater {
+                                    model: win.arrangements
 
-                                    readonly property color ink:
-                                        tile.active ? Theme.c.surface : Theme.c.on
-                                    readonly property color inkDim:
-                                        tile.active ? Qt.rgba(Theme.c.surface.r, Theme.c.surface.g,
-                                                              Theme.c.surface.b, 0.35)
-                                                    : Theme.c.onFaint
+                                    Rectangle {
+                                        id: tile
+                                        required property var modelData
+                                        readonly property bool active: win.mode === modelData.key
 
-                                    ColumnLayout {
-                                        anchors.centerIn: parent
-                                        spacing: Theme.px(7)
+                                        Layout.fillWidth: true
+                                        implicitHeight: Theme.px(72)
+                                        radius: Theme.r.chip
+                                        color: tile.active ? Theme.c.on
+                                             : (tma.containsMouse ? Theme.c.surface3 : Theme.c.surface2)
+                                        Behavior on color { ColorAnimation { duration: Theme.fast } }
 
-                                        // Two little screens saying what the
-                                        // arrangement does, which is faster to
-                                        // read than the word under it.
-                                        Item {
-                                            Layout.alignment: Qt.AlignHCenter
-                                            implicitWidth: Theme.px(40)
-                                            implicitHeight: Theme.px(20)
+                                        readonly property color ink:
+                                            tile.active ? Theme.c.surface : Theme.c.on
+                                        readonly property color inkDim:
+                                            tile.active ? Qt.rgba(Theme.c.surface.r, Theme.c.surface.g,
+                                                                  Theme.c.surface.b, 0.35)
+                                                        : Theme.c.onFaint
 
-                                            readonly property bool dup:
-                                                tile.modelData.kind === "duplicate"
-                                            readonly property bool only:
-                                                tile.modelData.kind === "only"
+                                        ColumnLayout {
+                                            anchors.centerIn: parent
+                                            spacing: Theme.px(7)
 
-                                            Rectangle {
-                                                x: 0
-                                                y: parent.dup ? Theme.px(4) : 0
-                                                width: Theme.px(18)
-                                                height: Theme.px(14)
-                                                radius: Theme.px(3)
-                                                color: (parent.only && tile.modelData.side === 1)
-                                                    ? "transparent" : tile.ink
-                                                border.width: 1
-                                                border.color: (parent.only && tile.modelData.side === 1)
-                                                    ? tile.inkDim : "transparent"
+                                            // Two little screens saying what the
+                                            // arrangement does, which is faster to
+                                            // read than the word under it.
+                                            Item {
+                                                Layout.alignment: Qt.AlignHCenter
+                                                implicitWidth: Theme.px(40)
+                                                implicitHeight: Theme.px(20)
+
+                                                readonly property bool dup:
+                                                    tile.modelData.kind === "duplicate"
+                                                readonly property bool only:
+                                                    tile.modelData.kind === "only"
+
+                                                Rectangle {
+                                                    x: 0
+                                                    y: parent.dup ? Theme.px(4) : 0
+                                                    width: Theme.px(18)
+                                                    height: Theme.px(14)
+                                                    radius: Theme.px(3)
+                                                    color: (parent.only && tile.modelData.side === 1)
+                                                        ? "transparent" : tile.ink
+                                                    border.width: 1
+                                                    border.color: (parent.only && tile.modelData.side === 1)
+                                                        ? tile.inkDim : "transparent"
+                                                }
+
+                                                Rectangle {
+                                                    x: parent.dup ? Theme.px(9) : Theme.px(22)
+                                                    y: parent.dup ? 0 : 0
+                                                    width: Theme.px(18)
+                                                    height: Theme.px(14)
+                                                    radius: Theme.px(3)
+                                                    color: (parent.only && tile.modelData.side === 0)
+                                                        ? "transparent"
+                                                        : (parent.dup ? tile.ink : tile.ink)
+                                                    border.width: 1
+                                                    border.color: (parent.only && tile.modelData.side === 0)
+                                                        ? tile.inkDim : "transparent"
+                                                    opacity: parent.dup ? 0.55 : 1
+                                                }
                                             }
 
-                                            Rectangle {
-                                                x: parent.dup ? Theme.px(9) : Theme.px(22)
-                                                y: parent.dup ? 0 : 0
-                                                width: Theme.px(18)
-                                                height: Theme.px(14)
-                                                radius: Theme.px(3)
-                                                color: (parent.only && tile.modelData.side === 0)
-                                                    ? "transparent"
-                                                    : (parent.dup ? tile.ink : tile.ink)
-                                                border.width: 1
-                                                border.color: (parent.only && tile.modelData.side === 0)
-                                                    ? tile.inkDim : "transparent"
-                                                opacity: parent.dup ? 0.55 : 1
+                                            NText {
+                                                Layout.alignment: Qt.AlignHCenter
+                                                Layout.maximumWidth: tile.width - Theme.px(10)
+                                                elide: Text.ElideRight
+                                                text: tile.modelData.label
+                                                font.pixelSize: Theme.f.tiny
+                                                color: tile.active ? Theme.c.surface : Theme.c.onDim
                                             }
                                         }
 
-                                        NText {
-                                            Layout.alignment: Qt.AlignHCenter
-                                            Layout.maximumWidth: tile.width - Theme.px(10)
-                                            elide: Text.ElideRight
-                                            text: tile.modelData.label
-                                            font.pixelSize: Theme.f.tiny
-                                            color: tile.active ? Theme.c.surface : Theme.c.onDim
+                                        MouseArea {
+                                            id: tma
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            enabled: !Displays.busy
+                                            onClicked: win.arrange(tile.modelData)
                                         }
                                     }
+                                }
+                            }
 
-                                    MouseArea {
-                                        id: tma
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        enabled: !Displays.busy
-                                        onClicked: win.arrange(tile.modelData)
+                            RowLayout {
+                                Layout.fillWidth: true
+                                Layout.topMargin: Theme.px(4)
+                                NLabel { text: "Layout" }
+                                Item { Layout.fillWidth: true }
+                                NLabel {
+                                    text: "drag a screen to move it"
+                                    dim: true
+                                }
+                            }
+
+                            // ── The map ───────────────────────────────────
+                            Rectangle {
+                                id: mapBox
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                                Layout.minimumHeight: Theme.px(150)
+                                radius: Theme.r.chip
+                                color: Theme.c.surface2
+                                clip: true
+
+                                readonly property var b: Displays.bounds
+                                readonly property real inset: Theme.px(18)
+                                readonly property real f: Math.min(
+                                    (width - inset * 2) / Math.max(1, b.w),
+                                    (height - inset * 2) / Math.max(1, b.h))
+                                readonly property real ox:
+                                    (width - b.w * f) / 2 - b.x * f
+                                readonly property real oy:
+                                    (height - b.h * f) / 2 - b.y * f
+
+                                Repeater {
+                                    model: Displays.active
+
+                                    Rectangle {
+                                        id: plate
+                                        required property var modelData
+                                        readonly property bool active: win.sel === modelData.name
+
+                                        // Dragging moves the rectangle; letting go
+                                        // is what tells Hyprland. Moving it live
+                                        // would refresh the list under the cursor
+                                        // and yank the plate out from under it.
+                                        property bool held: false
+
+                                        width: win.logicalW(modelData) * mapBox.f
+                                        height: win.logicalH(modelData) * mapBox.f
+                                        x: mapBox.ox + modelData.x * mapBox.f
+                                        y: mapBox.oy + modelData.y * mapBox.f
+
+                                        radius: Theme.px(6)
+                                        color: plate.active ? Theme.c.on : Theme.c.surface3
+                                        border.width: modelData.focused ? Theme.px(2) : 1
+                                        border.color: modelData.focused ? Theme.c.red : Theme.c.outline
+                                        Behavior on color { ColorAnimation { duration: Theme.fast } }
+
+                                        ColumnLayout {
+                                            anchors.centerIn: parent
+                                            spacing: 0
+                                            NText {
+                                                Layout.alignment: Qt.AlignHCenter
+                                                text: plate.modelData.name
+                                                font.weight: Font.Medium
+                                                color: plate.active ? Theme.c.surface : Theme.c.on
+                                            }
+                                            NText {
+                                                Layout.alignment: Qt.AlignHCenter
+                                                visible: plate.height > Theme.px(44)
+                                                text: plate.modelData.w + " x " + plate.modelData.h
+                                                font.pixelSize: Theme.f.tiny
+                                                color: plate.active ? Theme.c.surface : Theme.c.onDim
+                                                opacity: 0.75
+                                            }
+                                            NText {
+                                                Layout.alignment: Qt.AlignHCenter
+                                                visible: plate.modelData.mirrorOf !== ""
+                                                    && plate.height > Theme.px(60)
+                                                text: "mirrors " + plate.modelData.mirrorOf
+                                                font.pixelSize: Theme.f.tiny
+                                                color: Theme.c.red
+                                            }
+                                        }
+
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            cursorShape: plate.held ? Qt.ClosedHandCursor
+                                                                    : Qt.PointingHandCursor
+                                            drag.target: plate
+                                            drag.axis: Drag.XAndYAxis
+                                            drag.smoothed: false
+
+                                            onPressed: {
+                                                win.sel = plate.modelData.name;
+                                                plate.held = true;
+                                            }
+                                            onReleased: {
+                                                plate.held = false;
+                                                if (mapBox.f <= 0)
+                                                    return;
+                                                const lx = (plate.x - mapBox.ox) / mapBox.f;
+                                                const ly = (plate.y - mapBox.oy) / mapBox.f;
+                                                const p = win.snap(plate.modelData.name, lx, ly);
+                                                if (p.x === plate.modelData.x
+                                                    && p.y === plate.modelData.y) {
+                                                    // Put it back: the bindings were
+                                                    // broken by the drag.
+                                                    plate.x = Qt.binding(() =>
+                                                        mapBox.ox + plate.modelData.x * mapBox.f);
+                                                    plate.y = Qt.binding(() =>
+                                                        mapBox.oy + plate.modelData.y * mapBox.f);
+                                                    return;
+                                                }
+                                                Displays.setPosition(plate.modelData.name, p.x, p.y);
+                                            }
+                                        }
                                     }
+                                }
+
+                                NText {
+                                    anchors.centerIn: parent
+                                    visible: Displays.active.length === 0
+                                    text: "No screen is on"
+                                    color: Theme.c.onDim
                                 }
                             }
                         }
 
-                        RowLayout {
-                            Layout.fillWidth: true
-                            Layout.topMargin: Theme.px(4)
-                            NLabel { text: "Layout" }
-                            Item { Layout.fillWidth: true }
-                            NLabel {
-                                text: "drag a screen to move it"
-                                dim: true
-                            }
-                        }
+                        Rectangle { Layout.fillHeight: true; implicitWidth: 1; color: Theme.c.outline }
 
-                        // ── The map ───────────────────────────────────
-                        Rectangle {
-                            id: mapBox
-                            Layout.fillWidth: true
+                        // ── The chosen screen ─────────────────────────────
+                        ColumnLayout {
+                            Layout.preferredWidth: Theme.px(300)
                             Layout.fillHeight: true
-                            Layout.minimumHeight: Theme.px(150)
-                            radius: Theme.r.chip
-                            color: Theme.c.surface2
-                            clip: true
+                            Layout.margins: Theme.pad
+                            spacing: Theme.px(10)
 
-                            readonly property var b: Displays.bounds
-                            readonly property real inset: Theme.px(18)
-                            readonly property real f: Math.min(
-                                (width - inset * 2) / Math.max(1, b.w),
-                                (height - inset * 2) / Math.max(1, b.h))
-                            readonly property real ox:
-                                (width - b.w * f) / 2 - b.x * f
-                            readonly property real oy:
-                                (height - b.h * f) / 2 - b.y * f
+                            NLabel { text: "Screen" }
 
-                            Repeater {
-                                model: Displays.active
+                            // Every screen, on or off: a screen you switched
+                            // off has to stay reachable or there is no way back.
+                            Flow {
+                                Layout.fillWidth: true
+                                spacing: Theme.px(5)
 
-                                Rectangle {
-                                    id: plate
-                                    required property var modelData
-                                    readonly property bool active: win.sel === modelData.name
+                                Repeater {
+                                    model: Displays.screens
 
-                                    // Dragging moves the rectangle; letting go
-                                    // is what tells Hyprland. Moving it live
-                                    // would refresh the list under the cursor
-                                    // and yank the plate out from under it.
-                                    property bool held: false
+                                    Rectangle {
+                                        id: chip
+                                        required property var modelData
+                                        readonly property bool active: win.sel === modelData.name
 
-                                    width: win.logicalW(modelData) * mapBox.f
-                                    height: win.logicalH(modelData) * mapBox.f
-                                    x: mapBox.ox + modelData.x * mapBox.f
-                                    y: mapBox.oy + modelData.y * mapBox.f
+                                        implicitWidth: chipLabel.implicitWidth + Theme.px(20)
+                                        implicitHeight: Theme.px(26)
+                                        radius: Theme.r.pill
+                                        color: chip.active ? Theme.c.on : Theme.c.surface2
+                                        Behavior on color { ColorAnimation { duration: Theme.fast } }
 
-                                    radius: Theme.px(6)
-                                    color: plate.active ? Theme.c.on : Theme.c.surface3
-                                    border.width: modelData.focused ? Theme.px(2) : 1
-                                    border.color: modelData.focused ? Theme.c.red : Theme.c.outline
-                                    Behavior on color { ColorAnimation { duration: Theme.fast } }
-
-                                    ColumnLayout {
-                                        anchors.centerIn: parent
-                                        spacing: 0
                                         NText {
-                                            Layout.alignment: Qt.AlignHCenter
-                                            text: plate.modelData.name
-                                            font.weight: Font.Medium
-                                            color: plate.active ? Theme.c.surface : Theme.c.on
+                                            id: chipLabel
+                                            anchors.centerIn: parent
+                                            text: chip.modelData.name
+                                            color: chip.active ? Theme.c.surface
+                                                 : (chip.modelData.disabled ? Theme.c.onFaint
+                                                                            : Theme.c.onDim)
+                                            font.strikeout: chip.modelData.disabled
                                         }
-                                        NText {
-                                            Layout.alignment: Qt.AlignHCenter
-                                            visible: plate.height > Theme.px(44)
-                                            text: plate.modelData.w + " x " + plate.modelData.h
-                                            font.pixelSize: Theme.f.tiny
-                                            color: plate.active ? Theme.c.surface : Theme.c.onDim
-                                            opacity: 0.75
-                                        }
-                                        NText {
-                                            Layout.alignment: Qt.AlignHCenter
-                                            visible: plate.modelData.mirrorOf !== ""
-                                                && plate.height > Theme.px(60)
-                                            text: "mirrors " + plate.modelData.mirrorOf
-                                            font.pixelSize: Theme.f.tiny
-                                            color: Theme.c.red
-                                        }
-                                    }
 
-                                    MouseArea {
-                                        anchors.fill: parent
-                                        cursorShape: plate.held ? Qt.ClosedHandCursor
-                                                                : Qt.PointingHandCursor
-                                        drag.target: plate
-                                        drag.axis: Drag.XAndYAxis
-                                        drag.smoothed: false
-
-                                        onPressed: {
-                                            win.sel = plate.modelData.name;
-                                            plate.held = true;
-                                        }
-                                        onReleased: {
-                                            plate.held = false;
-                                            if (mapBox.f <= 0)
-                                                return;
-                                            const lx = (plate.x - mapBox.ox) / mapBox.f;
-                                            const ly = (plate.y - mapBox.oy) / mapBox.f;
-                                            const p = win.snap(plate.modelData.name, lx, ly);
-                                            if (p.x === plate.modelData.x
-                                                && p.y === plate.modelData.y) {
-                                                // Put it back: the bindings were
-                                                // broken by the drag.
-                                                plate.x = Qt.binding(() =>
-                                                    mapBox.ox + plate.modelData.x * mapBox.f);
-                                                plate.y = Qt.binding(() =>
-                                                    mapBox.oy + plate.modelData.y * mapBox.f);
-                                                return;
-                                            }
-                                            Displays.setPosition(plate.modelData.name, p.x, p.y);
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: win.sel = chip.modelData.name
                                         }
                                     }
                                 }
                             }
 
                             NText {
-                                anchors.centerIn: parent
-                                visible: Displays.active.length === 0
-                                text: "No screen is on"
+                                Layout.fillWidth: true
+                                visible: win.chosen !== null
+                                text: win.chosen?.label ?? ""
+                                elide: Text.ElideRight
                                 color: Theme.c.onDim
+                                font.pixelSize: Theme.f.tiny
+                            }
+
+                            // What the screen is running, read from Hyprland and
+                            // never written from here: refresh rate, VRR, bit
+                            // depth and colour management stay where you set them.
+                            NText {
+                                Layout.fillWidth: true
+                                visible: win.chosen !== null && !(win.chosen?.disabled ?? true)
+                                text: {
+                                    const c = win.chosen;
+                                    if (!c)
+                                        return "";
+                                    const bits = [Number(c.hz).toFixed(c.hz % 1 ? 2 : 0) + " Hz",
+                                                  c.vrr ? "VRR on" : "VRR off"];
+                                    if (c.bitDepth > 0)
+                                        bits.push(c.bitDepth + "-bit");
+                                    if (c.cm !== "")
+                                        bits.push(c.hdr ? "HDR (" + c.cm + ")" : c.cm);
+                                    return bits.join("  ·  ");
+                                }
+                                elide: Text.ElideRight
+                                color: Theme.c.onDim
+                                font.family: Theme.f.mono
+                                font.pixelSize: Theme.f.tiny
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                visible: win.chosen !== null
+                                NText { text: "On"; Layout.fillWidth: true }
+                                NSwitch {
+                                    checked: !(win.chosen?.disabled ?? true)
+                                    // The last screen cannot be switched off:
+                                    // there would be nothing left to switch it
+                                    // back on from.
+                                    enabled: (win.chosen?.disabled ?? false)
+                                        || Displays.active.length > 1
+                                    opacity: enabled ? 1 : 0.35
+                                    onToggled: (v) => Displays.setEnabled(win.sel, v)
+                                }
+                            }
+
+                            Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Theme.c.outline }
+
+                            NLabel { text: "Resolution" }
+
+                            Rectangle {
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                                Layout.minimumHeight: Theme.px(110)
+                                radius: Theme.r.chip
+                                color: Theme.c.surface2
+                                clip: true
+
+                                ListView {
+                                    id: modes
+                                    anchors.fill: parent
+                                    anchors.margins: Theme.px(4)
+                                    model: win.chosen?.modes ?? []
+                                    boundsBehavior: Flickable.StopAtBounds
+                                    clip: true
+
+                                    delegate: Rectangle {
+                                        id: modeRow
+                                        required property var modelData
+                                        readonly property bool active:
+                                            modelData.w === (win.chosen?.w ?? 0)
+                                            && modelData.h === (win.chosen?.h ?? 0)
+                                            && modelData.hz === Math.round(win.chosen?.hz ?? 0)
+
+                                        width: modes.width
+                                        implicitHeight: Theme.px(28)
+                                        radius: Theme.px(8)
+                                        color: modeRow.active ? Theme.c.on
+                                             : (mrm.containsMouse ? Theme.c.surface3 : "transparent")
+                                        Behavior on color { ColorAnimation { duration: Theme.fast } }
+
+                                        NText {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            anchors.left: parent.left
+                                            anchors.leftMargin: Theme.px(10)
+                                            text: modeRow.modelData.label
+                                            color: modeRow.active ? Theme.c.surface : Theme.c.onDim
+                                            font.family: Theme.f.mono
+                                            font.pixelSize: Theme.f.tiny
+                                        }
+
+                                        MouseArea {
+                                            id: mrm
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            enabled: !Displays.busy
+                                            onClicked: Displays.setMode(win.sel, modeRow.modelData.id)
+                                        }
+                                    }
+                                }
+
+                                NText {
+                                    anchors.centerIn: parent
+                                    visible: modes.count === 0
+                                    text: "No mode reported"
+                                    color: Theme.c.onFaint
+                                    font.pixelSize: Theme.f.tiny
+                                }
+                            }
+
+                            NLabel { text: "Scale" }
+
+                            SegmentedControl {
+                                Layout.fillWidth: true
+                                options: [
+                                    { label: "1x", value: 1 },
+                                    { label: "1.25x", value: 1.25 },
+                                    { label: "1.5x", value: 1.5 },
+                                    { label: "2x", value: 2 }
+                                ]
+                                current: win.chosen?.scale ?? 1
+                                onPicked: (v) => Displays.setScale(win.sel, v)
+                            }
+
+                            NLabel { text: "Rotation" }
+
+                            SegmentedControl {
+                                Layout.fillWidth: true
+                                options: [
+                                    { label: "0", value: 0 },
+                                    { label: "90", value: 1 },
+                                    { label: "180", value: 2 },
+                                    { label: "270", value: 3 }
+                                ]
+                                current: win.chosen?.transform ?? 0
+                                onPicked: (v) => Displays.setTransform(win.sel, v)
                             }
                         }
                     }
 
-                    Rectangle { Layout.fillHeight: true; implicitWidth: 1; color: Theme.c.outline }
-
-                    // ── The chosen screen ─────────────────────────────
-                    ColumnLayout {
-                        Layout.preferredWidth: Theme.px(300)
+                    DisplayLight {
+                        Layout.fillWidth: true
                         Layout.fillHeight: true
-                        Layout.margins: Theme.pad
-                        spacing: Theme.px(10)
-
-                        NLabel { text: "Screen" }
-
-                        // Every screen, on or off: a screen you switched
-                        // off has to stay reachable or there is no way back.
-                        Flow {
-                            Layout.fillWidth: true
-                            spacing: Theme.px(5)
-
-                            Repeater {
-                                model: Displays.screens
-
-                                Rectangle {
-                                    id: chip
-                                    required property var modelData
-                                    readonly property bool active: win.sel === modelData.name
-
-                                    implicitWidth: chipLabel.implicitWidth + Theme.px(20)
-                                    implicitHeight: Theme.px(26)
-                                    radius: Theme.r.pill
-                                    color: chip.active ? Theme.c.on : Theme.c.surface2
-                                    Behavior on color { ColorAnimation { duration: Theme.fast } }
-
-                                    NText {
-                                        id: chipLabel
-                                        anchors.centerIn: parent
-                                        text: chip.modelData.name
-                                        color: chip.active ? Theme.c.surface
-                                             : (chip.modelData.disabled ? Theme.c.onFaint
-                                                                        : Theme.c.onDim)
-                                        font.strikeout: chip.modelData.disabled
-                                    }
-
-                                    MouseArea {
-                                        anchors.fill: parent
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: win.sel = chip.modelData.name
-                                    }
-                                }
-                            }
-                        }
-
-                        NText {
-                            Layout.fillWidth: true
-                            visible: win.chosen !== null
-                            text: win.chosen?.label ?? ""
-                            elide: Text.ElideRight
-                            color: Theme.c.onDim
-                            font.pixelSize: Theme.f.tiny
-                        }
-
-                        RowLayout {
-                            Layout.fillWidth: true
-                            visible: win.chosen !== null
-                            NText { text: "On"; Layout.fillWidth: true }
-                            NSwitch {
-                                checked: !(win.chosen?.disabled ?? true)
-                                // The last screen cannot be switched off:
-                                // there would be nothing left to switch it
-                                // back on from.
-                                enabled: (win.chosen?.disabled ?? false)
-                                    || Displays.active.length > 1
-                                opacity: enabled ? 1 : 0.35
-                                onToggled: (v) => Displays.setEnabled(win.sel, v)
-                            }
-                        }
-
-                        Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Theme.c.outline }
-
-                        NLabel { text: "Resolution" }
-
-                        Rectangle {
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            Layout.minimumHeight: Theme.px(110)
-                            radius: Theme.r.chip
-                            color: Theme.c.surface2
-                            clip: true
-
-                            ListView {
-                                id: modes
-                                anchors.fill: parent
-                                anchors.margins: Theme.px(4)
-                                model: win.chosen?.modes ?? []
-                                boundsBehavior: Flickable.StopAtBounds
-                                clip: true
-
-                                delegate: Rectangle {
-                                    id: modeRow
-                                    required property var modelData
-                                    readonly property bool active:
-                                        modelData.w === (win.chosen?.w ?? 0)
-                                        && modelData.h === (win.chosen?.h ?? 0)
-                                        && modelData.hz === Math.round(win.chosen?.hz ?? 0)
-
-                                    width: modes.width
-                                    implicitHeight: Theme.px(28)
-                                    radius: Theme.px(8)
-                                    color: modeRow.active ? Theme.c.on
-                                         : (mrm.containsMouse ? Theme.c.surface3 : "transparent")
-                                    Behavior on color { ColorAnimation { duration: Theme.fast } }
-
-                                    NText {
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        anchors.left: parent.left
-                                        anchors.leftMargin: Theme.px(10)
-                                        text: modeRow.modelData.label
-                                        color: modeRow.active ? Theme.c.surface : Theme.c.onDim
-                                        font.family: Theme.f.mono
-                                        font.pixelSize: Theme.f.tiny
-                                    }
-
-                                    MouseArea {
-                                        id: mrm
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        enabled: !Displays.busy
-                                        onClicked: Displays.setMode(win.sel, modeRow.modelData.id)
-                                    }
-                                }
-                            }
-
-                            NText {
-                                anchors.centerIn: parent
-                                visible: modes.count === 0
-                                text: "No mode reported"
-                                color: Theme.c.onFaint
-                                font.pixelSize: Theme.f.tiny
-                            }
-                        }
-
-                        NLabel { text: "Scale" }
-
-                        SegmentedControl {
-                            Layout.fillWidth: true
-                            options: [
-                                { label: "1x", value: 1 },
-                                { label: "1.25x", value: 1.25 },
-                                { label: "1.5x", value: 1.5 },
-                                { label: "2x", value: 2 }
-                            ]
-                            current: win.chosen?.scale ?? 1
-                            onPicked: (v) => Displays.setScale(win.sel, v)
-                        }
-
-                        NLabel { text: "Rotation" }
-
-                        SegmentedControl {
-                            Layout.fillWidth: true
-                            options: [
-                                { label: "0", value: 0 },
-                                { label: "90", value: 1 },
-                                { label: "180", value: 2 },
-                                { label: "270", value: 3 }
-                            ]
-                            current: win.chosen?.transform ?? 0
-                            onPicked: (v) => Displays.setTransform(win.sel, v)
-                        }
+                        shown: win.visible && GlobalState.displaysTab === "light"
                     }
                 }
 

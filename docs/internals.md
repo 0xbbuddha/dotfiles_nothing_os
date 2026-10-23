@@ -53,6 +53,24 @@ and an existing `fish/config.fish` are created once and never
 overwritten; `fish/conf.d/nothing.fish` is refreshed. Re-run
 `./install --files` after pulling.
 
+**Light (SUPER+P, second page).** Three controls that all look like
+brightness and are kept apart on purpose. `services/Ddc.qml` drives each
+external monitor's own backlight with `ddcutil`, addressed by I2C bus and
+matched to Hyprland's output through the DRM connector `ddcutil detect`
+reports. One worker runs one `ddcutil` at a time; sliders only record the
+value they want and the latest one is written (`--noverify`), then read
+back after 0.4 s and 1.6 s. A monitor still wrong after a second write is
+marked refused and gets no more writes until "Try again". Detection runs
+when the page first opens, never at login. `services/NightLight.qml`
+drives the one `hyprsunset` daemon over `hyprctl hyprsunset` (temperature,
+`identity` for neutral, `gamma` for the software dim, all screens at
+once), starts it only on use (`pidof` first) and reads its state back.
+"Restore on login" (`nightRestore`, off by default) brings back the last
+manual on/off. VRR, bit depth and colour-management preset are shown per
+screen and never written. `scripts/deploy-display-light.sh` installs just
+these files with a dated backup and a rollback script;
+`scripts/test-display-light.sh [--write]` checks them on the machine.
+
 **Idle.** hypridle reads one config file when it starts and has no
 runtime interface, so `services/Idle.qml` generates
 `~/.config/nothing/hypridle.conf` from the four timings in Settings and

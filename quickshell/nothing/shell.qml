@@ -401,10 +401,29 @@ ShellRoot {
             GlobalState.displaysOpen = true;
         }
         function hide(): void { GlobalState.displaysOpen = false; }
+        // Straight to the Light page: brightness, night light, dimming.
+        function light(): void {
+            GlobalState.closeAll();
+            GlobalState.displaysTab = "light";
+            GlobalState.displaysOpen = true;
+        }
         function refresh(): void { Displays.refresh(); }
         function extend(): void { Displays.extend(); }
         function duplicate(): void { Displays.duplicate(); }
         function only(name: string): void { Displays.only(name); }
+    }
+
+    // Night light from a key or a script: qs ipc call nightlight toggle,
+    // or temperature 3500. Same service the panel and the tile use.
+    IpcHandler {
+        target: "nightlight"
+        function toggle(): void { NightLight.toggle(); }
+        function on(): void { NightLight.setActive(true); }
+        function off(): void { NightLight.setActive(false); }
+        function neutral(): void { NightLight.neutral(); }
+        function temperature(kelvin: int): void { NightLight.setTemperature(kelvin); }
+        function dim(percent: int): void { NightLight.setGamma(percent); }
+        function status(): string { return NightLight.status; }
     }
 
     IpcHandler {

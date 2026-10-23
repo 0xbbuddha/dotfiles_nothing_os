@@ -27,6 +27,9 @@ hl.bind(mainMod .. " + SHIFT + T",  ipc("wallpaperpicker", "toggle"))
 -- The screens: arrangement, resolution, scale, rotation, and a map
 -- you can drag them around on.
 hl.bind(mainMod .. " + P",          ipc("displays", "toggle"))
+-- Night light on or off, whatever the schedule says; temperature and
+-- schedule live on the Light page of SUPER+P.
+hl.bind(mainMod .. " + ALT + B",    ipc("nightlight", "toggle"))
 hl.bind(mainMod .. " + ALT + G",    ipc("game", "mode"))
 -- Walks off, Matrix, Bar, Strip. The surface that comes up plays its own
 -- notification rhythm, so you can see where you landed without looking.

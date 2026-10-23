@@ -110,6 +110,9 @@ Singleton {
     property alias nightFrom: a.nightFrom
     property alias nightTo: a.nightTo
     property alias nightTemperature: a.nightTemperature
+    property alias nightOn: a.nightOn
+    property alias nightRestore: a.nightRestore
+    property alias ddcLinked: a.ddcLinked
 
     // ── Game mode ─────────────────────────────────────────────────────
     property alias gameMode: a.gameMode
@@ -840,6 +843,9 @@ Singleton {
         a.nightFrom = "19:00";
         a.nightTo = "06:30";
         a.nightTemperature = 4000;
+        a.nightOn = false;
+        a.nightRestore = false;
+        a.ddcLinked = false;
 
         a.lockBackground = "black";
 
@@ -1134,6 +1140,12 @@ Singleton {
             property string nightFrom: "19:00"
             property string nightTo: "06:30"
             property int    nightTemperature: 4000
+            // Last manual on/off, and whether login brings it back. Off by
+            // default so a fresh install starts the way it always has.
+            property bool   nightOn: false
+            property bool   nightRestore: false
+            // SUPER+P > Light: one slider moves every external monitor.
+            property bool   ddcLinked: false
 
             // ── Game mode ─────────────────────────────────────────────
             property bool gameMode: false
