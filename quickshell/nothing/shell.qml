@@ -478,7 +478,7 @@ ShellRoot {
     }
 
     // Scripting the wallpaper: set <path> [screen], next, folder <path>.
-    // "Set as wallpaper" in a file manager's Open With goes through set.
+    // Dolphin's "Set as wallpaper" context menu (applications/servicemenus) goes through set and setHere.
     IpcHandler {
         target: "wallpaper"
         function set(path: string): void { Wallpapers.set(path, ""); }
