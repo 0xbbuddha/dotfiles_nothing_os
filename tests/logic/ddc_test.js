@@ -195,6 +195,24 @@ t("DDCRC_VERIFY / failing write: one retry, then blocked with the reason, real v
   assert.strictEqual(c.root.state[5].status, "ok");
 });
 
+t("a write that fails while a newer value is already pending is not reported as refused", () => {
+  const c = detected();
+  c.root.set(5, 0.7); c.fireDebounce();
+  assert.strictEqual(last(c), "ddcutil --bus 5 --noverify setvcp 10 70");
+  // The user keeps dragging before this write's result comes back - the
+  // slider's own value (not j.value, which is now stale) is what must
+  // end up written, and this failure must not be reported as a refusal
+  // of a target nobody wants anymore.
+  c.root.set(5, 0.9);
+  c.respond(1, "", "Error setting value: DDCRC_RETRIES(-3023)");
+  assert.strictEqual(c.root.state[5].blocked, false);
+  assert.notStrictEqual(c.root.state[5].status, "error");
+  assert.strictEqual(last(c), "ddcutil --bus 5 --noverify setvcp 10 90");
+  c.respond(0, ""); c.fireWait(); c.respond(0, "VCP 10 C 90 100");
+  assert.strictEqual(c.root.state[5].status, "ok");
+  assert.strictEqual(c.root.state[5].cur, 90);
+});
+
 t("linked mode writes every DDC screen, invalid one untouched", () => {
   const c = detected();
   c.root.setAll(0.25); c.fireDebounce();

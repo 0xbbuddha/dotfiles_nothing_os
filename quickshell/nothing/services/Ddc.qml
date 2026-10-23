@@ -440,7 +440,18 @@ Singleton {
 
     function onWritten(j: var, code: int, errText: string): void {
         if (code !== 0) {
-            if (j.tries < root.maxWrites && (root.state[j.bus]?.want ?? -1) < 0) {
+            if ((root.state[j.bus]?.want ?? -1) >= 0) {
+                // Overtaken by a newer slider value while this write was
+                // in flight: that value supersedes j.value regardless of
+                // whether this one succeeded, so failing it here would
+                // report a stale target as "refused" and wipe out the
+                // value the user actually wants now. The next pump()
+                // picks it up through nextWrite() with its own fresh
+                // retry budget instead.
+                root.patch(j.bus, { status: "writing" });
+                return;
+            }
+            if (j.tries < root.maxWrites) {
                 root.enqueue(Object.assign({}, j, { tries: j.tries + 1, delay: 600 }), true);
                 return;
             }
