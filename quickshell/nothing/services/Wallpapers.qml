@@ -47,8 +47,8 @@ Singleton {
     }
 
     // A stored choice (Config.wallpaper, or one screen's entry in
-    // Config.wallpaperScreens) to a URL. Empty and the old Documents path
-    // mean the bundled image; "nothing-dots" the pair; else a path, ~ allowed.
+    // Config.wallpaperScreenMap()) to a URL. Empty and the old Documents
+    // path mean the bundled image; "nothing-dots" the pair; else a path, ~ allowed.
     function resolve(value: string, w: real, h: real): url {
         const v = (value ?? "").trim();
         if (v === root.dotWallpaperKey) {
@@ -78,7 +78,7 @@ Singleton {
 
     // What a screen shows: its own choice if it has one, else the shared one.
     function valueFor(name: string): string {
-        const per = Config.wallpaperScreens ?? {};
+        const per = Config.wallpaperScreenMap();
         return (name && per[name]) ? per[name] : (Config.wallpaper ?? "");
     }
 
@@ -102,11 +102,9 @@ Singleton {
         const v = String(value ?? "").trim();
         if (screen === "") {
             Config.wallpaper = v;
-            Config.wallpaperScreens = ({});
+            Config.clearWallpaperScreens();
         } else {
-            const per = Object.assign({}, Config.wallpaperScreens ?? {});
-            per[screen] = v;
-            Config.wallpaperScreens = per;
+            Config.setWallpaperScreen(screen, v);
         }
         Config.save();
     }
@@ -131,15 +129,15 @@ Singleton {
         }
         const screens = Quickshell.screens.map(s => s.name);
         if (Config.wallpaperEachScreen && screens.length > 1) {
-            const per = {};
             const used = [];
+            let first = "";
             for (const n of screens) {
                 const pick = root.pickAfter(root.valueFor(n), list, used);
-                per[n] = pick;
+                Config.setWallpaperScreen(n, pick);
                 used.push(pick);
+                if (n === screens[0]) first = pick;
             }
-            Config.wallpaper = per[screens[0]];
-            Config.wallpaperScreens = per;
+            Config.wallpaper = first;
             Config.save();
             return;
         }

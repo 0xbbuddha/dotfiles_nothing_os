@@ -26,7 +26,8 @@ Singleton {
     property alias wallpaper: a.wallpaper
     property alias wallpaperFormat: a.wallpaperFormat
     property alias dotWallpaperChar: a.dotWallpaperChar
-    property alias wallpaperScreens: a.wallpaperScreens
+    property alias wallpaperScreenNames: a.wallpaperScreenNames
+    property alias wallpaperScreenValues: a.wallpaperScreenValues
     property alias wallpaperFolder: a.wallpaperFolder
     property alias wallpaperRotate: a.wallpaperRotate
     property alias wallpaperShuffle: a.wallpaperShuffle
@@ -284,6 +285,37 @@ Singleton {
         for (let i = 0; i < v.length; i++)
             out.push(v[i]);
         return out;
+    }
+
+    // wallpaperScreenNames/Values, zipped into the map Wallpapers.qml
+    // actually wants to read. See wallpaperScreenNames's own comment for
+    // why this isn't one JsonAdapter object property.
+    function wallpaperScreenMap(): var {
+        const names = root._list(a.wallpaperScreenNames) ?? [];
+        const values = root._list(a.wallpaperScreenValues) ?? [];
+        const out = {};
+        for (let i = 0; i < names.length; i++)
+            out[names[i]] = values[i];
+        return out;
+    }
+
+    function setWallpaperScreen(name: string, value: string): void {
+        const names = root._list(a.wallpaperScreenNames) ?? [];
+        const values = root._list(a.wallpaperScreenValues) ?? [];
+        const at = names.indexOf(name);
+        if (at >= 0) {
+            values[at] = value;
+        } else {
+            names.push(name);
+            values.push(value);
+        }
+        a.wallpaperScreenNames = names;
+        a.wallpaperScreenValues = values;
+    }
+
+    function clearWallpaperScreens(): void {
+        a.wallpaperScreenNames = [];
+        a.wallpaperScreenValues = [];
     }
 
     function glyphEventsOf(surface: string): var {
@@ -812,7 +844,8 @@ Singleton {
         a.wallpaper = "";
         a.wallpaperFormat = "auto";
         a.dotWallpaperChar = "tamaki";
-        a.wallpaperScreens = ({});
+        a.wallpaperScreenNames = [];
+        a.wallpaperScreenValues = [];
         a.wallpaperFolder = "";
         a.wallpaperRotate = 0;
         a.wallpaperShuffle = true;
@@ -1095,9 +1128,16 @@ Singleton {
             // hypr/wallpapers/ as nothing-dots-<char>-16-9.png /
             // -16-10.png. Only consulted when the pair is the chosen image.
             property string dotWallpaperChar: "tamaki"
-            // One screen's own picture, by connector ({ "DP-1": "/path" });
-            // a screen not listed shows `wallpaper`. Same values as `wallpaper`.
-            property var    wallpaperScreens: ({})
+            // One screen's own picture, by connector - two parallel lists
+            // (names[i] -> values[i]), not one { "DP-1": "/path" } map:
+            // same rule as the bar's islands and the glyph surfaces, a var
+            // property with an empty-object default never loads back from
+            // the file, while one with an array default does. A screen not
+            // listed shows `wallpaper`. Same values as `wallpaper`. Read
+            // and written through Config.wallpaperScreenMap/setWallpaperScreen,
+            // never indexed directly - see _list.
+            property var    wallpaperScreenNames: []
+            property var    wallpaperScreenValues: []
             // Where the picker and the slideshow look first; "" = ~/Pictures/Wallpapers.
             property string wallpaperFolder: ""
             // Minutes between two pictures from that folder, 0 = never.
