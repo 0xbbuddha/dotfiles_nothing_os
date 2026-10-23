@@ -59,6 +59,10 @@ Singleton {
         s += root.listener(Config.idleDim, "brightnessctl -s set 10%",
                            "brightnessctl -r");
         s += root.listener(Config.idleLock, "loginctl lock-session", "");
+        // The dot clock: through the shell's IPC, quoted for the path.
+        s += root.listener(Config.idleSaver,
+                           "qs -p '" + Quickshell.shellDir + "' ipc call screensaver show",
+                           "qs -p '" + Quickshell.shellDir + "' ipc call screensaver hide");
         s += root.listener(Config.idleOff,
                            "hyprctl dispatch 'hl.dsp.dpms({ action = \"disable\" })'",
                            "hyprctl dispatch 'hl.dsp.dpms({ action = \"enable\" })'");

@@ -118,6 +118,14 @@ Settings > Sound moves an app between outputs with `pactl
 move-sink-input` (streams matched by PipeWire object.id); WirePlumber
 remembers it. ConfigBackup makes one `-auto` copy a day and keeps seven.
 
+**Screensaver and phone.** `idleSaver` adds a hypridle listener that
+calls `qs ipc call screensaver show/hide`; modules/Screensaver.qml is an
+overlay (under the session lock) with the Ndot clock drifting once a
+minute. services/Phone.qml uses kdeconnect-cli: `--refresh` at login
+starts the daemon through D-Bus (its XDG autostart entry is not run by
+Hyprland), devices and battery (busctl) are read only while the control
+centre or settings are open; clipboard sync is KDE Connect's own plugin.
+
 **Idle.** hypridle reads one config file when it starts and has no
 runtime interface, so `services/Idle.qml` generates
 `~/.config/nothing/hypridle.conf` from the four timings in Settings and

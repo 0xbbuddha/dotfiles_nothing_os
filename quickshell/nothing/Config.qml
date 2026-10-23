@@ -75,6 +75,8 @@ Singleton {
     property alias ccStats: a.ccStats
     property alias ccCaffeine: a.ccCaffeine
     property alias ccDrives: a.ccDrives
+    property alias ccPhone: a.ccPhone
+    property alias phoneStart: a.phoneStart
     property alias drivesAutomount: a.drivesAutomount
     property alias drivesNotify: a.drivesNotify
 
@@ -214,6 +216,7 @@ Singleton {
     property alias idleDim: a.idleDim
     property alias idleLock: a.idleLock
     property alias idleOff: a.idleOff
+    property alias idleSaver: a.idleSaver
     property alias idleSuspend: a.idleSuspend
 
     // ── Glyph Matrix ──────────────────────────────────────────────────
@@ -750,6 +753,7 @@ Singleton {
         case "ccStats":    return a.ccStats;
         case "ccCaffeine": return a.ccCaffeine;
         case "ccDrives":   return a.ccDrives;
+        case "ccPhone":    return a.ccPhone;
         default:           return false;
         }
     }
@@ -762,6 +766,7 @@ Singleton {
         case "ccStats":    a.ccStats = on; break;
         case "ccCaffeine": a.ccCaffeine = on; break;
         case "ccDrives":   a.ccDrives = on; break;
+        case "ccPhone":    a.ccPhone = on; break;
         default:           return;
         }
         root.save();
@@ -838,6 +843,8 @@ Singleton {
         a.ccStats = true;
         a.ccCaffeine = true;
         a.ccDrives = true;
+        a.ccPhone = true;
+        a.phoneStart = true;
         a.drivesAutomount = true;
         a.drivesNotify = true;
 
@@ -896,6 +903,7 @@ Singleton {
         a.lockBackground = "black";
 
         a.idleDim = 120;
+        a.idleSaver = 0;
         a.idleLock = 300;
         a.idleOff = 600;
         a.idleSuspend = 1200;
@@ -1135,6 +1143,8 @@ Singleton {
             property int idleDim: 120
             property int idleLock: 300
             property int idleOff: 600
+            // Seconds before the dot clock screensaver; 0 = never (default).
+            property int idleSaver: 0
             property int idleSuspend: 1200
             property bool showTray: true
             property bool showBattery: true
@@ -1174,6 +1184,10 @@ Singleton {
             property bool ccCaffeine: true
             // Removable drives: the section only shows with one plugged in.
             property bool ccDrives: true
+            // KDE Connect: the phone section shows only with one connected;
+            // the daemon is started at login only if kdeconnect is installed.
+            property bool ccPhone: true
+            property bool phoneStart: true
             property bool drivesAutomount: true
             property bool drivesNotify: true
 

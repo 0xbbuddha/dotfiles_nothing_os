@@ -1,0 +1,12 @@
+const fs=require("fs"),assert=require("assert");
+const src=fs.readFileSync(process.argv[2],"utf8");
+const listBody=src.match(/--id-name-only"\]\n        stdout: StdioCollector \{\n            onStreamFinished: \{\n([\s\S]*?)\n            \}\n        \}/)[1];
+const batBody=src.match(/property string target: ""\n        stdout: StdioCollector \{\n            onStreamFinished: \{\n([\s\S]*?)\n            \}\n        \}/)[1];
+const root={devices:[],readBattery(id){this.asked=id;}};
+new Function("root","text",listBody)(root,"a1b2_c3d4 Pixel 8\n\nbad line!\n");
+assert.deepStrictEqual(root.devices.map(d=>[d.id,d.name]),[["a1b2_c3d4","Pixel 8"]]); assert.strictEqual(root.asked,"a1b2_c3d4");
+new Function("root","battery","text",batBody)(root,{target:"a1b2_c3d4"},"i 76\nb true\n");
+assert.strictEqual(root.devices[0].charge,76); assert.strictEqual(root.devices[0].charging,true);
+new Function("root","battery","text",batBody)(root,{target:"a1b2_c3d4"},"");
+assert.strictEqual(root.devices[0].charge,-1,"no battery plugin -> hidden");
+console.log("phone: device list and battery parsed; missing battery handled");

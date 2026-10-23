@@ -315,6 +315,35 @@ Item {
                 }
             }
 
+            // ── Phone ─────────────────────────────────────────────────
+            // Only with a phone connected through KDE Connect.
+            NCard {
+                Layout.fillWidth: true
+                visible: Config.ccPhone && Phone.first !== null
+                implicitHeight: Theme.px(36)
+                color: Theme.c.surface2
+                radius: Theme.r.chip
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: Theme.px(10)
+                    anchors.rightMargin: Theme.px(6)
+                    spacing: Theme.px(7)
+
+                    NIcon { text: "󰄜"; size: Theme.z.icon; color: Theme.c.onDim }
+                    NText {
+                        Layout.fillWidth: true
+                        elide: Text.ElideRight
+                        text: Phone.status !== "" ? Phone.status
+                            : (Phone.first?.name ?? "")
+                              + ((Phone.first?.charge ?? -1) >= 0
+                                 ? "  ·  " + Phone.first.charge + " %" + (Phone.first.charging ? " ⚡" : "") : "")
+                    }
+                    NPillButton { text: "Clipboard"; onActivated: Phone.sendClipboard(Phone.first?.id ?? "") }
+                    NPillButton { text: "Ring"; onActivated: Phone.ring(Phone.first?.id ?? "") }
+                }
+            }
+
             // ── Drives ────────────────────────────────────────────────
             // Only while something removable is plugged in.
             NCard {

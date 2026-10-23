@@ -332,4 +332,53 @@ SettingsPage {
             color: Theme.c.onDim
         }
     }
+
+    // ── Phone ─────────────────────────────────────────────────────────
+    // KDE Connect: pairing happens in its own app; this shows the phone,
+    // its battery, and starts the daemon at login (services/Phone).
+    SettingsSection {
+        title: "Phone"
+
+        SettingRow {
+            key: "phone"
+            label: Phone.first ? Phone.first.name
+                : (Phone.available ? "No phone connected" : "KDE Connect is not installed")
+            hint: !Phone.probed ? ""
+                : (!Phone.available
+                   ? "Install kdeconnect, and the KDE Connect app on the phone; open ports 1714-1764 if a firewall is on"
+                   : (Phone.status !== "" ? Phone.status
+                      : (Phone.first
+                         ? (Phone.first.charge >= 0 ? "Battery " + Phone.first.charge + " %"
+                            + (Phone.first.charging ? ", charging" : "") + ". " : "")
+                           + "Copy on one, paste on the other (Clipboard plugin on both sides)"
+                         : "Pair it from the KDE Connect app, on the same network")))
+            NPillButton {
+                visible: Phone.available
+                text: "KDE Connect"
+                onActivated: Phone.openApp()
+            }
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            visible: Phone.first !== null
+            spacing: Theme.px(6)
+            NPillButton { text: "Send clipboard"; onActivated: Phone.sendClipboard(Phone.first.id) }
+            NPillButton { text: "Ring"; onActivated: Phone.ring(Phone.first.id) }
+            NPillButton { text: "Ping"; onActivated: Phone.ping(Phone.first.id) }
+            Item { Layout.fillWidth: true }
+            CircleButton { icon: "󰑐"; size: Theme.px(22); onActivated: Phone.refresh() }
+        }
+
+        SettingRow {
+            key: "phoneStart"
+            visible: Phone.available
+            label: "Start KDE Connect at login"
+            hint: "Needed for the clipboard to follow you; Hyprland does not run its autostart entry"
+            DotSwitch {
+                checked: Config.phoneStart
+                onToggled: (v) => { Config.phoneStart = v; Config.save(); }
+            }
+        }
+    }
 }

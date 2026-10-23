@@ -257,6 +257,27 @@ SettingsPage {
         }
 
         SettingRow {
+            key: "idleSaver"
+            label: "Screensaver"
+            hint: Config.idleSaver <= 0 ? "The Nothing dot clock, off"
+                : (Config.idleLock > 0 && Config.idleLock <= Config.idleSaver
+                   ? "Set after the lock, so it never shows: pick a shorter time or a later lock"
+                   : "The Nothing dot clock on black, until you move")
+        }
+
+        DotPicker {
+            options: [
+                { label: "1 min",  value: 60 },
+                { label: "3 min",  value: 180 },
+                { label: "5 min",  value: 300 },
+                { label: "10 min", value: 600 },
+                { label: "Never",  value: 0 }
+            ]
+            current: Config.idleSaver
+            onPicked: (v) => { Config.idleSaver = v; Config.save(); }
+        }
+
+        SettingRow {
             key: "idleOff"
             label: "Screens off"
             hint: Config.idleOff > 0

@@ -46,6 +46,8 @@ ShellRoot {
         // `command -v ddcutil` and nothing more.
         void Ddc.available;
         void ConfigBackup.list;
+        // Starts KDE Connect's daemon if installed and wanted (Phone).
+        void Phone.available;
     }
 
     // ── Per screen ────────────────────────────────────────────────────
@@ -202,6 +204,12 @@ ShellRoot {
     LazyLoader {
         active: cheatsheetLatch.touched
         Variants { model: Quickshell.screens; Cheatsheet {} }
+    }
+
+    OpenLatch { id: saverLatch; open: GlobalState.screensaverOn }
+    LazyLoader {
+        active: saverLatch.touched
+        Variants { model: Quickshell.screens; Screensaver {} }
     }
 
     OpenLatch { id: displaysLatch; open: GlobalState.displaysOpen }
@@ -459,6 +467,13 @@ ShellRoot {
         function on(): void { Idle.apply(true); }
         function off(): void { Idle.apply(false); }
         function status(): bool { return Idle.inhibited; }
+    }
+
+    // hypridle's screensaver listener; "show" by hand to try it.
+    IpcHandler {
+        target: "screensaver"
+        function show(): void { GlobalState.screensaverOn = true; }
+        function hide(): void { GlobalState.screensaverOn = false; }
     }
 
     IpcHandler {
