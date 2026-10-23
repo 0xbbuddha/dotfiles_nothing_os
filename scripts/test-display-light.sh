@@ -102,8 +102,15 @@ fi
 
 echo "== shell IPC and keybinds"
 if have qs && [[ -d "$SHELL_DIR" ]]; then
-    s=$(qs -p "$SHELL_DIR" ipc call nightlight status 2>&1)
-    if [[ $? -eq 0 && "$s" != *"not found"* ]]; then ok "ipc nightlight status: ${s:-<empty>}"; else bad "ipc nightlight: $s (not deployed yet?)"; fi
+    # Right after an update the shell is still reloading; give it time.
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+        s=$(qs -p "$SHELL_DIR" ipc call nightlight status 2>&1)
+        [[ "$s" == *"Not ready"* ]] || break
+        sleep 1
+    done
+    if [[ "$s" == *"Not ready"* ]]; then bad "the shell is still loading after 10 s: see 'qs log -p $SHELL_DIR'"
+    elif [[ "$s" == *"not found"* ]]; then bad "ipc nightlight: $s (the shell runs the old version: a QML error? see 'qs log -p $SHELL_DIR')"
+    else ok "ipc nightlight status: ${s:-<empty>}"; fi
     qs -p "$SHELL_DIR" ipc show 2>/dev/null | grep -q 'function light' && ok "ipc displays.light present" || bad "displays.light missing (deployed?)"
 fi
 if have hyprctl; then
