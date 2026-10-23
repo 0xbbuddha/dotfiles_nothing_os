@@ -14,6 +14,13 @@ Item {
     readonly property int count: Math.max(1, Config.workspaceCount)
     readonly property int focusedId: Hyprland.focusedWorkspace?.id ?? 1
 
+    // The strip shows `count` consecutive numbers starting here - 1 as
+    // long as the focused workspace fits in that range, otherwise just
+    // enough to keep it as the last one shown. Going to 11 with a count
+    // of 10 slides the window to 2-11 rather than losing the focused
+    // workspace off the end of a strip that never grew past it.
+    readonly property int startId: Math.max(1, root.focusedId - root.count + 1)
+
     // ── Special workspace ─────────────────────────────────────────────
     // Hyprland does not put it in activeworkspace: that stays on the normal
     // workspace underneath. State lives on the monitor, and since
@@ -73,18 +80,40 @@ Item {
     implicitHeight: Theme.px(22)
 
     // Digits according to the chosen style.
+    // 1-99, the same way Japanese actually counts (十一, 二十, 二十一,
+    // ...), not just the first 10 digits with everything past that
+    // falling back to plain Arabic numerals - which is what a
+    // hardcoded 10-entry array did the moment the strip could slide
+    // past workspace 10.
+    function kanjiNumber(n: int): string {
+        const digits = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九"];
+        if (n < 1 || n >= 100)
+            return String(n);
+        if (n < 10)
+            return digits[n];
+        const tens = Math.floor(n / 10), ones = n % 10;
+        return (tens === 1 ? "" : digits[tens]) + "十" + (ones === 0 ? "" : digits[ones]);
+    }
+
+    // Classic subtractive-notation Roman numerals, for any n - the same
+    // reason as kanjiNumber above: a 10-entry array was never going to
+    // cover workspace 11 once the strip could actually reach it.
+    function romanNumeral(n: int): string {
+        if (n < 1)
+            return String(n);
+        const values = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
+        const symbols = ["M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"];
+        let out = "", rest = n;
+        for (let i = 0; i < values.length && rest > 0; i++) {
+            while (rest >= values[i]) { out += symbols[i]; rest -= values[i]; }
+        }
+        return out;
+    }
+
     function glyph(n: int): string {
         switch (Config.workspaceStyle) {
-        case "japanese": {
-            const kanji = ["一", "二", "三", "四", "五",
-                           "六", "七", "八", "九", "十"];
-            return kanji[n - 1] ?? String(n);
-        }
-        case "roman": {
-            const romans = ["I", "II", "III", "IV", "V",
-                            "VI", "VII", "VIII", "IX", "X"];
-            return romans[n - 1] ?? String(n);
-        }
+        case "japanese": return root.kanjiNumber(n);
+        case "roman":    return root.romanNumeral(n);
         default:
             return String(n);
         }
@@ -151,7 +180,7 @@ Item {
         if (x < 0)
             return -1;
         for (let i = 0; i < root.count; i++) {
-            const w = root.cellWidth(i + 1);
+            const w = root.cellWidth(root.startId + i);
             if (x < w + root.cellGap)
                 return i;
             x -= w + root.cellGap;
@@ -209,7 +238,7 @@ Item {
             Item {
                 id: cell
                 required property int index
-                readonly property int wsId: index + 1
+                readonly property int wsId: root.startId + index
                 readonly property bool active: root.focusedId === wsId
                 readonly property var clients: (root.windowsOn[wsId] ?? []).slice(0, 3)
                 readonly property bool occupied: clients.length > 0
@@ -306,12 +335,13 @@ Item {
             if (i < 0) return;
             // Hyprland >= 0.56 evaluates dispatches as Lua: the classic
             // syntax ("workspace 3") fails to parse and does nothing.
+            const wsId = root.startId + i;
             if (m.button === Qt.RightButton)
-                Hyprland.dispatch(`hl.dsp.window.move({ workspace = ${i + 1} })`);
+                Hyprland.dispatch(`hl.dsp.window.move({ workspace = ${wsId} })`);
             else
                 // gotoWorkspaceSafe first closes the special workspace, otherwise
                 // it would stay shown on top and nothing would appear to move.
-                Hyprland.dispatch(`gotoWorkspaceSafe(${i + 1})`);
+                Hyprland.dispatch(`gotoWorkspaceSafe(${wsId})`);
         }
     }
 }
