@@ -59,6 +59,8 @@ FILES=(
     "quickshell/nothing/modules/SettingsPageProcesses.qml:$QS/modules/SettingsPageProcesses.qml"
     "quickshell/nothing/modules/SettingsPageDock.qml:$QS/modules/SettingsPageDock.qml"
     "quickshell/nothing/modules/ControlCenter.qml:$QS/modules/ControlCenter.qml"
+    "quickshell/nothing/services/AudioRoutes.qml:$QS/services/AudioRoutes.qml"
+    "quickshell/nothing/components/AppMixer.qml:$QS/components/AppMixer.qml"
     "scripts/mime-defaults.py:$CONF/scripts/mime-defaults.py"
     "scripts/open-default.sh:$CONF/scripts/open-default.sh"
     "scripts/procs.py:$CONF/scripts/procs.py"

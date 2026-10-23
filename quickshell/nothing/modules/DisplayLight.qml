@@ -98,6 +98,70 @@ Item {
                 }
             }
 
+            // Day and evening levels, switched at the night-light hours.
+            ColumnLayout {
+                Layout.fillWidth: true
+                visible: Ddc.available
+                spacing: Theme.px(4)
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Theme.px(6)
+                    NText {
+                        Layout.fillWidth: true
+                        text: "Dimmer in the evening"
+                        color: Theme.c.onDim
+                        font.pixelSize: Theme.f.small
+                    }
+                    NLabel { text: Config.nightFrom + " – " + Config.nightTo }
+                    NSwitch {
+                        checked: Config.ddcEvening
+                        onToggled: (v) => {
+                            Config.ddcEvening = v;
+                            Config.save();
+                            Ddc.followSchedule();
+                        }
+                    }
+                }
+
+                Repeater {
+                    model: Config.ddcEvening
+                        ? [ { key: "day", label: "Day" }, { key: "evening", label: "Evening" } ] : []
+                    RowLayout {
+                        id: lvl
+                        required property var modelData
+                        readonly property int level: lvl.modelData.key === "day"
+                            ? Config.ddcDayLevel : Config.ddcEveningLevel
+                        Layout.fillWidth: true
+                        NLabel { text: lvl.modelData.label; Layout.preferredWidth: Theme.px(60) }
+                        NSlider {
+                            Layout.fillWidth: true
+                            value: lvl.level / 100
+                            onMoved: (v) => {
+                                const n = Math.round(v * 20) * 5;
+                                if (lvl.modelData.key === "day") Config.ddcDayLevel = n;
+                                else Config.ddcEveningLevel = n;
+                                saveLevels.restart();
+                            }
+                        }
+                        NText {
+                            text: lvl.level + "%"
+                            font.family: Theme.f.mono
+                            font.pixelSize: Theme.f.small
+                            Layout.preferredWidth: Theme.px(36)
+                        }
+                    }
+                }
+
+                Timer {
+                    id: saveLevels
+                    interval: 600
+                    // The level for the period you are in applies at once,
+                    // so moving it shows what it does.
+                    onTriggered: { Config.save(); Ddc.followSchedule(); }
+                }
+            }
+
             NText {
                 Layout.fillWidth: true
                 visible: Ddc.probed && !Ddc.available
@@ -212,6 +276,101 @@ Item {
                                     }
                                 }
 
+                                // Contrast, colour preset and picture mode,
+                                // folded away: read from the monitor only
+                                // when opened (a capabilities read takes a
+                                // second or two of DDC traffic).
+                                property bool picture: false
+                                readonly property var ex: Ddc.extras[card.modelData.bus] ?? null
+
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    visible: cardBody.picture
+                                    spacing: Theme.px(6)
+
+                                    NText {
+                                        visible: cardBody.ex?.loading ?? true
+                                        text: "Reading what this monitor offers…"
+                                        font.pixelSize: Theme.f.tiny
+                                        color: Theme.c.onDim
+                                    }
+
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        visible: (cardBody.ex?.contrast ?? null) !== null
+                                        NLabel { text: "Contrast"; Layout.preferredWidth: Theme.px(70) }
+                                        NSlider {
+                                            id: contrast
+                                            Layout.fillWidth: true
+                                            value: (cardBody.ex?.contrast?.cur ?? 0) / (cardBody.ex?.contrast?.max ?? 100)
+                                            property real pending: -1
+                                            onMoved: (v) => { contrast.pending = v; contrastLater.restart(); }
+                                            Timer {
+                                                id: contrastLater
+                                                interval: 220
+                                                onTriggered: Ddc.setExtra(card.modelData.bus, "contrast", contrast.pending)
+                                            }
+                                        }
+                                        NText {
+                                            text: Math.max(0, cardBody.ex?.contrast?.cur ?? 0)
+                                            font.family: Theme.f.mono
+                                            font.pixelSize: Theme.f.small
+                                        }
+                                    }
+
+                                    Repeater {
+                                        model: [ { key: "preset", label: "Colour" }, { key: "mode", label: "Mode" } ]
+
+                                        RowLayout {
+                                            id: pick
+                                            required property var modelData
+                                            readonly property var f: cardBody.ex?.[modelData.key] ?? null
+                                            Layout.fillWidth: true
+                                            visible: pick.f !== null && pick.f.values.length > 0
+                                            NLabel { text: pick.modelData.label; Layout.preferredWidth: Theme.px(70) }
+                                            Flow {
+                                                Layout.fillWidth: true
+                                                spacing: Theme.px(4)
+                                                Repeater {
+                                                    model: pick.f?.values ?? []
+                                                    Rectangle {
+                                                        id: chip
+                                                        required property var modelData
+                                                        readonly property bool on: chip.modelData.code === (pick.f?.cur ?? "")
+                                                        implicitWidth: chipText.implicitWidth + Theme.px(16)
+                                                        implicitHeight: Theme.px(22)
+                                                        radius: Theme.r.pill
+                                                        color: chip.on ? Theme.c.on : Theme.c.surface3
+                                                        NText {
+                                                            id: chipText
+                                                            anchors.centerIn: parent
+                                                            text: chip.modelData.name
+                                                            font.pixelSize: Theme.f.tiny
+                                                            color: chip.on ? Theme.c.surface : Theme.c.onDim
+                                                        }
+                                                        MouseArea {
+                                                            anchors.fill: parent
+                                                            cursorShape: Qt.PointingHandCursor
+                                                            onClicked: Ddc.setExtra(card.modelData.bus, pick.modelData.key, chip.modelData.code)
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    NText {
+                                        Layout.fillWidth: true
+                                        visible: (cardBody.ex?.error ?? "") !== "" || ((cardBody.ex?.loaded ?? false)
+                                            && !cardBody.ex.contrast && !cardBody.ex.preset && !cardBody.ex.mode)
+                                        wrapMode: Text.WordWrap
+                                        font.pixelSize: Theme.f.tiny
+                                        color: (cardBody.ex?.error ?? "") !== "" ? Theme.c.red : Theme.c.onDim
+                                        text: (cardBody.ex?.error ?? "") !== "" ? cardBody.ex.error
+                                            : "This monitor offers no contrast or preset over DDC/CI"
+                                    }
+                                }
+
                                 RowLayout {
                                     Layout.fillWidth: true
                                     spacing: Theme.px(8)
@@ -236,6 +395,16 @@ Item {
                                             case "ok": return "Set on the monitor itself";
                                             default: return "";
                                             }
+                                        }
+                                    }
+
+                                    NPillButton {
+                                        visible: card.modelData.ok && card.st !== null && card.st.cur >= 0
+                                        text: cardBody.picture ? "Less" : "Picture"
+                                        onActivated: {
+                                            cardBody.picture = !cardBody.picture;
+                                            if (cardBody.picture)
+                                                Ddc.loadExtras(card.modelData.bus);
                                         }
                                     }
 

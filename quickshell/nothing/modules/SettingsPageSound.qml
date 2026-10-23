@@ -104,11 +104,13 @@ SettingsPage {
         SettingRow {
             key: "soundApps"
             label: "Per-app volume"
-            hint: Audio.streams.length > 0 ? "" : "Nothing is playing right now"
+            hint: Audio.streams.length === 0 ? "Nothing is playing right now"
+                : (Audio.sinks.length > 1 ? "Click an app's output to send it elsewhere; it is remembered" : "")
         }
 
         AppMixer {
             Layout.fillWidth: true
+            routes: true
         }
     }
 }

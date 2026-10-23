@@ -24,7 +24,49 @@ Singleton {
     property string status: ""
     property bool busy: false
 
-    readonly property var nameRe: /^config-\d{8}-\d{6}(-before-restore)?\.json$/
+    readonly property var nameRe: /^config-\d{8}-\d{6}(-before-restore|-auto)?\.json$/
+
+    // ── Daily copy ────────────────────────────────────────────────────
+    // One automatic backup a day (Config.autoBackup, on by default), the
+    // first time the shell runs that day and then every six hours if it
+    // stays up past midnight. Only the seven newest automatic ones are
+    // kept; manual and before-restore copies are never deleted.
+    readonly property int keepAuto: 7
+    property string triedOn: ""
+
+    function autoCheck(): void {
+        if (!Config.autoBackup || root.busy)
+            return;
+        const autos = root.list.filter(n => n.endsWith("-auto.json"));   // newest first
+        const today = "config-" + Qt.formatDateTime(new Date(), "yyyyMMdd") + "-";
+        if (!autos.some(n => n.startsWith(today))) {
+            // Once a day at most: a copy that fails (disk full) is not
+            // retried on every refresh.
+            if (root.triedOn === today)
+                return;
+            root.triedOn = today;
+            root.backup(true);
+            return;
+        }
+        const extra = autos.slice(root.keepAuto).filter(n => root.nameRe.test(n));
+        if (extra.length > 0) {
+            pruner.command = ["rm", "-f", "--"].concat(extra.map(n => root.dir + "/" + n));
+            pruner.running = true;
+        }
+    }
+
+    NProcess {
+        id: pruner
+        label: "settings backup prune"
+        onExited: root.refresh()
+    }
+
+    Timer {
+        interval: 6 * 3600 * 1000
+        repeat: true
+        running: Config.autoBackup
+        onTriggered: root.refresh()
+    }
 
     function stamp(): string {
         return Qt.formatDateTime(new Date(), "yyyyMMdd-HHmmss");
@@ -45,13 +87,15 @@ Singleton {
             onStreamFinished: {
                 root.list = text.split("\n").map(s => s.trim())
                     .filter(s => root.nameRe.test(s)).sort().reverse();
+                root.autoCheck();
             }
         }
     }
 
-    function backup(): void {
+    function backup(auto: bool): void {
         if (root.busy)
             return;
+        backupLater.auto = auto === true;
         Config.save();
         root.busy = true;
         // A pending save (80 ms debounce) reaches the disk first.
@@ -60,9 +104,10 @@ Singleton {
 
     Timer {
         id: backupLater
+        property bool auto: false
         interval: 250
         onTriggered: {
-            const name = "config-" + root.stamp() + ".json";
+            const name = "config-" + root.stamp() + (backupLater.auto ? "-auto" : "") + ".json";
             runner.label = "settings backup";
             runner.done = "Saved as " + name;
             runner.command = ["sh", "-c",

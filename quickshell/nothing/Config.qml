@@ -116,8 +116,12 @@ Singleton {
     property alias nightOn: a.nightOn
     property alias nightRestore: a.nightRestore
     property alias ddcLinked: a.ddcLinked
+    property alias ddcEvening: a.ddcEvening
+    property alias ddcDayLevel: a.ddcDayLevel
+    property alias ddcEveningLevel: a.ddcEveningLevel
     property alias displayGrace: a.displayGrace
     property alias autostartApps: a.autostartApps
+    property alias autoBackup: a.autoBackup
     property alias autostartDelay: a.autostartDelay
 
     // ── Input ─────────────────────────────────────────────────────────
@@ -869,9 +873,13 @@ Singleton {
         a.nightOn = false;
         a.nightRestore = false;
         a.ddcLinked = false;
+        a.ddcEvening = false;
+        a.ddcDayLevel = 80;
+        a.ddcEveningLevel = 35;
         a.barCaffeineAdded = true;
         a.barDrivesAdded = true;
         a.autostartApps = [];
+        a.autoBackup = true;
         a.autostartDelay = 3;
         a.displayGrace = 15;
         a.inputSensitivity = 0;
@@ -1208,12 +1216,18 @@ Singleton {
             property bool   nightRestore: false
             // SUPER+P > Light: one slider moves every external monitor.
             property bool   ddcLinked: false
+            // Monitor brightness by time of day (night-light hours).
+            property bool   ddcEvening: false
+            property int    ddcDayLevel: 80
+            property int    ddcEveningLevel: 35
             // The caffeine bar item was added to an existing bar once.
             property bool   barCaffeineAdded: false
             property bool   barDrivesAdded: false
             // Settings > System > Startup: .desktop ids started once per
             // Hyprland session, a few seconds after login.
             property var    autostartApps: []
+            // One copy of config.json a day, seven kept (ConfigBackup).
+            property bool   autoBackup: true
             property int    autostartDelay: 3
             // Seconds a display change waits for Keep before undoing itself.
             property int    displayGrace: 15

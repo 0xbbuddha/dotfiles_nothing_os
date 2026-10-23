@@ -42,6 +42,10 @@ ShellRoot {
         void NightLight.available;
         void Autostart.ran;
         void Drives.available;
+        // Only acts when "Dimmer in the evening" is on; otherwise a
+        // `command -v ddcutil` and nothing more.
+        void Ddc.available;
+        void ConfigBackup.list;
     }
 
     // ── Per screen ────────────────────────────────────────────────────

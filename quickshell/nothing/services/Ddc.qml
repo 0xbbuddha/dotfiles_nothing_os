@@ -256,6 +256,13 @@ Singleton {
 
         if (j.kind === "detect") {
             worker.command = ["ddcutil", "detect"];
+        } else if (j.kind === "caps") {
+            worker.command = ["ddcutil", "--bus", String(j.bus), "capabilities"];
+        } else if (j.kind === "fread") {
+            worker.command = ["ddcutil", "--bus", String(j.bus), "getvcp", j.code, "--brief"];
+        } else if (j.kind === "fwrite") {
+            worker.command = ["ddcutil", "--bus", String(j.bus), "--noverify",
+                              "setvcp", j.code, String(j.value)];
         } else if (j.kind === "read") {
             root.patch(j.bus, { status: j.verify !== undefined ? "verifying" : "reading" });
             worker.command = ["ddcutil", "--bus", String(j.bus), "getvcp", "10", "--brief"];
@@ -300,6 +307,8 @@ Singleton {
                 root.fault = "ddcutil detect did not answer within "
                            + Math.round(root.timeoutMs / 1000) + " s";
                 console.warn("ddc: " + root.fault);
+            } else if (j.kind === "caps" || j.kind === "fread" || j.kind === "fwrite") {
+                root.patchExtra(j.bus, { loading: false, error: "ddcutil timed out" });
             } else {
                 root.fail(j.bus, "ddcutil timed out talking to this screen", true);
             }
@@ -326,6 +335,12 @@ Singleton {
 
         if (j.kind === "detect")
             root.onDetected(code, stdoutText, stderrText);
+        else if (j.kind === "caps")
+            root.onCaps(j, code, stdoutText, stderrText);
+        else if (j.kind === "fread")
+            root.onFeatureRead(j, code, stdoutText, stderrText);
+        else if (j.kind === "fwrite")
+            root.onFeatureWritten(j, code, stderrText);
         else if (j.kind === "read")
             root.onRead(j, code, stdoutText, stderrText);
         else
@@ -384,6 +399,7 @@ Singleton {
                 return;
             }
             root.fail(j.bus, root.reason(errText, "Could not read brightness"), true);
+            root.applyPending();
             return;
         }
         const st = root.state[j.bus] ?? {};
@@ -393,6 +409,7 @@ Singleton {
             // A read after a refused write reports the real value and
             // leaves the refusal on screen.
             root.patch(j.bus, st.blocked ? { status: "error" } : { status: "ok", error: "" });
+            root.applyPending();
             return;
         }
         // Moved again since: that newer value gets written and checked,
@@ -434,6 +451,156 @@ Singleton {
                        readNo: 1, delay: root.settleFirst }, true);
     }
 
+    // ── Contrast, colour preset, picture mode ─────────────────────────
+    //
+    // Beyond brightness, three MCCS features worth a click: 0x12 contrast
+    // (a range), 0x14 colour preset (sRGB, 6500 K, user...) and 0xDC
+    // display mode (standard, movie, game...). Which ones a monitor has,
+    // and which values the two lists take, come from its own capabilities
+    // string, read once when its card is opened: offering a preset the
+    // monitor does not list is offering a no-op. Written with --noverify
+    // and read back once; a monitor that keeps its old value says so, and
+    // brightness is not affected either way.
+    //
+    // bus -> { loading, loaded, error, contrast: { cur, max },
+    //          preset: { cur, values: [{ code, name }] }, mode: {...} }
+    property var extras: ({})
+
+    readonly property var extraCodes: ({ "12": "contrast", "14": "preset", "DC": "mode" })
+
+    function patchExtra(bus: int, fields: var): void {
+        const next = Object.assign({}, root.extras);
+        next[bus] = Object.assign({ loading: false, loaded: false, error: "",
+                                    contrast: null, preset: null, mode: null },
+                                  next[bus] ?? {}, fields);
+        root.extras = next;
+    }
+
+    function loadExtras(bus: int): void {
+        const e = root.extras[bus];
+        if (e && (e.loading || e.loaded))
+            return;
+        root.patchExtra(bus, { loading: true, error: "" });
+        root.enqueue({ kind: "caps", bus: bus }, false);
+    }
+
+    // `ddcutil capabilities`, human form:
+    //    Feature: 14 (Select color preset)
+    //       Values:
+    //          05: 6500 K
+    // or, for a feature ddcutil cannot name, "Values: 05 08 0b (...)".
+    function parseCaps(text: string): var {
+        const out = {};
+        let cur = "";
+        for (const raw of String(text).split("\n")) {
+            let m;
+            if ((m = raw.match(/^\s*Feature:\s*([0-9A-Fa-f]{2})\b/))) {
+                cur = m[1].toUpperCase();
+                out[cur] = [];
+                continue;
+            }
+            if (cur === "")
+                continue;
+            if ((m = raw.match(/^\s*Values:\s*((?:[0-9A-Fa-f]{2}\s*)+)/))) {
+                for (const v of m[1].trim().split(/\s+/))
+                    out[cur].push({ code: v.toLowerCase(), name: "0x" + v.toLowerCase() });
+                continue;
+            }
+            if ((m = raw.match(/^\s{6,}([0-9A-Fa-f]{2}):\s*(.+)$/)))
+                out[cur].push({ code: m[1].toLowerCase(), name: m[2].trim() });
+        }
+        return out;
+    }
+
+    // MCCS 2.2's own names, for monitors whose capabilities list only codes.
+    readonly property var standardNames: ({
+        "14": { "01": "sRGB", "02": "Native", "03": "4000 K", "04": "5000 K", "05": "6500 K",
+                "06": "7500 K", "07": "8200 K", "08": "9300 K", "09": "10000 K", "0a": "11500 K",
+                "0b": "User 1", "0c": "User 2", "0d": "User 3" },
+        "DC": { "00": "Standard", "01": "Productivity", "02": "Mixed", "03": "Movie",
+                "04": "User", "05": "Games", "06": "Sports", "07": "Professional",
+                "08": "Standard (low power)", "09": "Low power", "0a": "Demo", "f0": "Dynamic contrast" }
+    })
+
+    function onCaps(j: var, code: int, text: string, errText: string): void {
+        if (code !== 0) {
+            root.patchExtra(j.bus, { loading: false, error: root.reason(errText, "Could not read its capabilities") });
+            return;
+        }
+        const caps = root.parseCaps(text);
+        const fields = { loading: false, loaded: true };
+        for (const c in root.extraCodes) {
+            if (caps[c] === undefined)
+                continue;
+            const key = root.extraCodes[c];
+            const names = root.standardNames[c] ?? {};
+            const values = (caps[c] ?? []).map(v => v.name.indexOf("0x") === 0 && names[v.code]
+                ? { code: v.code, name: names[v.code] } : v);
+            fields[key] = c === "12" ? { cur: -1, max: 100 } : { cur: "", values: values };
+            root.enqueue({ kind: "fread", bus: j.bus, code: c }, false);
+        }
+        root.patchExtra(j.bus, fields);
+    }
+
+    function onFeatureRead(j: var, code: int, text: string, errText: string): void {
+        const key = root.extraCodes[j.code];
+        const e = root.extras[j.bus] ?? {};
+        if (code !== 0) {
+            root.patchExtra(j.bus, { error: root.reason(errText, "Could not read it") });
+            return;
+        }
+        const f = {};
+        let m;
+        if ((m = String(text).match(/VCP\s+\w+\s+C\s+(\d+)\s+(\d+)/)))
+            f[key] = Object.assign({}, e[key], { cur: parseInt(m[1], 10), max: Math.max(1, parseInt(m[2], 10)) });
+        else if ((m = String(text).match(/VCP\s+\w+\s+SNC\s+x([0-9a-fA-F]{2})/)))
+            f[key] = Object.assign({}, e[key], { cur: m[1].toLowerCase() });
+        else
+            return;
+        if (j.verify !== undefined) {
+            const got = key === "contrast" ? f[key].cur : f[key].cur;
+            const want = key === "contrast" ? j.verify : String(j.verify).toLowerCase();
+            const same = key === "contrast" ? Math.abs(got - want) <= 1 : got === want;
+            f.error = same ? "" : "The monitor kept its previous setting";
+        }
+        root.patchExtra(j.bus, f);
+    }
+
+    function onFeatureWritten(j: var, code: int, errText: string): void {
+        if (code !== 0) {
+            root.patchExtra(j.bus, { error: root.reason(errText, "The monitor refused it") });
+            root.enqueue({ kind: "fread", bus: j.bus, code: j.code }, true);
+            return;
+        }
+        root.enqueue({ kind: "fread", bus: j.bus, code: j.code, verify: j.raw,
+                       delay: root.settleFirst }, true);
+    }
+
+    // contrast: 0..1 of its max. preset and mode: a code from its values.
+    // A newer request for the same feature replaces one still queued.
+    function setExtra(bus: int, key: string, value: var): void {
+        const e = root.extras[bus];
+        if (!e || !e[key])
+            return;
+        const code = Object.keys(root.extraCodes).find(c => root.extraCodes[c] === key);
+        let raw, arg;
+        if (key === "contrast") {
+            raw = Math.round(Math.max(0, Math.min(1, value)) * e.contrast.max);
+            arg = String(raw);
+            root.patchExtra(bus, { contrast: Object.assign({}, e.contrast, { cur: raw }) });
+        } else {
+            if (!e[key].values.some(v => v.code === value))
+                return;
+            raw = value;
+            arg = "x" + value;
+            const f = {};
+            f[key] = Object.assign({}, e[key], { cur: value });
+            root.patchExtra(bus, f);
+        }
+        root.queue = root.queue.filter(q => !(q.kind === "fwrite" && q.bus === bus && q.code === code));
+        root.enqueue({ kind: "fwrite", bus: bus, code: code, value: arg, raw: raw }, false);
+    }
+
     // ── Asking for a value ────────────────────────────────────────────
     // percent: 0..1 of the monitor's own maximum.
     function set(bus: int, percent: real): void {
@@ -470,5 +637,42 @@ Singleton {
         onTriggered: root.kick()
     }
 
-    Component.onCompleted: probe.running = true
+    // ── Evening level ─────────────────────────────────────────────────
+    //
+    // Optional (Config.ddcEvening): every monitor that accepts writes goes
+    // to the day level outside the night-light hours and to the evening
+    // level inside them. Applied at login and at each change of period,
+    // never in between, so a level you set by hand holds until the next
+    // change. Waits for detection and the first reads, so it never writes
+    // to a monitor it has not read.
+    readonly property bool evening: NightLight.inSchedule
+    property real pendingLevel: -1
+
+    onEveningChanged: root.followSchedule()
+
+    function followSchedule(): void {
+        if (!Config.ddcEvening)
+            return;
+        root.pendingLevel = (root.evening ? Config.ddcEveningLevel : Config.ddcDayLevel) / 100;
+        root.wantDetect = true;
+        root.ensure();
+        root.applyPending();
+    }
+
+    function applyPending(): void {
+        if (root.pendingLevel < 0 || !root.detected)
+            return;
+        const ok = root.monitors.filter(m => m.ok);
+        // Every screen read (or refused) first.
+        if (ok.some(m => (root.state[m.bus]?.cur ?? -1) < 0 && !(root.state[m.bus]?.blocked ?? false)))
+            return;
+        const level = root.pendingLevel;
+        root.pendingLevel = -1;
+        root.setAll(level);
+    }
+
+    Component.onCompleted: {
+        probe.running = true;
+        root.followSchedule();
+    }
 }

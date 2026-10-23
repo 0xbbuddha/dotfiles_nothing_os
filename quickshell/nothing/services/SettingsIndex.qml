@@ -110,6 +110,7 @@ Singleton {
         { key: "autostartApps",   label: "Startup apps",       page: root.pageAbout, words: "autostart startup login boot open apps exec-once launch discord steam", icon: "󰐊" },
         { key: "autostartDelay",  label: "Wait after login",   page: root.pageAbout, words: "autostart startup delay login seconds", icon: "󰐊" },
         { key: "settingsBackup",  label: "Back up settings",   page: root.pageAbout, words: "backup export save settings config json copy", icon: "󰁯" },
+        { key: "autoBackup",      label: "Daily automatic backup", page: root.pageAbout, words: "backup automatic daily settings config keep", icon: "󰁯" },
         { key: "settingsRestore", label: "Restore settings",   page: root.pageAbout, words: "restore import backup settings config json undo", icon: "󰁯" },
         { key: "inputReset",      label: "Input settings file", page: root.pageInput, words: "input reset defaults mouse keyboard file", icon: "󰌌" },
         { key: "weather",         label: "Weather",            page: root.pageScreen, words: "weather wttr forecast", icon: "󰖐" },

@@ -108,6 +108,16 @@ unmounting every partition then powering the disk off. Essential Search
 `scripts/procs.py`, only while on screen, groups by program and sends
 TERM, then KILL on request, to your own processes only.
 
+**Picture, evening level, app routes, daily backup.** A monitor card's
+"Picture" reads its DDC capabilities once and offers contrast (0x12),
+colour presets (0x14) and display mode (0xDC) from that list only,
+named from MCCS when the monitor gives codes. "Dimmer in the evening"
+sets every writable monitor to the day or evening level at login and
+at each night-light boundary, after detection and first reads.
+Settings > Sound moves an app between outputs with `pactl
+move-sink-input` (streams matched by PipeWire object.id); WirePlumber
+remembers it. ConfigBackup makes one `-auto` copy a day and keeps seven.
+
 **Idle.** hypridle reads one config file when it starts and has no
 runtime interface, so `services/Idle.qml` generates
 `~/.config/nothing/hypridle.conf` from the four timings in Settings and

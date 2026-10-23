@@ -21,7 +21,9 @@ SettingsPage {
     function backupLabel(name: string): string {
         const m = name.match(/^config-(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})/);
         const when = m ? m[3] + "/" + m[2] + "/" + m[1] + " " + m[4] + ":" + m[5] : name;
-        return name.indexOf("before-restore") >= 0 ? when + " · before a restore" : when;
+        if (name.indexOf("before-restore") >= 0)
+            return when + " · before a restore";
+        return name.indexOf("-auto") >= 0 ? when + " · automatic" : when;
     }
 
     NProcess {
@@ -327,7 +329,17 @@ SettingsPage {
                 : "A copy of config.json in ~/.config/nothing/backups"
             NPillButton {
                 text: ConfigBackup.busy ? "…" : "Back up now"
-                onActivated: ConfigBackup.backup()
+                onActivated: ConfigBackup.backup(false)
+            }
+        }
+
+        SettingRow {
+            key: "autoBackup"
+            label: "Daily automatic backup"
+            hint: "Once a day, the seven newest kept; your own backups are never deleted"
+            DotSwitch {
+                checked: Config.autoBackup
+                onToggled: (v) => { Config.autoBackup = v; Config.save(); if (v) ConfigBackup.refresh(); }
             }
         }
 
