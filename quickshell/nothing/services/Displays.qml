@@ -87,6 +87,16 @@ Singleton {
                         mirrorOf: m.mirrorOf && m.mirrorOf !== "none"
                             ? m.mirrorOf : "",
                         focused: m.focused === true,
+                        // Read only. Shown so you can see what the panel's
+                        // night light and dimming are drawn on top of;
+                        // nothing here ever writes cm, bitdepth or vrr.
+                        vrr: m.vrr === true,
+                        format: m.currentFormat ?? "",
+                        bitDepth: root.depthOf(m.currentFormat ?? ""),
+                        // Absent on Hyprland releases older than colour
+                        // management; empty then, and the row says nothing.
+                        cm: m.colorManagementPreset ?? "",
+                        hdr: /hdr/i.test(String(m.colorManagementPreset ?? "")),
                         modes: root.tidyModes(m.availableModes ?? [])
                     });
                 }
@@ -94,6 +104,23 @@ Singleton {
             }
         }
     }
+
+    // XRGB8888 is 8 bits a channel, XRGB2101010 is 10. Unknown is 0, which
+    // the panel leaves out rather than guessing.
+    function depthOf(fmt: string): int {
+        if (fmt === "")
+            return 0;
+        if (/2101010/.test(fmt))
+            return 10;
+        if (/16161616/.test(fmt))
+            return 16;
+        if (/8888/.test(fmt))
+            return 8;
+        return 0;
+    }
+
+    readonly property bool anyHdr: root.active.some(s => s.hdr)
+    readonly property bool anyWide: root.active.some(s => s.bitDepth > 8)
 
     // "1920x1080@60.00Hz" is Hyprland's own spelling and also what
     // hl.monitor accepts back, so the string is kept whole and only the
@@ -190,7 +217,9 @@ Singleton {
     property var undoTo: []
     property bool confirming: false
     property int countdown: 0
-    readonly property int grace: 15
+    // Settings > Screen. Never under 5 s: a screen that went black needs
+    // time to be noticed before it can be undone.
+    readonly property int grace: Math.max(5, Config.displayGrace)
 
     // The current layout as the specs that would recreate it.
     function specsNow(): var {

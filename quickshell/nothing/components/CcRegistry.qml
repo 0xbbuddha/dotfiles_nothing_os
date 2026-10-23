@@ -52,7 +52,11 @@ Singleton {
         { id: "voice",     label: "Voice note",   icon: "󱑽",
           hint: "Record straight into Essential Space" },
         { id: "dock",      label: "Dock",         icon: "󱂩",
-          hint: "Show or hide the dock" }
+          hint: "Show or hide the dock" },
+        { id: "powerprofile", label: "Power profile", icon: "󰓅",
+          hint: "Saver, balanced, performance. Hidden without power-profiles-daemon" },
+        { id: "caffeine",  label: "Caffeine",     icon: "󰅶",
+          hint: "Keep the screen awake. Also SUPER+ALT+I" }
     ]
 
     // ── Footer buttons ────────────────────────────────────────────────
@@ -91,7 +95,11 @@ Singleton {
         { id: "ccStats",    label: "System",      icon: "󰻠",
           hint: "CPU, memory and GPU gauges" },
         { id: "ccCaffeine", label: "Caffeine",    icon: "󰅶",
-          hint: "The sleep inhibitor, above the buttons" }
+          hint: "The sleep inhibitor, above the buttons" },
+        { id: "ccDrives",   label: "Drives",      icon: "󰕓",
+          hint: "USB sticks and external disks, with Open and Eject" },
+        { id: "ccPhone",    label: "Phone",       icon: "󰄜",
+          hint: "KDE Connect: battery, send clipboard, ring" }
     ]
 
     function meta(zone: string, id: string): var {

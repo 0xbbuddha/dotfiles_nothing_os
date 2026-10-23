@@ -76,6 +76,33 @@ PanelWindow {
             "1111111",
             "0001000",
             "0011100"] },
+        // A mouse: the pointer, the touchpad and the keys.
+        { key: "input", label: "Input", glyph: [
+            "0011100",
+            "0101010",
+            "0101010",
+            "0111110",
+            "0100010",
+            "0100010",
+            "0011100"] },
+        // A speaker with its sound going out.
+        { key: "sound", label: "Sound", glyph: [
+            "0001000",
+            "0011010",
+            "1111001",
+            "1111001",
+            "1111001",
+            "0011010",
+            "0001000"] },
+        // Bars of different heights: what is using the machine.
+        { key: "processes", label: "Processes", glyph: [
+            "0000001",
+            "0000001",
+            "0001001",
+            "0001011",
+            "0101011",
+            "1101111",
+            "1111111"] },
         { key: "essential", label: "Essential", glyph: [
             "0011100",
             "0110110",
@@ -306,7 +333,9 @@ PanelWindow {
                                 readonly property bool active: stack.currentIndex === index
 
                                 Layout.fillWidth: true
-                                implicitHeight: Theme.px(50)
+                                // 44, not 50: eleven pages now, and the rail
+                                // has to fit a 768 px tall screen whole.
+                                implicitHeight: Theme.px(44)
                                 radius: Theme.px(4)
                                 color: nav.active ? Theme.c.surface2
                                      : (nma.containsMouse ? Theme.c.surface2 : "transparent")
@@ -406,6 +435,9 @@ PanelWindow {
                             SettingsPageBar {}
                             SettingsPageWindows {}
                             SettingsPageScreen {}
+                            SettingsPageInput {}
+                            SettingsPageSound {}
+                            SettingsPageProcesses {}
                             SettingsPageEssential {}
                                             SettingsPageDock {}
                             SettingsPageNet {}

@@ -52,6 +52,11 @@ Singleton {
 
     // The screens and how they are arranged: SUPER+P.
     property bool displaysOpen: false
+    // Which half of it: "layout" (arrangement, modes) or "light"
+    // (monitor brightness, night light, software dim).
+    property string displaysTab: "layout"
+    // The idle clock (modules/Screensaver), raised by hypridle.
+    property bool screensaverOn: false
 
     // The Nothing Launcher: widgets and glyph surfaces in one place.
     property bool launcherNothingOpen: false

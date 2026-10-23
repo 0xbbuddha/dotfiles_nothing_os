@@ -19,7 +19,8 @@ Singleton {
         math:    "=",
         nothing: "#",
         shell:   "$",
-        web:     "?"
+        web:     "?",
+        files:   "~"
     })
 
     property string query: ""
@@ -51,6 +52,44 @@ Singleton {
         id: math
         stdout: StdioCollector {
             onStreamFinished: root.mathResult = text.trim()
+        }
+    }
+
+    // ── Files ("~") ───────────────────────────────────────────────────
+    // fd over the home folder (hidden and ignored files left out, so
+    // node_modules and caches do not drown the result), plocate when fd is
+    // missing. Thirty hits, newest query only: a slower answer to an older
+    // keystroke is dropped rather than shown.
+    property var fileHits: []
+    property string fileFor: ""
+
+    Timer {
+        id: fileDebounce
+        interval: 160
+        onTriggered: {
+            const q = root.body(root.query).trim();
+            if (q.length < 2) { root.fileHits = []; return; }
+            finder.wanted = q;
+            finder.running = false;
+            finder.command = ["sh", "-c",
+                'if command -v fd >/dev/null; then fd --max-results 30 --ignore-case --fixed-strings -- "$1" "$HOME"; '
+                + 'elif command -v plocate >/dev/null; then plocate -i -l 30 -- "$1" | grep "^$HOME/"; '
+                + 'else echo "!missing"; fi', "files", q];
+            finder.running = true;
+        }
+    }
+
+    NProcess {
+        id: finder
+        quiet: true
+        property string wanted: ""
+        stdout: StdioCollector {
+            onStreamFinished: {
+                if (finder.wanted !== root.body(root.query).trim())
+                    return;
+                root.fileFor = finder.wanted;
+                root.fileHits = text.split("\n").filter(l => l !== "");
+            }
         }
     }
 
@@ -325,6 +364,26 @@ Singleton {
         const text = root.body(q).trim();
         const out = [];
 
+        if (mode === "files") {
+            if (root.fileHits[0] === "!missing") {
+                out.push({ kind: "action", title: "Install fd for file search",
+                           subtitle: "sudo pacman -S fd", icon: "󰈞", run: () => {} });
+                return out;
+            }
+            const home = Quickshell.env("HOME") ?? "";
+            for (const path of root.fileHits) {
+                const clean = path.replace(/\/$/, "");
+                const dir = path.endsWith("/");
+                out.push({
+                    kind: "file", title: clean.split("/").pop(),
+                    subtitle: clean.startsWith(home) ? "~" + clean.slice(home.length) : clean,
+                    icon: dir ? "󰉋" : "󰈔",
+                    run: () => Quickshell.execDetached(["xdg-open", clean])
+                });
+            }
+            return out;
+        }
+
         if (mode === "clip") {
             const _ = Clipboard.stamp;
             for (const it of Clipboard.search(text).slice(0, 30)) {
@@ -515,6 +574,8 @@ Singleton {
             root.mathResult = "";
         if (text !== root.askFor)
             root.askAnswer = "";
+        if (mode === "files")
+            fileDebounce.restart();
     }
 
     readonly property var hints: [
@@ -525,7 +586,8 @@ Singleton {
         { p: "$", label: "command" },
         { p: "?", label: "web" },
         { p: "/", label: "actions" },
-        { p: "#", label: "nothing" }
+        { p: "#", label: "nothing" },
+        { p: "~", label: "files" }
     ]
 
     // Label of the current mode, shown in the search bar.
@@ -539,6 +601,7 @@ Singleton {
         case "action": return "Actions";
         case "nothing": return "Nothing";
         case "app":    return "Applications";
+        case "files":  return "Files";
         default:       return "";
         }
     }

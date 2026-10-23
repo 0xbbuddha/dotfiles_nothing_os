@@ -26,6 +26,13 @@ Singleton {
     property alias wallpaper: a.wallpaper
     property alias wallpaperFormat: a.wallpaperFormat
     property alias dotWallpaperChar: a.dotWallpaperChar
+    property alias wallpaperScreenNames: a.wallpaperScreenNames
+    property alias wallpaperScreenValues: a.wallpaperScreenValues
+    property alias wallpaperFolder: a.wallpaperFolder
+    property alias wallpaperRotate: a.wallpaperRotate
+    property alias wallpaperShuffle: a.wallpaperShuffle
+    property alias wallpaperEachScreen: a.wallpaperEachScreen
+    property alias wallpaperFill: a.wallpaperFill
 
     // ── Shown elements ────────────────────────────────────────────────
     property alias showDock: a.showDock
@@ -74,6 +81,11 @@ Singleton {
     property alias ccUpdates: a.ccUpdates
     property alias ccStats: a.ccStats
     property alias ccCaffeine: a.ccCaffeine
+    property alias ccDrives: a.ccDrives
+    property alias ccPhone: a.ccPhone
+    property alias phoneStart: a.phoneStart
+    property alias drivesAutomount: a.drivesAutomount
+    property alias drivesNotify: a.drivesNotify
 
     // ── Behaviour ─────────────────────────────────────────────────────
     property alias notificationsEnabled: a.notificationsEnabled
@@ -110,6 +122,28 @@ Singleton {
     property alias nightFrom: a.nightFrom
     property alias nightTo: a.nightTo
     property alias nightTemperature: a.nightTemperature
+    property alias nightOn: a.nightOn
+    property alias nightRestore: a.nightRestore
+    property alias ddcLinked: a.ddcLinked
+    property alias ddcEvening: a.ddcEvening
+    property alias ddcDayLevel: a.ddcDayLevel
+    property alias ddcEveningLevel: a.ddcEveningLevel
+    property alias displayGrace: a.displayGrace
+    property alias autostartApps: a.autostartApps
+    property alias autoBackup: a.autoBackup
+    property alias autostartDelay: a.autostartDelay
+
+    // ── Input ─────────────────────────────────────────────────────────
+    property alias inputSensitivity: a.inputSensitivity
+    property alias inputAccel: a.inputAccel
+    property alias inputNaturalScroll: a.inputNaturalScroll
+    property alias inputFollowMouse: a.inputFollowMouse
+    property alias inputRepeatRate: a.inputRepeatRate
+    property alias inputRepeatDelay: a.inputRepeatDelay
+    property alias inputNumlock: a.inputNumlock
+    property alias touchpadNaturalScroll: a.touchpadNaturalScroll
+    property alias touchpadDisableTyping: a.touchpadDisableTyping
+    property alias touchpadScrollFactor: a.touchpadScrollFactor
 
     // ── Game mode ─────────────────────────────────────────────────────
     property alias gameMode: a.gameMode
@@ -189,6 +223,7 @@ Singleton {
     property alias idleDim: a.idleDim
     property alias idleLock: a.idleLock
     property alias idleOff: a.idleOff
+    property alias idleSaver: a.idleSaver
     property alias idleSuspend: a.idleSuspend
 
     // ── Glyph Matrix ──────────────────────────────────────────────────
@@ -250,6 +285,37 @@ Singleton {
         for (let i = 0; i < v.length; i++)
             out.push(v[i]);
         return out;
+    }
+
+    // wallpaperScreenNames/Values, zipped into the map Wallpapers.qml
+    // actually wants to read. See wallpaperScreenNames's own comment for
+    // why this isn't one JsonAdapter object property.
+    function wallpaperScreenMap(): var {
+        const names = root._list(a.wallpaperScreenNames) ?? [];
+        const values = root._list(a.wallpaperScreenValues) ?? [];
+        const out = {};
+        for (let i = 0; i < names.length; i++)
+            out[names[i]] = values[i];
+        return out;
+    }
+
+    function setWallpaperScreen(name: string, value: string): void {
+        const names = root._list(a.wallpaperScreenNames) ?? [];
+        const values = root._list(a.wallpaperScreenValues) ?? [];
+        const at = names.indexOf(name);
+        if (at >= 0) {
+            values[at] = value;
+        } else {
+            names.push(name);
+            values.push(value);
+        }
+        a.wallpaperScreenNames = names;
+        a.wallpaperScreenValues = values;
+    }
+
+    function clearWallpaperScreens(): void {
+        a.wallpaperScreenNames = [];
+        a.wallpaperScreenValues = [];
     }
 
     function glyphEventsOf(surface: string): var {
@@ -724,6 +790,8 @@ Singleton {
         case "ccUpdates":  return a.ccUpdates;
         case "ccStats":    return a.ccStats;
         case "ccCaffeine": return a.ccCaffeine;
+        case "ccDrives":   return a.ccDrives;
+        case "ccPhone":    return a.ccPhone;
         default:           return false;
         }
     }
@@ -735,6 +803,8 @@ Singleton {
         case "ccUpdates":  a.ccUpdates = on; break;
         case "ccStats":    a.ccStats = on; break;
         case "ccCaffeine": a.ccCaffeine = on; break;
+        case "ccDrives":   a.ccDrives = on; break;
+        case "ccPhone":    a.ccPhone = on; break;
         default:           return;
         }
         root.save();
@@ -774,12 +844,19 @@ Singleton {
         a.wallpaper = "";
         a.wallpaperFormat = "auto";
         a.dotWallpaperChar = "tamaki";
+        a.wallpaperScreenNames = [];
+        a.wallpaperScreenValues = [];
+        a.wallpaperFolder = "";
+        a.wallpaperRotate = 0;
+        a.wallpaperShuffle = true;
+        a.wallpaperEachScreen = false;
+        a.wallpaperFill = "crop";
 
         a.barLeft = ["workspaces", "media"];
         a.barCentre = ["apps", "clock", "essential"];
         a.barRight = ["tray", "net", "bluetooth", "cpu", "ram", "gpu", "temp",
                       "updates", "mic", "volume", "battery",
-                      "notifications", "privacy", "recording"];
+                      "notifications", "privacy", "recording", "caffeine", "drives"];
 
         a.showDock = true;
         a.showDesktopWidgets = true;
@@ -810,6 +887,11 @@ Singleton {
         a.ccUpdates = true;
         a.ccStats = true;
         a.ccCaffeine = true;
+        a.ccDrives = true;
+        a.ccPhone = true;
+        a.phoneStart = true;
+        a.drivesAutomount = true;
+        a.drivesNotify = true;
 
         a.notificationsEnabled = true;
         a.notificationTimeout = 5;
@@ -840,10 +922,33 @@ Singleton {
         a.nightFrom = "19:00";
         a.nightTo = "06:30";
         a.nightTemperature = 4000;
+        a.nightOn = false;
+        a.nightRestore = false;
+        a.ddcLinked = false;
+        a.ddcEvening = false;
+        a.ddcDayLevel = 80;
+        a.ddcEveningLevel = 35;
+        a.barCaffeineAdded = true;
+        a.barDrivesAdded = true;
+        a.autostartApps = [];
+        a.autoBackup = true;
+        a.autostartDelay = 3;
+        a.displayGrace = 15;
+        a.inputSensitivity = 0;
+        a.inputAccel = "";
+        a.inputNaturalScroll = false;
+        a.inputFollowMouse = true;
+        a.inputRepeatRate = 25;
+        a.inputRepeatDelay = 600;
+        a.inputNumlock = false;
+        a.touchpadNaturalScroll = true;
+        a.touchpadDisableTyping = true;
+        a.touchpadScrollFactor = 0.5;
 
         a.lockBackground = "black";
 
         a.idleDim = 120;
+        a.idleSaver = 0;
         a.idleLock = 300;
         a.idleOff = 600;
         a.idleSuspend = 1200;
@@ -908,6 +1013,26 @@ Singleton {
     // Migration: early versions stored objects
     // { icon, exec, match }. Convert them to .desktop identifiers.
     function migrate(): void {
+        // The caffeine and drives indicators only show while sleep is held
+        // off or a drive is mounted, so each is added to bars saved before
+        // it existed, once. Taking one out in Settings > Bar is respected
+        // after that.
+        if (!a.barDrivesAdded) {
+            const right = root._list(a.barRight) ?? [];
+            const all = right.concat(root._list(a.barLeft) ?? [], root._list(a.barCentre) ?? []);
+            if (all.indexOf("drives") < 0)
+                a.barRight = right.concat(["drives"]);
+            a.barDrivesAdded = true;
+            root.save();
+        }
+        if (!a.barCaffeineAdded) {
+            const right = root._list(a.barRight) ?? [];
+            const all = right.concat(root._list(a.barLeft) ?? [], root._list(a.barCentre) ?? []);
+            if (all.indexOf("caffeine") < 0)
+                a.barRight = right.concat(["caffeine"]);
+            a.barCaffeineAdded = true;
+            root.save();
+        }
         const list = a.dockApps ?? [];
         if (list.length > 0 && typeof list[0] !== "string") {
             const ids = [];
@@ -1003,6 +1128,25 @@ Singleton {
             // hypr/wallpapers/ as nothing-dots-<char>-16-9.png /
             // -16-10.png. Only consulted when the pair is the chosen image.
             property string dotWallpaperChar: "tamaki"
+            // One screen's own picture, by connector - two parallel lists
+            // (names[i] -> values[i]), not one { "DP-1": "/path" } map:
+            // same rule as the bar's islands and the glyph surfaces, a var
+            // property with an empty-object default never loads back from
+            // the file, while one with an array default does. A screen not
+            // listed shows `wallpaper`. Same values as `wallpaper`. Read
+            // and written through Config.wallpaperScreenMap/setWallpaperScreen,
+            // never indexed directly - see _list.
+            property var    wallpaperScreenNames: []
+            property var    wallpaperScreenValues: []
+            // Where the picker and the slideshow look first; "" = ~/Pictures/Wallpapers.
+            property string wallpaperFolder: ""
+            // Minutes between two pictures from that folder, 0 = never.
+            property int    wallpaperRotate: 0
+            property bool   wallpaperShuffle: true
+            // The slideshow gives each screen a different picture.
+            property bool   wallpaperEachScreen: false
+            // "crop" fills the screen, "fit" shows the whole picture on black.
+            property string wallpaperFill: "crop"
 
             // The bar, one ordered list per island. Empty is a legitimate
             // answer: an island with nothing in it simply does not draw.
@@ -1017,7 +1161,7 @@ Singleton {
             property var barRight: ["tray", "net", "bluetooth", "cpu", "ram",
                                     "gpu", "temp", "updates", "mic", "volume",
                                     "battery", "notifications", "privacy",
-                                    "recording"]
+                                    "recording", "caffeine", "drives"]
 
             property bool showDock: true
             property bool showDesktopWidgets: true
@@ -1063,6 +1207,8 @@ Singleton {
             property int idleDim: 120
             property int idleLock: 300
             property int idleOff: 600
+            // Seconds before the dot clock screensaver; 0 = never (default).
+            property int idleSaver: 0
             property int idleSuspend: 1200
             property bool showTray: true
             property bool showBattery: true
@@ -1100,6 +1246,14 @@ Singleton {
             property bool ccUpdates: true
             property bool ccStats: true
             property bool ccCaffeine: true
+            // Removable drives: the section only shows with one plugged in.
+            property bool ccDrives: true
+            // KDE Connect: the phone section shows only with one connected;
+            // the daemon is started at login only if kdeconnect is installed.
+            property bool ccPhone: true
+            property bool phoneStart: true
+            property bool drivesAutomount: true
+            property bool drivesNotify: true
 
             property bool notificationsEnabled: true
             property int  notificationTimeout: 5
@@ -1134,6 +1288,41 @@ Singleton {
             property string nightFrom: "19:00"
             property string nightTo: "06:30"
             property int    nightTemperature: 4000
+            // Last manual on/off, and whether login brings it back. Off by
+            // default so a fresh install starts the way it always has.
+            property bool   nightOn: false
+            property bool   nightRestore: false
+            // SUPER+P > Light: one slider moves every external monitor.
+            property bool   ddcLinked: false
+            // Monitor brightness by time of day (night-light hours).
+            property bool   ddcEvening: false
+            property int    ddcDayLevel: 80
+            property int    ddcEveningLevel: 35
+            // The caffeine bar item was added to an existing bar once.
+            property bool   barCaffeineAdded: false
+            property bool   barDrivesAdded: false
+            // Settings > System > Startup: .desktop ids started once per
+            // Hyprland session, a few seconds after login.
+            property var    autostartApps: []
+            // One copy of config.json a day, seven kept (ConfigBackup).
+            property bool   autoBackup: true
+            property int    autostartDelay: 3
+            // Seconds a display change waits for Keep before undoing itself.
+            property int    displayGrace: 15
+
+            // ── Input (Settings > Input, written to hypr/input.lua) ───
+            // Defaults are general.lua's own values, so the first change
+            // on that page moves only what was changed.
+            property real   inputSensitivity: 0
+            property string inputAccel: ""
+            property bool   inputNaturalScroll: false
+            property bool   inputFollowMouse: true
+            property int    inputRepeatRate: 25
+            property int    inputRepeatDelay: 600
+            property bool   inputNumlock: false
+            property bool   touchpadNaturalScroll: true
+            property bool   touchpadDisableTyping: true
+            property real   touchpadScrollFactor: 0.5
 
             // ── Game mode ─────────────────────────────────────────────
             property bool gameMode: false

@@ -46,21 +46,80 @@ Singleton {
         running: true
         command: ["sh", "-c", "command -v hyprsunset >/dev/null 2>&1 && echo yes"]
         stdout: StdioCollector {
-            onStreamFinished: probe.found = text.trim() === "yes"
+            onStreamFinished: {
+                probe.found = text.trim() === "yes";
+                if (probe.found)
+                    root.startup();
+            }
         }
     }
 
+    // Started only when something here needs it, and never twice: pidof
+    // first. It starts already in the state it is about to be asked for,
+    // so there is no flash of hyprsunset's own 6000 K default before the
+    // first command lands. Arguments travel as $@, not inside the script.
     function ensureDaemon(): void {
+        const args = root.active
+            ? ["-t", String(root.kelvin)] : ["-i"];
         Quickshell.execDetached(["sh", "-c",
-            "pidof hyprsunset >/dev/null || nohup hyprsunset >/dev/null 2>&1 &"]);
+            "pidof hyprsunset >/dev/null || nohup hyprsunset \"$@\" >/dev/null 2>&1 &",
+            "hyprsunset"].concat(args));
     }
+
+    // The temperature actually used: the setting, clamped to the range the
+    // panel offers (hyprsunset itself takes 1000 to 20000).
+    readonly property int minKelvin: 2500
+    readonly property int maxKelvin: 6500
+    readonly property int kelvin: Math.max(root.minKelvin,
+        Math.min(root.maxKelvin, Config.nightTemperature))
 
     function apply(on: bool): void {
         if (!root.available)
             return;
         root.active = on;
+        root.commanded = true;
         root.ensureDaemon();
+        root.resent = 0;
         send.restart();
+    }
+
+    // Live: the screen follows the slider while it moves (one hyprctl per
+    // settled step, through the running daemon). Saved a moment after the
+    // slider stops rather than on every step.
+    function setTemperature(k: int): void {
+        const next = Math.round(Math.max(root.minKelvin, Math.min(root.maxKelvin, k)) / 100) * 100;
+        if (next === Config.nightTemperature)
+            return;
+        Config.nightTemperature = next;
+        saveLater.restart();
+        if (root.active && root.available) {
+            root.resent = 0;
+            send.restart();
+        }
+    }
+
+    // A manual choice, remembered so "restore on login" has something to
+    // restore. The schedule calls apply() directly and is not remembered.
+    function setActive(on: bool): void {
+        root.apply(on);
+        if (Config.nightOn !== on) {
+            Config.nightOn = on;
+            saveLater.restart();
+        }
+    }
+
+    // Colours and brightness exactly as the panel sends them.
+    function neutral(): void {
+        if (!root.available)
+            return;
+        root.setActive(false);
+        root.setGamma(100);
+    }
+
+    Timer {
+        id: saveLater
+        interval: 600
+        onTriggered: Config.save()
     }
 
     function setGamma(g: real): void {
@@ -70,6 +129,7 @@ Singleton {
         if (next === root.gamma)
             return;
         root.gamma = next;
+        root.commanded = true;
         root.ensureDaemon();
         gammaSend.restart();
         root.gammaAdjusted();
@@ -79,17 +139,20 @@ Singleton {
         id: send
         interval: 180
         onTriggered: {
-            // No `identity`: that also resets gamma to 100 and breaks
-            // the extra-dim phase of the Light slider.
+            // `identity` for off: since hyprsunset 0.4 it only swaps the
+            // colour matrix for the identity and keeps gamma (the matrix is
+            // identity x gamma), so the extra-dim phase survives. Older
+            // releases reset gamma with it, which is why this used to send
+            // 6500 K, which is close to neutral but not neutral.
             if (root.active) {
                 Quickshell.execDetached([
-                    "hyprctl", "hyprsunset", "temperature",
-                    String(Config.nightTemperature)
+                    "hyprctl", "hyprsunset", "temperature", String(root.kelvin)
                 ]);
             } else {
-                Quickshell.execDetached(["hyprctl", "hyprsunset", "temperature", "6500"]);
+                Quickshell.execDetached(["hyprctl", "hyprsunset", "identity"]);
             }
             Quickshell.execDetached(["hyprctl", "hyprsunset", "gamma", String(root.gamma)]);
+            check.restart();
         }
     }
 
@@ -99,19 +162,89 @@ Singleton {
         onTriggered: Quickshell.execDetached(["hyprctl", "hyprsunset", "gamma", String(root.gamma)])
     }
 
+    // ── What the daemon says ──────────────────────────────────────────
+    //
+    // Commands are fire and forget, so whether they landed is read back:
+    // a daemon started a moment ago may not be listening yet, and the
+    // first command is then lost. One resend, then the panel says so.
+    property bool daemonUp: false
+    property int liveKelvin: 0
+    property bool liveIdentity: true
+    property bool checked: false
+    property int resent: 0
+
+    readonly property string status: {
+        if (!root.available)
+            return "hyprsunset is not installed";
+        if (!root.checked)
+            return "";
+        if (!root.daemonUp)
+            return root.active || root.gamma < 100
+                ? "hyprsunset is not answering" : "hyprsunset is not running";
+        return root.liveIdentity ? "Neutral colours" : root.liveKelvin + " K";
+    }
+
+    Timer {
+        id: check
+        interval: 450
+        onTriggered: statusProbe.running = true
+    }
+
     NProcess {
-        running: true
-        command: ["hyprctl", "hyprsunset", "gamma"]
+        id: statusProbe
+        // A daemon that is not running is reported in the panel, not here.
+        quiet: true
+        // Three answers, one per line. A constant script: nothing in it
+        // comes from a setting.
+        command: ["sh", "-c",
+            "hyprctl hyprsunset temperature; echo; hyprctl hyprsunset identity get; echo; hyprctl hyprsunset gamma; echo",
+            "hyprsunset-status"]
         stdout: StdioCollector {
-            onStreamFinished: {
-                const n = parseInt(text.trim(), 10);
-                if (!isNaN(n))
-                    root.gamma = Math.max(root.gammaLowerLimit, Math.min(100, n));
-            }
+            onStreamFinished: root.readStatus(text)
         }
     }
 
-    function toggle(): void { root.apply(!root.active); }
+    property bool firstStatus: true
+    // Set by the first command sent from here; until then the daemon's own
+    // state is adopted rather than corrected.
+    property bool commanded: false
+
+    function readStatus(text: string): void {
+        const lines = String(text).split("\n").map(s => s.trim()).filter(s => s !== "");
+        const k = parseInt(lines[0] ?? "", 10);
+        const id = lines[1] ?? "";
+        const g = parseFloat(lines[2] ?? "");
+        root.checked = true;
+        root.daemonUp = !isNaN(k) && (id === "true" || id === "false") && !isNaN(g);
+        if (!root.daemonUp) {
+            if (!root.firstStatus && root.resent < 1 && (root.active || root.gamma < 100)) {
+                root.resent++;
+                root.ensureDaemon();
+                send.restart();
+            }
+            root.firstStatus = false;
+            return;
+        }
+        root.liveKelvin = k;
+        root.liveIdentity = id === "true";
+        if (root.firstStatus && !root.commanded) {
+            // Whatever was already running (your own exec-once included)
+            // is the truth at start: a warm daemon reads as on.
+            root.firstStatus = false;
+            root.active = !root.liveIdentity && k < root.maxKelvin;
+            root.gamma = Math.max(root.gammaLowerLimit, Math.min(100, Math.round(g)));
+            return;
+        }
+        const want = root.active ? root.kelvin : -1;
+        const wrong = root.active ? (root.liveIdentity || Math.abs(k - want) > 50)
+                                  : !root.liveIdentity;
+        if (wrong && root.resent < 1) {
+            root.resent++;
+            send.restart();
+        }
+    }
+
+    function toggle(): void { root.setActive(!root.active); }
 
     onInScheduleChanged: {
         if (!Config.nightAutomatic)
@@ -133,7 +266,17 @@ Singleton {
         }
     }
 
-    Component.onCompleted: {
+    // Once hyprsunset is known to exist. This used to run from
+    // Component.onCompleted, before the probe had answered, when apply()
+    // still saw available = false and quietly did nothing: a session that
+    // started inside the night-light hours stayed neutral until the next
+    // boundary.
+    function startup(): void {
+        statusProbe.running = true;
+        // Opt-in and off by default: login keeps doing what it did unless
+        // "Restore on login" was switched on in SUPER+P.
+        if (Config.nightRestore && Config.nightOn && !(Config.nightAutomatic && !root.inSchedule))
+            root.apply(true);
         if (Config.nightAutomatic && root.inSchedule) {
             root.apply(true);
             if (!Notifs.doNotDisturb) {

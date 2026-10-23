@@ -26,8 +26,12 @@ Singleton {
                 { keys: ["SUPER", "ALT", "A"], label: "Essential Apps" },
                 { keys: ["SUPER", "ALT", "L"], label: "Nothing Launcher" },
                 { keys: ["SUPER", "SHIFT", "G"], label: "Next Glyph surface" },
-                { keys: ["SUPER", "P"],     label: "Displays" },
+                { keys: ["SUPER", "P"],     label: "Displays, brightness, night light" },
+                { keys: ["SUPER", "ALT", "B"], label: "Night light on or off" },
+                { keys: ["SUPER", "ALT", "I"], label: "Keep the screen awake" },
+                { keys: ["CTRL", "SHIFT", "Esc"], label: "Processes" },
                 { keys: ["SUPER", "SHIFT", "T"], label: "Wallpaper picker" },
+                { keys: ["SUPER", "ALT", "W"], label: "Next wallpaper" },
                 { keys: ["SUPER", "/"],     label: "This cheatsheet" },
                 { keys: ["CTRL", "ALT", "Del"], label: "Session menu" }
             ]

@@ -6,6 +6,8 @@ import "../services"
 // Per-application volume, reused by the CC and the GameBar.
 ColumnLayout {
     id: root
+    // Settings > Sound: also show and switch each app's output.
+    property bool routes: false
     spacing: Theme.px(7)
 
     Repeater {
@@ -36,10 +38,45 @@ ColumnLayout {
                 Layout.fillWidth: true
                 spacing: Theme.px(2)
 
-                NText {
+                RowLayout {
                     Layout.fillWidth: true
-                    text: Audio.appName(row.modelData)
-                    elide: Text.ElideRight
+                    spacing: Theme.px(6)
+
+                    NText {
+                        Layout.fillWidth: true
+                        text: Audio.appName(row.modelData)
+                        elide: Text.ElideRight
+                    }
+
+                    // Where it plays; click for the next output.
+                    Rectangle {
+                        id: route
+                        readonly property var sink: root.routes ? AudioRoutes.sinkOf(row.modelData) : null
+                        visible: root.routes && Audio.sinks.length > 1 && route.sink !== null
+                        implicitWidth: Math.min(Theme.px(170), routeText.implicitWidth + Theme.px(22))
+                        implicitHeight: Theme.px(20)
+                        radius: Theme.r.pill
+                        color: rma.containsMouse ? Theme.c.surface3 : Theme.c.surface2
+
+                        NText {
+                            id: routeText
+                            anchors.centerIn: parent
+                            width: Math.min(implicitWidth, route.width - Theme.px(14))
+                            elide: Text.ElideRight
+                            text: (route.sink ? Audio.glyphFor(route.sink) + " " + Audio.nameOf(route.sink) : "")
+                            font.pixelSize: Theme.f.tiny
+                            color: Theme.c.onDim
+                        }
+
+                        MouseArea {
+                            id: rma
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            enabled: !AudioRoutes.busy
+                            onClicked: AudioRoutes.cycle(row.modelData)
+                        }
+                    }
                 }
 
                 NSlider {

@@ -53,6 +53,93 @@ and an existing `fish/config.fish` are created once and never
 overwritten; `fish/conf.d/nothing.fish` is refreshed. Re-run
 `./install --files` after pulling.
 
+**Light (SUPER+P, second page).** Three controls that all look like
+brightness and are kept apart on purpose. `services/Ddc.qml` drives each
+external monitor's own backlight with `ddcutil`, addressed by I2C bus and
+matched to Hyprland's output through the DRM connector `ddcutil detect`
+reports. One worker runs one `ddcutil` at a time; sliders only record the
+value they want and the latest one is written (`--noverify`), then read
+back after 0.4 s and 1.6 s. A monitor still wrong after a second write is
+marked refused and gets no more writes until "Try again". Detection runs
+when the page first opens, never at login. `services/NightLight.qml`
+drives the one `hyprsunset` daemon over `hyprctl hyprsunset` (temperature,
+`identity` for neutral, `gamma` for the software dim, all screens at
+once), starts it only on use (`pidof` first) and reads its state back.
+"Restore on login" (`nightRestore`, off by default) brings back the last
+manual on/off. VRR, bit depth and colour-management preset are shown per
+screen and never written. `scripts/update-nothing.sh` updates an installed rice file by file
+(every tracked file that differs, each backed up, rollback script; your
+own files in ~/.config/hypr and config.json are never in the list);
+`scripts/test-display-light.sh [--write]` checks them on the machine.
+
+**Input and power.** Settings > Input writes mouse, touchpad and
+keyboard values to `~/.config/hypr/input.lua` (live through `hyprctl
+eval`, read back by `general.lua` after its own `input` block, before
+`custom.lua`). The file only appears once the page is used. Settings >
+Screen > Power drives `powerprofilesctl` when power-profiles-daemon or
+tuned-ppd answers, and says so when neither does.
+
+**Sound and backups.** Settings > Sound is Pipewire through
+Quickshell only (default output and input, levels, card profile via
+`AudioProfiles`, per-app mixer); WirePlumber remembers the defaults.
+Settings > System > Backups copies `config.json` to
+`~/.config/nothing/backups/config-<stamp>.json`. A restore checks the
+file is a JSON object, copies the current one aside as
+`…-before-restore.json`, then replaces it; Config's file watcher reloads.
+
+**Startup apps and caffeine.** Settings > System > Startup apps stores
+.desktop ids and launches them with `DesktopEntry.execute()`, once per
+Hyprland session (a marker in `$XDG_RUNTIME_DIR` named after the
+instance, so reloading the shell does not reopen them), skipping any
+whose executable `pgrep` finds running. `exec-once` lines are untouched.
+SUPER+ALT+I toggles caffeine (`Idle.apply`); the bar's `caffeine` item
+shows only while it holds, and was added once to existing bars
+(`barCaffeineAdded`).
+
+**Default apps, drives, files, processes.** Settings > Dock > Default
+apps lists and sets `~/.config/mimeapps.list` through
+`scripts/mime-defaults.py` (only the app's own declared types, other
+lines kept); SUPER+W runs `scripts/open-default.sh web`, which uses that
+choice when you made one. `services/Drives.qml` re-reads `lsblk` on
+`udevadm monitor` block events, mounts newly plugged USB/SD partitions
+with `udisksctl` (never at login, never encrypted ones) and ejects by
+unmounting every partition then powering the disk off. Essential Search
+`~query` runs `fd` (or `plocate`) over `$HOME`. Settings > Processes
+(CTRL+SHIFT+Esc) samples `/proc` twice per refresh with
+`scripts/procs.py`, only while on screen, groups by program and sends
+TERM, then KILL on request, to your own processes only.
+
+**Picture, evening level, app routes, daily backup.** A monitor card's
+"Picture" reads its DDC capabilities once and offers contrast (0x12),
+colour presets (0x14) and display mode (0xDC) from that list only,
+named from MCCS when the monitor gives codes. "Dimmer in the evening"
+sets every writable monitor to the day or evening level at login and
+at each night-light boundary, after detection and first reads.
+Settings > Sound moves an app between outputs with `pactl
+move-sink-input` (streams matched by PipeWire object.id); WirePlumber
+remembers it. ConfigBackup makes one `-auto` copy a day and keeps seven.
+
+**Screensaver and phone.** `idleSaver` adds a hypridle listener that
+calls `qs ipc call screensaver show/hide`; modules/Screensaver.qml is an
+overlay (under the session lock) with the Ndot clock drifting once a
+minute. services/Phone.qml uses kdeconnect-cli: `--refresh` at login
+starts the daemon through D-Bus (its XDG autostart entry is not run by
+Hyprland), devices and battery (busctl) are read only while the control
+centre or settings are open; clipboard sync is KDE Connect's own plugin.
+
+**Wallpaper.** `Config.wallpaper` is the shared choice and
+`Config.wallpaperScreens` overrides it per connector; services/Wallpapers
+resolves either (path, ~, "" for the bundled image, "nothing-dots" for
+the pair by screen shape) and runs the folder slideshow
+(`wallpaperRotate` minutes, shuffle, different per screen).
+services/Walls scans `wallpaperFolder` (default ~/Pictures/Wallpapers)
+and the Pictures folders, newest first, 300 at most; the picker decodes
+thumbnails at 320 px. `wallpaper` IPC: set, setOn, next, folder;
+applications/servicemenus/nothing-set-wallpaper.desktop adds "Set as
+wallpaper" (every screen, or the focused one) to Dolphin's context menu:
+a service menu, not an application, so it can never become the default
+picture opener.
+
 **Idle.** hypridle reads one config file when it starts and has no
 runtime interface, so `services/Idle.qml` generates
 `~/.config/nothing/hypridle.conf` from the four timings in Settings and

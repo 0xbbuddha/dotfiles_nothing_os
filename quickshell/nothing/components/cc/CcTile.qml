@@ -34,6 +34,7 @@ Loader {
         case "mic":     return Audio.hasMic;
         case "night":   return NightLight.available;
         case "songrec": return Songrec.available;
+        case "powerprofile": return PowerProfile.available;
         default:        return true;
         }
     }
@@ -54,6 +55,8 @@ Loader {
         case "songrec":   return songrecTile;
         case "voice":     return voiceTile;
         case "dock":      return dockTile;
+        case "powerprofile": return powerTile;
+        case "caffeine":  return caffeineTile;
         default:          return null;
         }
     }
@@ -229,6 +232,35 @@ Loader {
             subtitle: Game.applying ? "…" : (Config.gameMode ? "on" : "off")
             active: Config.gameMode
             onToggled: Game.toggle()
+        }
+    }
+
+    // Click steps through what this machine offers, right click goes
+    // straight back to balanced. Lit whenever it is not balanced, since
+    // that is the state worth noticing.
+    Component {
+        id: powerTile
+        Toggle {
+            icon: PowerProfile.current === "performance" ? "󰓅"
+                : (PowerProfile.current === "power-saver" ? "󰌪" : "󰾅")
+            title: "Power profile"
+            subtitle: PowerProfile.current === "power-saver" ? "Saver"
+                : (PowerProfile.current === "performance" ? "Performance" : "Balanced")
+            active: PowerProfile.current !== "" && PowerProfile.current !== "balanced"
+            onToggled: PowerProfile.cycle()
+            onSecondary: PowerProfile.set("balanced")
+            Component.onCompleted: PowerProfile.refresh()
+        }
+    }
+
+    Component {
+        id: caffeineTile
+        Toggle {
+            icon: "󰅶"
+            title: "Caffeine"
+            subtitle: Idle.inhibited ? "awake" : "off"
+            active: Idle.inhibited
+            onToggled: Idle.toggle()
         }
     }
 

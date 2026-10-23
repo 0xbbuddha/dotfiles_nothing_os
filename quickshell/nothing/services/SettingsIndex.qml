@@ -23,18 +23,23 @@ Singleton {
     readonly property int pageBar: 1
     readonly property int pageWindows: 2
     readonly property int pageScreen: 3
-    readonly property int pageEssential: 4
-    readonly property int pageDock: 5
-    readonly property int pageNet: 6
-    readonly property int pageGame: 7
-    readonly property int pageAbout: 8
+    readonly property int pageInput: 4
+    readonly property int pageSound: 5
+    readonly property int pageProcesses: 6
+    readonly property int pageEssential: 7
+    readonly property int pageDock: 8
+    readonly property int pageNet: 9
+    readonly property int pageGame: 10
+    readonly property int pageAbout: 11
 
     readonly property var entries: [
         // ── Appearance ────────────────────────────────────────────────
         { key: "theme",      label: "Light or dark",    page: root.pageLook, words: "theme dark light appearance colour scheme", icon: "󰝨" },
         { key: "scale",      label: "Interface size",   page: root.pageLook, words: "scale zoom size dpi big small", icon: "󰫰" },
         { key: "accent",     label: "Accent colour",    page: root.pageLook, words: "colour color red theme", icon: "󰝥" },
-        { key: "wallpaper",  label: "Wallpaper image",  page: root.pageLook, words: "background picture desktop image", icon: "󰋊" },
+        { key: "wallpaper",  label: "Wallpaper image",  page: root.pageLook, words: "background picture desktop image slideshow rotate change per screen fit crop next", icon: "󰋊" },
+        { key: "wallpaperPicker", label: "Wallpaper picker",   page: root.pageLook, words: "wallpaper picker per screen slideshow rotate fit crop next pictures", icon: "󰋊" },
+        { key: "wallpaperFolder", label: "Wallpaper folder",   page: root.pageLook, words: "wallpaper folder pictures slideshow directory background", icon: "󰉏" },
         { key: "wallpaperDraw", label: "Wallpaper drawn by the shell", page: root.pageLook, words: "background swww hyprpaper", icon: "󰋊" },
         { key: "wallpaperSet",  label: "Nothing dot-matrix wallpaper", page: root.pageLook, words: "background dots anime manga bundled shipped", icon: "󰋊" },
         { key: "wallpaperChar", label: "Wallpaper character", page: root.pageLook, words: "background dots tamaki frieren figure anime character", icon: "󰉦" },
@@ -77,8 +82,44 @@ Singleton {
         { key: "osd",             label: "Volume and brightness overlays", page: root.pageScreen, words: "osd bubble volume brightness mute charge glyph", icon: "󰕾" },
         { key: "night",           label: "Night light schedule", page: root.pageScreen, words: "night blue light warm hyprsunset evening", icon: "󰖔" },
         { key: "nightTemp",       label: "Colour temperature", page: root.pageScreen, words: "kelvin warm night light", icon: "󰖔" },
+        { key: "displayLight",    label: "Monitor brightness and night light", page: root.pageScreen, words: "brightness monitor ddc ddcutil backlight dim gamma hyprsunset external screen", icon: "󰃠" },
+        { key: "nightRestore",    label: "Night light comes back at login", page: root.pageScreen, words: "night light login restore startup remember", icon: "󰖔" },
+        { key: "displayGrace",    label: "Undo a display change after", page: root.pageScreen, words: "display revert keep undo resolution timeout seconds", icon: "󰍹" },
+        { key: "powerProfile",    label: "Power profile",      page: root.pageScreen, words: "power profile performance balanced saver battery energy cpu powerprofilesctl", icon: "󰓅" },
+        // ── Input ─────────────────────────────────────────────────────
+        { key: "inputSensitivity", label: "Pointer speed",     page: root.pageInput, words: "mouse pointer speed sensitivity cursor dpi", icon: "󰍽" },
+        { key: "inputAccel",      label: "Mouse acceleration", page: root.pageInput, words: "mouse acceleration flat adaptive raw gaming", icon: "󰍽" },
+        { key: "inputNaturalScroll", label: "Mouse natural scrolling", page: root.pageInput, words: "mouse wheel scroll natural reverse invert", icon: "󰍽" },
+        { key: "inputFollowMouse", label: "Focus follows the pointer", page: root.pageInput, words: "focus follows mouse hover click", icon: "󰍽" },
+        { key: "touchpadNaturalScroll", label: "Touchpad natural scrolling", page: root.pageInput, words: "touchpad trackpad scroll natural reverse", icon: "󰟸" },
+        { key: "touchpadDisableTyping", label: "Ignore touchpad while typing", page: root.pageInput, words: "touchpad trackpad typing palm disable", icon: "󰟸" },
+        { key: "touchpadScrollFactor", label: "Touchpad scroll speed", page: root.pageInput, words: "touchpad trackpad scroll speed factor", icon: "󰟸" },
+        { key: "inputRepeatDelay", label: "Key repeat delay",  page: root.pageInput, words: "keyboard key repeat delay hold", icon: "󰌌" },
+        { key: "inputRepeatRate", label: "Key repeat rate",    page: root.pageInput, words: "keyboard key repeat rate speed", icon: "󰌌" },
+        { key: "inputNumlock",    label: "Num Lock on at login", page: root.pageInput, words: "numlock num lock keypad keyboard", icon: "󰌌" },
+        // ── Sound ─────────────────────────────────────────────────────
+        { key: "soundOutput",     label: "Output volume",      page: root.pageSound, words: "sound volume audio speaker loud mute", icon: "󰕾" },
+        { key: "soundDevice",     label: "Output device",      page: root.pageSound, words: "sound output device speaker headphones hdmi default sink", icon: "󰓃" },
+        { key: "soundProfile",    label: "Sound card profile", page: root.pageSound, words: "sound card profile hdmi jack analogue digital", icon: "󰓃" },
+        { key: "soundMic",        label: "Microphone level",   page: root.pageSound, words: "microphone mic input level gain mute record", icon: "󰍬" },
+        { key: "soundInputDevice", label: "Input device",      page: root.pageSound, words: "microphone mic input device source default webcam headset", icon: "󰍬" },
+        { key: "soundApps",       label: "Per-app volume",     page: root.pageSound, words: "app application volume mixer stream", icon: "󰎆" },
+        // ── Backups (System page) ─────────────────────────────────────
+        { key: "phone",           label: "Phone (KDE Connect)", page: root.pageNet, words: "phone android kde connect kdeconnect clipboard sync battery ring sms share", icon: "󰄜" },
+        { key: "phoneStart",      label: "Start KDE Connect at login", page: root.pageNet, words: "kde connect kdeconnect start login daemon phone", icon: "󰄜" },
+        { key: "processes",       label: "Processes",          page: root.pageProcesses, words: "process task manager kill end close frozen cpu memory ram usage program app htop top", icon: "󰍛" },
+        { key: "mimeDefaults",    label: "Default apps for files and links", page: root.pageDock, words: "default app browser pdf image video music open with mime xdg mimeapps associations", icon: "󰘔" },
+        { key: "drivesAutomount", label: "Mount drives when plugged in", page: root.pageAbout, words: "usb stick disk drive mount automount sd card removable udisks", icon: "󰕓" },
+        { key: "drivesNotify",    label: "Drive notifications", page: root.pageAbout, words: "usb drive notification eject mount plug", icon: "󰕓" },
+        { key: "autostartApps",   label: "Startup apps",       page: root.pageAbout, words: "autostart startup login boot open apps exec-once launch discord steam", icon: "󰐊" },
+        { key: "autostartDelay",  label: "Wait after login",   page: root.pageAbout, words: "autostart startup delay login seconds", icon: "󰐊" },
+        { key: "settingsBackup",  label: "Back up settings",   page: root.pageAbout, words: "backup export save settings config json copy", icon: "󰁯" },
+        { key: "autoBackup",      label: "Daily automatic backup", page: root.pageAbout, words: "backup automatic daily settings config keep", icon: "󰁯" },
+        { key: "settingsRestore", label: "Restore settings",   page: root.pageAbout, words: "restore import backup settings config json undo", icon: "󰁯" },
+        { key: "inputReset",      label: "Input settings file", page: root.pageInput, words: "input reset defaults mouse keyboard file", icon: "󰌌" },
         { key: "weather",         label: "Weather",            page: root.pageScreen, words: "weather wttr forecast", icon: "󰖐" },
         { key: "weatherCity",     label: "Weather city",       page: root.pageScreen, words: "weather city location", icon: "󰙀" },
+        { key: "idleSaver",       label: "Screensaver",        page: root.pageScreen, words: "screensaver clock idle dot matrix burn oled", icon: "󰔟" },
         { key: "idleDim",         label: "Dim the screen when idle", page: root.pageScreen, words: "idle dim brightness timeout hypridle sleep away darker", icon: "󰂽" },
         { key: "idleLock",        label: "Lock when idle",   page: root.pageScreen, words: "idle lock timeout hypridle away automatic", icon: "󰌾" },
         { key: "idleOff",         label: "Screens off when idle", page: root.pageScreen, words: "idle dpms screen off timeout hypridle blank sleep standby", icon: "󰍹" },
@@ -152,6 +193,22 @@ Singleton {
         "Weather": "󰖐",
         "Idle": "󰤄",
         "Lock": "󰌾",
+        "Displays": "󰍹",
+        "Power": "󰓅",
+        "Mouse": "󰍽",
+        "Touchpad": "󰟸",
+        "Keyboard": "󰌌",
+        "Input file": "󰈙",
+        "Output": "󰕾",
+        "Microphone": "󰍬",
+        "Applications": "󰎆",
+        "Backups": "󰁯",
+        "Startup apps": "󰐊",
+        "Default apps": "󰘔",
+        "Removable drives": "󰕓",
+        "Processes": "󰍛",
+        "Phone": "󰄜",
+        "Add a startup app": "󰐕",
         "Space": "󰋖",
         "Search": "󰍉",
         "Mind": "󰍜",

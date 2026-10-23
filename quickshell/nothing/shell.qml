@@ -32,9 +32,22 @@ ShellRoot {
     // alive from the start instead: between them they are what puts the
     // chosen layout and the window border colour back when the files under
     // ~/.config/hypr and the settings have drifted apart.
+    //
+    // Same for these two, which act at login rather than when opened: the
+    // night light's schedule and "restore at login", and the startup apps
+    // chosen in Settings > System (once per Hyprland session, see there).
     Component.onCompleted: {
         void WindowLayout.probed;
         void HyprAccent.saved;
+        void NightLight.available;
+        void Autostart.ran;
+        void Drives.available;
+        // Only acts when "Dimmer in the evening" is on; otherwise a
+        // `command -v ddcutil` and nothing more.
+        void Ddc.available;
+        void ConfigBackup.list;
+        // Starts KDE Connect's daemon if installed and wanted (Phone).
+        void Phone.available;
     }
 
     // ── Per screen ────────────────────────────────────────────────────
@@ -194,6 +207,12 @@ ShellRoot {
         Variants { model: Quickshell.screens; Cheatsheet {} }
     }
 
+    OpenLatch { id: saverLatch; open: GlobalState.screensaverOn }
+    LazyLoader {
+        active: saverLatch.touched
+        Variants { model: Quickshell.screens; Screensaver {} }
+    }
+
     OpenLatch { id: displaysLatch; open: GlobalState.displaysOpen }
     LazyLoader {
         active: displaysLatch.touched
@@ -311,6 +330,12 @@ ShellRoot {
         function toggle(): void { GlobalState.settingsOpen = !GlobalState.settingsOpen; }
         function open(): void { GlobalState.settingsOpen = true; }
         function hide(): void { GlobalState.settingsOpen = false; }
+        // CTRL+SHIFT+Escape: straight to Processes, open or not.
+        function processes(): void {
+            GlobalState.settingsOpen = false;
+            GlobalState.settingsPage = SettingsIndex.pageProcesses;
+            GlobalState.settingsOpen = true;
+        }
     }
 
     IpcHandler {
@@ -402,10 +427,66 @@ ShellRoot {
             GlobalState.displaysOpen = true;
         }
         function hide(): void { GlobalState.displaysOpen = false; }
+        // Straight to the Light page: brightness, night light, dimming.
+        function light(): void {
+            GlobalState.closeAll();
+            GlobalState.displaysTab = "light";
+            GlobalState.displaysOpen = true;
+        }
         function refresh(): void { Displays.refresh(); }
         function extend(): void { Displays.extend(); }
         function duplicate(): void { Displays.duplicate(); }
         function only(name: string): void { Displays.only(name); }
+    }
+
+    // Night light from a key or a script: qs ipc call nightlight toggle,
+    // or temperature 3500. Same service the panel and the tile use.
+    IpcHandler {
+        target: "nightlight"
+        function toggle(): void { NightLight.toggle(); }
+        function on(): void { NightLight.setActive(true); }
+        function off(): void { NightLight.setActive(false); }
+        function neutral(): void { NightLight.neutral(); }
+        function temperature(kelvin: int): void { NightLight.setTemperature(kelvin); }
+        function dim(percent: int): void { NightLight.setGamma(percent); }
+        function status(): string { return NightLight.status; }
+    }
+
+    // Caffeine from a key: the same switch as the control centre's. The
+    // bar's cup says it is on; a short notification says which way it
+    // just went, since a key press has nothing else to look at.
+    IpcHandler {
+        target: "caffeine"
+        function toggle(): void {
+            Idle.toggle();
+            Quickshell.execDetached(["notify-send", "-a", "Nothing", "-t", "1500",
+                "-h", "string:x-canonical-private-synchronous:caffeine",
+                Idle.inhibited ? "Caffeine on" : "Caffeine off",
+                Idle.inhibited ? "The screen stays awake until you press SUPER+ALT+I again"
+                               : "Dim, lock and sleep are back on their timers"]);
+        }
+        function on(): void { Idle.apply(true); }
+        function off(): void { Idle.apply(false); }
+        function status(): bool { return Idle.inhibited; }
+    }
+
+    // hypridle's screensaver listener; "show" by hand to try it.
+    IpcHandler {
+        target: "screensaver"
+        function show(): void { GlobalState.screensaverOn = true; }
+        function hide(): void { GlobalState.screensaverOn = false; }
+    }
+
+    // Scripting the wallpaper: set <path> [screen], next, folder <path>.
+    // Dolphin's "Set as wallpaper" context menu (applications/servicemenus) goes through set and setHere.
+    IpcHandler {
+        target: "wallpaper"
+        function set(path: string): void { Wallpapers.set(path, ""); }
+        function setOn(path: string, screen: string): void { Wallpapers.set(path, screen); }
+        function setHere(path: string): void { Wallpapers.set(path, Hyprland.focusedMonitor?.name ?? ""); }
+        function next(): void { Wallpapers.next(); }
+        function folder(path: string): void { Config.wallpaperFolder = path; Config.save(); }
+        function current(): string { return Config.wallpaper; }
     }
 
     IpcHandler {
@@ -459,6 +540,17 @@ ShellRoot {
         }
         function hide(): void { GlobalState.appsOpen = false; }
         function refresh(): void { MiniApps.refresh(); }
+        // By exact .desktop id, as the launcher would. "ok" or "missing":
+        // scripts/open-default.sh falls back on anything but ok.
+        function launch(id: string): string {
+            // mimeapps.list says "firefox.desktop"; Quickshell's ids have no
+            // suffix ("firefox"), as Config.dockApps does.
+            const e = DesktopEntries.byId(id) ?? DesktopEntries.byId(id.replace(/\.desktop$/, ""));
+            if (!e)
+                return "missing";
+            e.execute();
+            return "ok";
+        }
     }
 
     IpcHandler {

@@ -41,6 +41,9 @@ Singleton {
 
         { id: "apps",       label: "Essential Apps", icon: "󰀻", zone: "centre",
           hint: "The dot grid that opens the apps shelf" },
+        // Shown only with Triat installed (services/Triat.qml).
+        { id: "triat",      label: "Triat",       icon: "󰝚", zone: "centre",
+          hint: "Triat player: open, play/pause, next. Needs Triat installed", wide: true },
         { id: "clock",      label: "Clock",       icon: "󰥔", zone: "centre",
           hint: "Time, and the date on hover",             wide: true },
         { id: "essential",  label: "Essential Key", icon: "󰋼", zone: "centre",
@@ -73,7 +76,11 @@ Singleton {
         { id: "privacy",    label: "Privacy",     icon: "󰄀", zone: "right",
           hint: "Shown while the mic, camera or screen is in use" },
         { id: "recording",  label: "Recording",   icon: "󰑊", zone: "right",
-          hint: "Shown while a screen recording is running" }
+          hint: "Shown while a screen recording is running" },
+        { id: "caffeine",   label: "Caffeine",    icon: "󰅶", zone: "right",
+          hint: "Shown while the screen is kept awake (SUPER+ALT+I)" },
+        { id: "drives",     label: "Drives",      icon: "󰕓", zone: "right",
+          hint: "Shown while a USB stick or disk is mounted; click to eject it" }
     ]
 
     function meta(id: string): var {
