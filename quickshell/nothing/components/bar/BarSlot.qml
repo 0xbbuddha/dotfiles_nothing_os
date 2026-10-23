@@ -59,6 +59,7 @@ Loader {
         switch (slot.itemId) {
         case "apps":      return Config.appsKey;
         case "essential": return Config.essentialEnabled;
+        case "triat":     return Triat.installed;
         case "media":     return Player.active;
         case "tray":      return Config.showTray && slot.win.trayItems.length > 0;
         case "cpu":       return Config.barShowCpu;
@@ -101,6 +102,7 @@ Loader {
         case "apps":       return appsPart;
         case "clock":      return clockPart;
         case "essential":  return essentialPart;
+        case "triat":      return triatPart;
         case "tray":       return trayPart;
         case "net":        return netPart;
         case "bluetooth":  return btPart;
@@ -251,6 +253,17 @@ Loader {
                 text: "Essential Apps"
                 shown: appsMa.containsMouse && !GlobalState.appsOpen
             }
+        }
+    }
+
+    // ── Triat ─────────────────────────────────────────────────────────
+    // Triat's own module, loaded by path because it ships with Triat, not
+    // with the rice (see services/Triat.qml).
+    Component {
+        id: triatPart
+        Loader {
+            active: Triat.installed
+            source: Triat.module
         }
     }
 

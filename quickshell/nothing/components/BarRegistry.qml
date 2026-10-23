@@ -41,6 +41,9 @@ Singleton {
 
         { id: "apps",       label: "Essential Apps", icon: "󰀻", zone: "centre",
           hint: "The dot grid that opens the apps shelf" },
+        // Shown only with Triat installed (services/Triat.qml).
+        { id: "triat",      label: "Triat",       icon: "󰝚", zone: "centre",
+          hint: "Triat player: open, play/pause, next. Needs Triat installed", wide: true },
         { id: "clock",      label: "Clock",       icon: "󰥔", zone: "centre",
           hint: "Time, and the date on hover",             wide: true },
         { id: "essential",  label: "Essential Key", icon: "󰋼", zone: "centre",

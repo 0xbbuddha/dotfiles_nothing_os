@@ -277,3 +277,12 @@ Packages are left installed. App theme revert:
 - [Quickshell](https://quickshell.outfoxxed.me/)
 
 Internals (file map, Hyprland Lua notes): [docs/internals.md](docs/internals.md).
+
+### Triat
+
+[Triat](https://github.com/kerstz/triat), a music player made for this rice,
+plugs into the bar natively: its installer drops
+`components/bar/TriatBarItem.qml` in, and the bar's `triat` item loads it
+when it is there (and stays hidden when it is not). No rice file is patched,
+so updating the rice and Triat never step on each other.
+
