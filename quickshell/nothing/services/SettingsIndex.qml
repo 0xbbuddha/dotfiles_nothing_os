@@ -24,11 +24,12 @@ Singleton {
     readonly property int pageWindows: 2
     readonly property int pageScreen: 3
     readonly property int pageInput: 4
-    readonly property int pageEssential: 5
-    readonly property int pageDock: 6
-    readonly property int pageNet: 7
-    readonly property int pageGame: 8
-    readonly property int pageAbout: 9
+    readonly property int pageSound: 5
+    readonly property int pageEssential: 6
+    readonly property int pageDock: 7
+    readonly property int pageNet: 8
+    readonly property int pageGame: 9
+    readonly property int pageAbout: 10
 
     readonly property var entries: [
         // ── Appearance ────────────────────────────────────────────────
@@ -93,6 +94,16 @@ Singleton {
         { key: "inputRepeatDelay", label: "Key repeat delay",  page: root.pageInput, words: "keyboard key repeat delay hold", icon: "󰌌" },
         { key: "inputRepeatRate", label: "Key repeat rate",    page: root.pageInput, words: "keyboard key repeat rate speed", icon: "󰌌" },
         { key: "inputNumlock",    label: "Num Lock on at login", page: root.pageInput, words: "numlock num lock keypad keyboard", icon: "󰌌" },
+        // ── Sound ─────────────────────────────────────────────────────
+        { key: "soundOutput",     label: "Output volume",      page: root.pageSound, words: "sound volume audio speaker loud mute", icon: "󰕾" },
+        { key: "soundDevice",     label: "Output device",      page: root.pageSound, words: "sound output device speaker headphones hdmi default sink", icon: "󰓃" },
+        { key: "soundProfile",    label: "Sound card profile", page: root.pageSound, words: "sound card profile hdmi jack analogue digital", icon: "󰓃" },
+        { key: "soundMic",        label: "Microphone level",   page: root.pageSound, words: "microphone mic input level gain mute record", icon: "󰍬" },
+        { key: "soundInputDevice", label: "Input device",      page: root.pageSound, words: "microphone mic input device source default webcam headset", icon: "󰍬" },
+        { key: "soundApps",       label: "Per-app volume",     page: root.pageSound, words: "app application volume mixer stream", icon: "󰎆" },
+        // ── Backups (System page) ─────────────────────────────────────
+        { key: "settingsBackup",  label: "Back up settings",   page: root.pageAbout, words: "backup export save settings config json copy", icon: "󰁯" },
+        { key: "settingsRestore", label: "Restore settings",   page: root.pageAbout, words: "restore import backup settings config json undo", icon: "󰁯" },
         { key: "inputReset",      label: "Input settings file", page: root.pageInput, words: "input reset defaults mouse keyboard file", icon: "󰌌" },
         { key: "weather",         label: "Weather",            page: root.pageScreen, words: "weather wttr forecast", icon: "󰖐" },
         { key: "weatherCity",     label: "Weather city",       page: root.pageScreen, words: "weather city location", icon: "󰙀" },
@@ -175,6 +186,10 @@ Singleton {
         "Touchpad": "󰟸",
         "Keyboard": "󰌌",
         "Input file": "󰈙",
+        "Output": "󰕾",
+        "Microphone": "󰍬",
+        "Applications": "󰎆",
+        "Backups": "󰁯",
         "Space": "󰋖",
         "Search": "󰍉",
         "Mind": "󰍜",

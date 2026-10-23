@@ -85,6 +85,15 @@ PanelWindow {
             "0100010",
             "0100010",
             "0011100"] },
+        // A speaker with its sound going out.
+        { key: "sound", label: "Sound", glyph: [
+            "0001000",
+            "0011010",
+            "1111001",
+            "1111001",
+            "1111001",
+            "0011010",
+            "0001000"] },
         { key: "essential", label: "Essential", glyph: [
             "0011100",
             "0110110",
@@ -315,7 +324,9 @@ PanelWindow {
                                 readonly property bool active: stack.currentIndex === index
 
                                 Layout.fillWidth: true
-                                implicitHeight: Theme.px(50)
+                                // 44, not 50: eleven pages now, and the rail
+                                // has to fit a 768 px tall screen whole.
+                                implicitHeight: Theme.px(44)
                                 radius: Theme.px(4)
                                 color: nav.active ? Theme.c.surface2
                                      : (nma.containsMouse ? Theme.c.surface2 : "transparent")
@@ -416,6 +427,7 @@ PanelWindow {
                             SettingsPageWindows {}
                             SettingsPageScreen {}
                             SettingsPageInput {}
+                            SettingsPageSound {}
                             SettingsPageEssential {}
                                             SettingsPageDock {}
                             SettingsPageNet {}

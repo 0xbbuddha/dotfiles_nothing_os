@@ -14,6 +14,15 @@ SettingsPage {
 
     property bool armed: false
     Timer { id: disarm; interval: 4000; onTriggered: page.armed = false }
+    property string restoreArmed: ""
+    Timer { id: disarmRestore; interval: 4000; onTriggered: page.restoreArmed = "" }
+
+    // config-20261023-201500.json -> "23/10/2026 20:15"
+    function backupLabel(name: string): string {
+        const m = name.match(/^config-(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})/);
+        const when = m ? m[3] + "/" + m[2] + "/" + m[1] + " " + m[4] + ":" + m[5] : name;
+        return name.indexOf("before-restore") >= 0 ? when + " · before a restore" : when;
+    }
 
     NProcess {
         running: true
@@ -144,6 +153,62 @@ SettingsPage {
             interactive: true
             onActivated: sh.run(`xdg-open ${JSON.stringify(Quickshell.shellDir)}`)
             NIcon { text: "󰏋"; size: Theme.z.icon; color: Theme.c.onDim }
+        }
+    }
+
+    // Copies of config.json: one click to save, one to put back. Restoring
+    // keeps what it replaces, so it can be undone from the same list.
+    SettingsSection {
+        title: "Backups"
+
+        SettingRow {
+            key: "settingsBackup"
+            label: "Back up settings"
+            hint: ConfigBackup.status !== "" ? ConfigBackup.status
+                : "A copy of config.json in ~/.config/nothing/backups"
+            NPillButton {
+                text: ConfigBackup.busy ? "…" : "Back up now"
+                onActivated: ConfigBackup.backup()
+            }
+        }
+
+        SettingRow {
+            key: "settingsRestore"
+            label: "Restore settings"
+            hint: ConfigBackup.list.length === 0
+                ? "No backup yet"
+                : (page.restoreArmed !== ""
+                   ? "Replace every setting with " + page.restoreArmed + "? Click again to confirm."
+                   : ConfigBackup.list.length + " backup" + (ConfigBackup.list.length > 1 ? "s" : "")
+                     + ". The current settings are kept aside first.")
+            NPillButton {
+                text: "Folder"
+                onActivated: ConfigBackup.openFolder()
+            }
+        }
+
+        Repeater {
+            // The ten newest; the folder has the rest.
+            model: ConfigBackup.list.slice(0, 10)
+
+            SettingRow {
+                required property string modelData
+                label: page.backupLabel(modelData)
+                hint: modelData
+                NPillButton {
+                    text: page.restoreArmed === modelData ? "Confirm" : "Restore"
+                    danger: page.restoreArmed === modelData
+                    onActivated: {
+                        if (page.restoreArmed === modelData) {
+                            page.restoreArmed = "";
+                            ConfigBackup.restore(modelData);
+                            return;
+                        }
+                        page.restoreArmed = modelData;
+                        disarmRestore.restart();
+                    }
+                }
+            }
         }
     }
 

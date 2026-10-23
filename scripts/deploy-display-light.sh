@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Targeted deploy of the SUPER+P Light page (monitor brightness over DDC/CI,
-# night light, software dim), Settings > Input and the Power / Displays
-# sections of Settings > Screen, into an already installed Nothing rice.
+# night light, software dim), Settings > Input and Sound, the Power /
+# Displays sections of Settings > Screen and settings backups, into an already installed Nothing rice.
 #
 # Unlike install-config.sh this replaces no directory: it copies the dozen
 # files the feature touches, one by one, after copying each one it would
@@ -42,6 +42,11 @@ FILES=(
     "quickshell/nothing/modules/SettingsPageInput.qml:$QS/modules/SettingsPageInput.qml"
     "quickshell/nothing/modules/Settings.qml:$QS/modules/Settings.qml"
     "hypr/hyprland/general.lua:$HY/general.lua"
+    "quickshell/nothing/services/Audio.qml:$QS/services/Audio.qml"
+    "quickshell/nothing/services/ConfigBackup.qml:$QS/services/ConfigBackup.qml"
+    "quickshell/nothing/components/SinkList.qml:$QS/components/SinkList.qml"
+    "quickshell/nothing/modules/SettingsPageSound.qml:$QS/modules/SettingsPageSound.qml"
+    "quickshell/nothing/modules/SettingsPageAbout.qml:$QS/modules/SettingsPageAbout.qml"
 )
 
 say() { printf '%s\n' "$*"; }

@@ -78,6 +78,14 @@ eval`, read back by `general.lua` after its own `input` block, before
 Screen > Power drives `powerprofilesctl` when power-profiles-daemon or
 tuned-ppd answers, and says so when neither does.
 
+**Sound and backups.** Settings > Sound is Pipewire through
+Quickshell only (default output and input, levels, card profile via
+`AudioProfiles`, per-app mixer); WirePlumber remembers the defaults.
+Settings > System > Backups copies `config.json` to
+`~/.config/nothing/backups/config-<stamp>.json`. A restore checks the
+file is a JSON object, copies the current one aside as
+`…-before-restore.json`, then replaces it; Config's file watcher reloads.
+
 **Idle.** hypridle reads one config file when it starts and has no
 runtime interface, so `services/Idle.qml` generates
 `~/.config/nothing/hypridle.conf` from the four timings in Settings and

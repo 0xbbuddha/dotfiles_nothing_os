@@ -31,7 +31,15 @@ Singleton {
             n.isStream && n.isSink && n.audio);
     }
 
+    // Capture devices. Streams are apps recording, not devices.
+    readonly property var sources: {
+        const _ = root.nodeCount;
+        return (Pipewire.nodes?.values ?? []).filter(n =>
+            !n.isSink && !n.isStream && n.audio);
+    }
+
     PwObjectTracker { objects: [root.sink, root.source] }
+    PwObjectTracker { objects: root.sources }
     PwObjectTracker { objects: root.sinks }
     PwObjectTracker { objects: root.streams }
 
@@ -62,6 +70,15 @@ Singleton {
     function setSink(node): void {
         if (node)
             Pipewire.preferredDefaultAudioSink = node;
+    }
+
+    function isDefaultSource(node): bool {
+        return (root.source?.id ?? -1) === (node?.id ?? -2);
+    }
+
+    function setSource(node): void {
+        if (node)
+            Pipewire.preferredDefaultAudioSource = node;
     }
 
     function toggleMic(): void {

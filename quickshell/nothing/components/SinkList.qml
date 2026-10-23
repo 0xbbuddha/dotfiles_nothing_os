@@ -4,17 +4,20 @@ import ".."
 import "../services"
 
 // List of detected audio sinks. A click sets the default sink.
+// With `inputs`, the same list for microphones and the default source.
 ColumnLayout {
     id: root
+    property bool inputs: false
     spacing: Theme.px(3)
 
     Repeater {
-        model: Audio.sinks
+        model: root.inputs ? Audio.sources : Audio.sinks
 
         Rectangle {
             id: row
             required property var modelData
-            readonly property bool current: Audio.isDefault(modelData)
+            readonly property bool current: root.inputs
+                ? Audio.isDefaultSource(modelData) : Audio.isDefault(modelData)
 
             Layout.fillWidth: true
             implicitHeight: Theme.px(30)
@@ -29,7 +32,7 @@ ColumnLayout {
                 spacing: Theme.px(8)
 
                 NIcon {
-                    text: Audio.glyphFor(row.modelData)
+                    text: root.inputs ? "󰍬" : Audio.glyphFor(row.modelData)
                     size: Theme.z.iconM
                     color: row.current ? Theme.c.on : Theme.c.onDim
                     Layout.preferredWidth: Theme.px(16)
@@ -56,7 +59,8 @@ ColumnLayout {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                onClicked: Audio.setSink(row.modelData)
+                onClicked: root.inputs ? Audio.setSource(row.modelData)
+                                     : Audio.setSink(row.modelData)
             }
         }
     }
