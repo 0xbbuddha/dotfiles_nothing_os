@@ -230,6 +230,8 @@ Settings live in `~/.config/nothing/config.json`.
 | `SUPER+ALT+B` | night light on/off |
 | `SUPER+ALT+I` | caffeine: keep the screen awake |
 | `CTRL+SHIFT+Esc` | processes: what uses CPU/memory, end a frozen app |
+| `SUPER+SHIFT+T` | wallpaper picker: your pictures, per screen, crop/fit, slideshow |
+| `SUPER+ALT+W` | next wallpaper from the folder |
 | `SUPER+SHIFT+G` | next Glyph surface |
 | `SUPER+G` | game bar |
 | `SUPER+V` / `SUPER+.` | clipboard / emoji |

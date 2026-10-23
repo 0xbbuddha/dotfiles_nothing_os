@@ -26,6 +26,12 @@ Singleton {
     property alias wallpaper: a.wallpaper
     property alias wallpaperFormat: a.wallpaperFormat
     property alias dotWallpaperChar: a.dotWallpaperChar
+    property alias wallpaperScreens: a.wallpaperScreens
+    property alias wallpaperFolder: a.wallpaperFolder
+    property alias wallpaperRotate: a.wallpaperRotate
+    property alias wallpaperShuffle: a.wallpaperShuffle
+    property alias wallpaperEachScreen: a.wallpaperEachScreen
+    property alias wallpaperFill: a.wallpaperFill
 
     // ── Shown elements ────────────────────────────────────────────────
     property alias showDock: a.showDock
@@ -806,6 +812,12 @@ Singleton {
         a.wallpaper = "";
         a.wallpaperFormat = "auto";
         a.dotWallpaperChar = "tamaki";
+        a.wallpaperScreens = ({});
+        a.wallpaperFolder = "";
+        a.wallpaperRotate = 0;
+        a.wallpaperShuffle = true;
+        a.wallpaperEachScreen = false;
+        a.wallpaperFill = "crop";
 
         a.barLeft = ["workspaces", "media"];
         a.barCentre = ["apps", "clock", "essential"];
@@ -1083,6 +1095,18 @@ Singleton {
             // hypr/wallpapers/ as nothing-dots-<char>-16-9.png /
             // -16-10.png. Only consulted when the pair is the chosen image.
             property string dotWallpaperChar: "tamaki"
+            // One screen's own picture, by connector ({ "DP-1": "/path" });
+            // a screen not listed shows `wallpaper`. Same values as `wallpaper`.
+            property var    wallpaperScreens: ({})
+            // Where the picker and the slideshow look first; "" = ~/Pictures/Wallpapers.
+            property string wallpaperFolder: ""
+            // Minutes between two pictures from that folder, 0 = never.
+            property int    wallpaperRotate: 0
+            property bool   wallpaperShuffle: true
+            // The slideshow gives each screen a different picture.
+            property bool   wallpaperEachScreen: false
+            // "crop" fills the screen, "fit" shows the whole picture on black.
+            property string wallpaperFill: "crop"
 
             // The bar, one ordered list per island. Empty is a legitimate
             // answer: an island with nothing in it simply does not draw.

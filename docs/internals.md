@@ -126,6 +126,17 @@ starts the daemon through D-Bus (its XDG autostart entry is not run by
 Hyprland), devices and battery (busctl) are read only while the control
 centre or settings are open; clipboard sync is KDE Connect's own plugin.
 
+**Wallpaper.** `Config.wallpaper` is the shared choice and
+`Config.wallpaperScreens` overrides it per connector; services/Wallpapers
+resolves either (path, ~, "" for the bundled image, "nothing-dots" for
+the pair by screen shape) and runs the folder slideshow
+(`wallpaperRotate` minutes, shuffle, different per screen).
+services/Walls scans `wallpaperFolder` (default ~/Pictures/Wallpapers)
+and the Pictures folders, newest first, 300 at most; the picker decodes
+thumbnails at 320 px. `wallpaper` IPC: set, setOn, next, folder;
+applications/nothing-set-wallpaper.desktop adds "Set as wallpaper" to
+Open With for pictures.
+
 **Idle.** hypridle reads one config file when it starts and has no
 runtime interface, so `services/Idle.qml` generates
 `~/.config/nothing/hypridle.conf` from the four timings in Settings and

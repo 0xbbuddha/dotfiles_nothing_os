@@ -31,6 +31,7 @@ Singleton {
                 { keys: ["SUPER", "ALT", "I"], label: "Keep the screen awake" },
                 { keys: ["CTRL", "SHIFT", "Esc"], label: "Processes" },
                 { keys: ["SUPER", "SHIFT", "T"], label: "Wallpaper picker" },
+                { keys: ["SUPER", "ALT", "W"], label: "Next wallpaper" },
                 { keys: ["SUPER", "/"],     label: "This cheatsheet" },
                 { keys: ["CTRL", "ALT", "Del"], label: "Session menu" }
             ]

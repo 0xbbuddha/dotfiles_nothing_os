@@ -192,13 +192,26 @@ SettingsPage {
 
         SettingRow {
             key: "wallpaper"
-            label: "Image"
-            hint: "Absolute path, empty = the image shipped in hypr/"
+            label: "Pictures"
+            hint: "Every screen or one, crop or fit, slideshow: SUPER+SHIFT+T. Next picture: SUPER+ALT+W"
+            NPillButton {
+                text: "Open the picker"
+                onActivated: {
+                    GlobalState.settingsOpen = false;
+                    GlobalState.wallpaperPickerOpen = true;
+                }
+            }
+        }
+
+        SettingRow {
+            key: "wallpaperFolder"
+            label: "Wallpaper folder"
+            hint: "Shown first in the picker and used by the slideshow; empty = ~/Pictures/Wallpapers"
             NField {
                 implicitWidth: Theme.px(210)
-                text: Config.wallpaper
-                placeholder: "hypr/wallpaper.png"
-                onCommitted: (v) => { Config.wallpaper = v.trim(); Config.save(); }
+                text: Config.wallpaperFolder
+                placeholder: "~/Pictures/Wallpapers"
+                onCommitted: (v) => { Config.wallpaperFolder = v.trim(); Config.save(); }
             }
         }
 
@@ -210,7 +223,8 @@ SettingsPage {
             visible: Walls.files.length > 0
 
             Repeater {
-                model: Walls.files
+                // The newest eight; the picker has them all.
+                model: Walls.files.slice(0, 8)
 
                 Item {
                     id: thumb
@@ -232,6 +246,8 @@ SettingsPage {
                             anchors.fill: parent
                             anchors.margins: thumb.active ? 1 : 0
                             source: "file://" + thumb.modelData
+                            // Decoded at thumbnail size, not the photo's own.
+                            sourceSize.width: Theme.px(200)
                             fillMode: Image.PreserveAspectCrop
                             asynchronous: true
                         }
@@ -239,10 +255,7 @@ SettingsPage {
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                Config.wallpaper = thumb.modelData;
-                                Config.save();
-                            }
+                            onClicked: Wallpapers.set(thumb.modelData, "")
                         }
                     }
                 }

@@ -476,6 +476,17 @@ ShellRoot {
         function hide(): void { GlobalState.screensaverOn = false; }
     }
 
+    // Scripting the wallpaper: set <path> [screen], next, folder <path>.
+    // "Set as wallpaper" in a file manager's Open With goes through set.
+    IpcHandler {
+        target: "wallpaper"
+        function set(path: string): void { Wallpapers.set(path, ""); }
+        function setOn(path: string, screen: string): void { Wallpapers.set(path, screen); }
+        function next(): void { Wallpapers.next(); }
+        function folder(path: string): void { Config.wallpaperFolder = path; Config.save(); }
+        function current(): string { return Config.wallpaper; }
+    }
+
     IpcHandler {
         target: "wallpaperpicker"
         function toggle(): void { GlobalState.wallpaperPickerOpen = !GlobalState.wallpaperPickerOpen; }

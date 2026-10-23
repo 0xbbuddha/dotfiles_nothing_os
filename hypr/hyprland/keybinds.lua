@@ -25,6 +25,8 @@ hl.bind(mainMod .. " + G",          ipc("game", "toggle"))
 hl.bind(mainMod .. " + Slash",      ipc("cheatsheet", "toggle"))
 -- Which dot-matrix figure to draw, full-bleed, no trip through Settings.
 hl.bind(mainMod .. " + SHIFT + T",  ipc("wallpaperpicker", "toggle"))
+-- The next picture from the wallpaper folder.
+hl.bind(mainMod .. " + ALT + W",    ipc("wallpaper", "next"))
 -- The screens: arrangement, resolution, scale, rotation, and a map
 -- you can drag them around on.
 hl.bind(mainMod .. " + P",          ipc("displays", "toggle"))

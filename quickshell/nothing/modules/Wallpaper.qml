@@ -10,7 +10,7 @@ PanelWindow {
     required property var modelData
 
     screen: modelData
-    color: Theme.c.bg
+    color: Config.wallpaperFill === "fit" ? "black" : Theme.c.bg
     WlrLayershell.layer: WlrLayer.Background
     WlrLayershell.namespace: "nothing-wallpaper"
     // Without this, the bar's exclusive zone crops the wallpaper and
@@ -28,7 +28,12 @@ PanelWindow {
         // has a 16:10 frame and a 16:9 one, and each output should get
         // the one it was drawn for.
         readonly property url wallUrl: Wallpapers.wallpaperUrlFor(
-            win.modelData?.width ?? 0, win.modelData?.height ?? 0)
+            win.modelData?.name ?? "", win.modelData?.width ?? 0, win.modelData?.height ?? 0)
+
+        // "fit" keeps the whole picture, on black: an ultrawide shot on a
+        // 16:9 screen, or a portrait photo, without its sides cut off.
+        readonly property int fill: Config.wallpaperFill === "fit"
+            ? Image.PreserveAspectFit : Image.PreserveAspectCrop
 
         // The picture underneath, always live. A change never touches
         // it directly - the window below reveals the new one on top of
@@ -37,7 +42,7 @@ PanelWindow {
         Image {
             id: base
             anchors.fill: parent
-            fillMode: Image.PreserveAspectCrop
+            fillMode: stage.fill
             cache: true
             asynchronous: true
             smooth: true
@@ -70,7 +75,7 @@ PanelWindow {
                 anchors.centerIn: parent
                 width: stage.width
                 height: stage.height
-                fillMode: Image.PreserveAspectCrop
+                fillMode: stage.fill
                 smooth: true
                 source: incoming.status === Image.Ready ? incoming.source : ""
             }
