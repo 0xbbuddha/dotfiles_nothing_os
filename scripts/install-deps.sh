@@ -66,6 +66,13 @@ PACMAN_PKGS=(
     jq imagemagick libqalculate rsync songrec
     python python-pillow python-numpy python-opencv
     git
+    # display, power, drives, file search, file dialogs: each page
+    # already says what's missing instead of failing without it, same
+    # as everything above, so there's no reason to make these any less
+    # automatic. kdeconnect is not here on purpose - see offer_kdeconnect:
+    # unlike these, it starts a daemon that announces itself on the LAN
+    # to pair with a phone, which is worth asking about first.
+    ddcutil fd udisks2 power-profiles-daemon zenity
 )
 
 # hyprshot and songrec used to live here; both are in extra now, so they
@@ -260,6 +267,27 @@ offer_warp() {
     ok "WARP is ready. Toggle it from the control centre (SUPER+N)."
 }
 
+offer_kdeconnect() {
+    if have kdeconnect-cli; then
+        ok "kdeconnect-cli already present (Phone section works)"
+        return
+    fi
+    log "KDE Connect"
+    printf '%s\n' \
+        "  Settings > Network and the control centre have a Phone" \
+        "  section (battery, Send clipboard, Ring, Ping). It stays" \
+        "  hidden until kdeconnect-cli is installed, and its daemon" \
+        "  then starts at login and announces itself on the LAN to" \
+        "  pair with a phone - worth asking about before installing."
+    if ! ask_yn "Install KDE Connect?" n; then
+        warn "Skipped. Later: sudo pacman -S kdeconnect"
+        return
+    fi
+    run sudo pacman -S --needed --noconfirm kdeconnect \
+        || { warn "could not install kdeconnect"; return; }
+    ok "KDE Connect is ready. Pair your phone from its own app."
+}
+
 offer_bluetooth() {
     if systemctl is-enabled --quiet bluetooth.service 2>/dev/null; then
         ok "bluetooth.service already enabled"
@@ -282,6 +310,7 @@ offer_bluetooth() {
 offer_ear_native
 offer_rog
 offer_warp
+offer_kdeconnect
 offer_bluetooth
 
 ok "Dependencies are in place."
