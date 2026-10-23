@@ -28,7 +28,8 @@ Singleton {
     // Tamaki with no sign anything was wrong.
     readonly property var dotWallpaperChars: [
         { label: "Tamaki",  value: "tamaki" },
-        { label: "Frieren", value: "frieren" }
+        { label: "Frieren", value: "frieren" },
+        { label: "Waguri",  value: "waguri" }
     ]
 
     // The character is explicit, not read off Config, so a picker can
@@ -120,6 +121,9 @@ Singleton {
     // every screen, or to each screen separately with different pictures
     // when "different on each screen" is on.
     function next(): void {
+        // A turn of the slideshow is not news: no popup for it.
+        root.quiet = true;
+        quietOff.restart();
         const list = Walls.folderFiles;
         if (list.length === 0) {
             Walls.refresh();
@@ -163,5 +167,34 @@ Singleton {
         repeat: true
         running: Config.wallpaperRotate > 0 && Config.drawWallpaper
         onTriggered: root.next()
+    }
+
+    // ── Telling you ───────────────────────────────────────────────────
+    // A popup on every real change, the same way a reload that failed
+    // tells you rather than leaving you to notice. Lives here rather
+    // than in Wallpaper.qml: that one is instantiated once per screen,
+    // and a change would otherwise say so once per monitor rather than
+    // once per change. Silent for the slideshow's own turns.
+    property bool quiet: false
+    Timer { id: quietOff; interval: 500; onTriggered: root.quiet = false }
+
+    function announce(): void {
+        if (root.quiet)
+            return;
+        const label = root.dotWallpaperOn
+            ? (root.dotWallpaperChars.find(c => c.value === Config.dotWallpaperChar)?.label ?? "Custom")
+            : ((Config.wallpaper ?? "").split("/").pop() || "Custom");
+        const thumb = root.dotWallpaperOn
+            ? root.dotWallpaperPath(true)
+            : String(root.plainWallpaperUrl).replace("file://", "");
+        WallpaperAnnounce.announce(label, thumb);
+    }
+
+    Connections {
+        target: Config
+        function onWallpaperChanged(): void { root.announce(); }
+        function onDotWallpaperCharChanged(): void {
+            if (root.dotWallpaperOn) root.announce();
+        }
     }
 }

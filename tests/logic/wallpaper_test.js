@@ -4,7 +4,7 @@ const fns={};const re=/^    function (\w+)\(([^)]*)\)(?::\s*\w+)?\s*\{\n([\s\S]*
 while((m=re.exec(src)))fns[m[1]]={p:m[2].split(",").map(x=>x.split(":")[0].trim()).filter(Boolean),b:m[3]};
 function make(cfg,folder,screens){
   const Config=Object.assign({wallpaper:"",wallpaperScreens:{},wallpaperFormat:"auto",dotWallpaperChar:"tamaki",wallpaperShuffle:false,wallpaperEachScreen:false,saved:0,save(){this.saved++;}},cfg);
-  const env={Config,Quickshell:{env:()=>"/home/u",shellPath:p=>"/rice/"+p.replace("../../",""),screens:screens.map(n=>({name:n}))},Walls:{folderFiles:folder,refresh(){env.refreshed=true;}},Math};
+  const env={Config,Quickshell:{env:()=>"/home/u",shellPath:p=>"/rice/"+p.replace("../../",""),screens:screens.map(n=>({name:n}))},Walls:{folderFiles:folder,refresh(){env.refreshed=true;}},Math,quietOff:{restart(){}},WallpaperAnnounce:{announce(){}}};
   const root={dotWallpaperKey:"nothing-dots",bundledWallpaper:"/rice/hypr/wallpaper.png"};env.root=root;
   for(const[n,f]of Object.entries(fns)){const k=Object.keys(env);root[n]=new Function(...k,`return function(${f.p}){${f.b}}`)(...k.map(x=>env[x]));}
   return {root,Config,env};

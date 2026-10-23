@@ -102,7 +102,8 @@ fi
 
 echo "== shell IPC and keybinds"
 if have qs && [[ -d "$SHELL_DIR" ]]; then
-    s=$(qs -p "$SHELL_DIR" ipc call nightlight status 2>&1) && ok "ipc nightlight status: ${s:-<empty>}" || bad "ipc nightlight: $s"
+    s=$(qs -p "$SHELL_DIR" ipc call nightlight status 2>&1)
+    if [[ $? -eq 0 && "$s" != *"not found"* ]]; then ok "ipc nightlight status: ${s:-<empty>}"; else bad "ipc nightlight: $s (not deployed yet?)"; fi
     qs -p "$SHELL_DIR" ipc show 2>/dev/null | grep -q 'function light' && ok "ipc displays.light present" || bad "displays.light missing (deployed?)"
 fi
 if have hyprctl; then

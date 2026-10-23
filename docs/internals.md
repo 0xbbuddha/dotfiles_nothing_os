@@ -67,8 +67,9 @@ drives the one `hyprsunset` daemon over `hyprctl hyprsunset` (temperature,
 once), starts it only on use (`pidof` first) and reads its state back.
 "Restore on login" (`nightRestore`, off by default) brings back the last
 manual on/off. VRR, bit depth and colour-management preset are shown per
-screen and never written. `scripts/deploy-display-light.sh` installs just
-these files with a dated backup and a rollback script;
+screen and never written. `scripts/update-nothing.sh` updates an installed rice file by file
+(every tracked file that differs, each backed up, rollback script; your
+own files in ~/.config/hypr and config.json are never in the list);
 `scripts/test-display-light.sh [--write]` checks them on the machine.
 
 **Input and power.** Settings > Input writes mouse, touchpad and

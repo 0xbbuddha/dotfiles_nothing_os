@@ -38,6 +38,7 @@ Singleton {
         { key: "scale",      label: "Interface size",   page: root.pageLook, words: "scale zoom size dpi big small", icon: "󰫰" },
         { key: "accent",     label: "Accent colour",    page: root.pageLook, words: "colour color red theme", icon: "󰝥" },
         { key: "wallpaper",  label: "Wallpaper image",  page: root.pageLook, words: "background picture desktop image slideshow rotate change per screen fit crop next", icon: "󰋊" },
+        { key: "wallpaperPicker", label: "Wallpaper picker",   page: root.pageLook, words: "wallpaper picker per screen slideshow rotate fit crop next pictures", icon: "󰋊" },
         { key: "wallpaperFolder", label: "Wallpaper folder",   page: root.pageLook, words: "wallpaper folder pictures slideshow directory background", icon: "󰉏" },
         { key: "wallpaperDraw", label: "Wallpaper drawn by the shell", page: root.pageLook, words: "background swww hyprpaper", icon: "󰋊" },
         { key: "wallpaperSet",  label: "Nothing dot-matrix wallpaper", page: root.pageLook, words: "background dots anime manga bundled shipped", icon: "󰋊" },

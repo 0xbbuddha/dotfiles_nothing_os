@@ -24,6 +24,69 @@ Item {
         root.expanded = (root.expanded === k) ? "" : k;
     }
 
+    // Which tab the body shows. "main" is the grid this panel has
+    // always had; the rest are additions living beside it rather than
+    // inside it, so nothing about the main tab had to move to make
+    // room for them.
+    property string ccTab: "main"
+    readonly property var ccTabs: [
+        // The one dot this house draws everywhere it means "the whole
+        // thing at once" - the launcher's own mark, the disc on the
+        // vinyl widget, a Glyph waking up.
+        { label: "Main", value: "main", glyph: [
+            "0011100",
+            "0111110",
+            "1111111",
+            "1111111",
+            "1111111",
+            "0111110",
+            "0011100"] },
+        // Three bars climbing left to right - load over time, the same
+        // idea the history bars next to every stat already draw.
+        { label: "Usage", value: "sys", glyph: [
+            "0000000",
+            "0000010",
+            "0000010",
+            "0001010",
+            "0001010",
+            "0101010",
+            "0101010"] },
+        // Straight from Settings' own Network page, unchanged: the same
+        // mark ought to mean the same thing wherever it turns up.
+        { label: "Net", value: "net", glyph: [
+            "1111111",
+            "1000001",
+            "0111110",
+            "0100010",
+            "0011100",
+            "0000000",
+            "0001000"] },
+        // A solid wedge rather than a ring of single dots: a thin
+        // outline held up at this size than as a scatter of dots that
+        // needed the eye to connect them into a shape at all.
+        { label: "Sound", value: "audio", glyph: [
+            "0000000",
+            "0100000",
+            "0110000",
+            "0111110",
+            "0110000",
+            "0100000",
+            "0000000"] },
+        // Rasterised straight from the Bluetooth glyph already in the
+        // Nerd Font this shell uses elsewhere (see NetPanel.qml), the
+        // same way the README's own logo comes from a real vector
+        // rather than a guess at one: freehand, the bowtie kept coming
+        // out as an abstract shape instead of the actual mark.
+        { label: "BT", value: "bt", glyph: [
+            "0001000",
+            "0101100",
+            "0011100",
+            "0001100",
+            "0011100",
+            "0101100",
+            "0001000"] }
+    ]
+
     property real maxHeight: Theme.px(720)
     signal requestClose()
 
@@ -38,6 +101,7 @@ Item {
         if (!open) {
             calOpen = false;
             root.expanded = "";
+            root.ccTab = "main";
         } else {
             Warp.refresh();
         }
@@ -48,8 +112,9 @@ Item {
     Behavior on y { NumberAnimation { duration: Theme.med; easing.type: Theme.ease } }
 
     readonly property real naturalHeight:
-        Theme.pad * 2 + header.implicitHeight + bodyCol.implicitHeight
-        + footer.implicitHeight + Theme.gap * 2
+        Theme.pad * 2 + header.implicitHeight + tabBar.implicitHeight
+        + (root.ccTab === "main" ? bodyCol.implicitHeight : extraCol.implicitHeight)
+        + footer.implicitHeight + Theme.gap * 3
 
     NCard {
         id: card
@@ -116,11 +181,20 @@ Item {
                 }
             }
 
+            CcTabBar {
+                id: tabBar
+                Layout.fillWidth: true
+                options: root.ccTabs
+                current: root.ccTab
+                onPicked: (v) => root.ccTab = v
+            }
+
             Flickable {
                 id: bodyFlick
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.preferredHeight: bodyCol.implicitHeight
+                visible: root.ccTab === "main"
                 clip: true
                 contentWidth: width
                 contentHeight: bodyCol.implicitHeight
@@ -312,86 +386,129 @@ Item {
                             Stat { label: "GPU"; icon: "󰢮"; value: Sys.gpu; history: Sys.gpuHistory; temp: Sys.gpuTemp; visible: Sys.gpuSeen }
                         }
                     }
-                }
-            }
 
-            // ── Phone ─────────────────────────────────────────────────
-            // Only with a phone connected through KDE Connect.
-            NCard {
-                Layout.fillWidth: true
-                visible: Config.ccPhone && Phone.first !== null
-                implicitHeight: Theme.px(36)
-                color: Theme.c.surface2
-                radius: Theme.r.chip
-
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.leftMargin: Theme.px(10)
-                    anchors.rightMargin: Theme.px(6)
-                    spacing: Theme.px(7)
-
-                    NIcon { text: "󰄜"; size: Theme.z.icon; color: Theme.c.onDim }
-                    NText {
+                    // ── Phone ─────────────────────────────────────────────────
+                    // Only with a phone connected through KDE Connect.
+                    NCard {
                         Layout.fillWidth: true
-                        elide: Text.ElideRight
-                        text: Phone.status !== "" ? Phone.status
-                            : (Phone.first?.name ?? "")
-                              + ((Phone.first?.charge ?? -1) >= 0
-                                 ? "  ·  " + Phone.first.charge + " %" + (Phone.first.charging ? " ⚡" : "") : "")
-                    }
-                    NPillButton { text: "Clipboard"; onActivated: Phone.sendClipboard(Phone.first?.id ?? "") }
-                    NPillButton { text: "Ring"; onActivated: Phone.ring(Phone.first?.id ?? "") }
-                }
-            }
-
-            // ── Drives ────────────────────────────────────────────────
-            // Only while something removable is plugged in.
-            NCard {
-                Layout.fillWidth: true
-                visible: Config.ccDrives && Drives.list.length > 0
-                implicitHeight: drivesCol.implicitHeight + Theme.px(16)
-                color: Theme.c.surface2
-                radius: Theme.r.chip
-
-                ColumnLayout {
-                    id: drivesCol
-                    anchors.fill: parent
-                    anchors.margins: Theme.px(8)
-                    spacing: Theme.px(4)
-
-                    Repeater {
-                        model: Drives.list
+                        visible: Config.ccPhone && Phone.first !== null
+                        implicitHeight: Theme.px(36)
+                        color: Theme.c.surface2
+                        radius: Theme.r.chip
 
                         RowLayout {
-                            id: drive
-                            required property var modelData
-                            Layout.fillWidth: true
+                            anchors.fill: parent
+                            anchors.leftMargin: Theme.px(10)
+                            anchors.rightMargin: Theme.px(6)
                             spacing: Theme.px(7)
 
-                            NIcon {
-                                text: drive.modelData.encrypted ? "󰯄" : "󰕓"
-                                size: Theme.z.icon
-                                color: drive.modelData.mount !== "" ? Theme.c.on : Theme.c.onDim
-                            }
+                            NIcon { text: "󰄜"; size: Theme.z.icon; color: Theme.c.onDim }
                             NText {
                                 Layout.fillWidth: true
-                                text: drive.modelData.label + "  ·  " + drive.modelData.size
                                 elide: Text.ElideRight
+                                text: Phone.status !== "" ? Phone.status
+                                    : (Phone.first?.name ?? "")
+                                      + ((Phone.first?.charge ?? -1) >= 0
+                                         ? "  ·  " + Phone.first.charge + " %" + (Phone.first.charging ? " ⚡" : "") : "")
                             }
-                            NPillButton {
-                                text: Drives.busyPath === drive.modelData.path ? "…"
-                                    : (drive.modelData.mount !== "" ? "Open" : "Mount")
-                                visible: !drive.modelData.encrypted
-                                onActivated: Drives.open(drive.modelData)
-                            }
-                            NPillButton {
-                                text: Drives.busyPath === drive.modelData.disk ? "…" : "Eject"
-                                onActivated: Drives.eject(drive.modelData)
+                            NPillButton { text: "Clipboard"; onActivated: Phone.sendClipboard(Phone.first?.id ?? "") }
+                            NPillButton { text: "Ring"; onActivated: Phone.ring(Phone.first?.id ?? "") }
+                        }
+                    }
+
+                    // ── Drives ────────────────────────────────────────────────
+                    // Only while something removable is plugged in.
+                    NCard {
+                        Layout.fillWidth: true
+                        visible: Config.ccDrives && Drives.list.length > 0
+                        implicitHeight: drivesCol.implicitHeight + Theme.px(16)
+                        color: Theme.c.surface2
+                        radius: Theme.r.chip
+
+                        ColumnLayout {
+                            id: drivesCol
+                            anchors.fill: parent
+                            anchors.margins: Theme.px(8)
+                            spacing: Theme.px(4)
+
+                            Repeater {
+                                model: Drives.list
+
+                                RowLayout {
+                                    id: drive
+                                    required property var modelData
+                                    Layout.fillWidth: true
+                                    spacing: Theme.px(7)
+
+                                    NIcon {
+                                        text: drive.modelData.encrypted ? "󰯄" : "󰕓"
+                                        size: Theme.z.icon
+                                        color: drive.modelData.mount !== "" ? Theme.c.on : Theme.c.onDim
+                                    }
+                                    NText {
+                                        Layout.fillWidth: true
+                                        text: drive.modelData.label + "  ·  " + drive.modelData.size
+                                        elide: Text.ElideRight
+                                    }
+                                    NPillButton {
+                                        text: Drives.busyPath === drive.modelData.path ? "…"
+                                            : (drive.modelData.mount !== "" ? "Open" : "Mount")
+                                        visible: !drive.modelData.encrypted
+                                        onActivated: Drives.open(drive.modelData)
+                                    }
+                                    NPillButton {
+                                        text: Drives.busyPath === drive.modelData.disk ? "…" : "Eject"
+                                        onActivated: Drives.eject(drive.modelData)
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
+
+            // ── The other tabs ───────────────────────────────────────
+            // One Flickable, its content swapped by a Loader: the four
+            // added tabs are not shown at once, so nothing is lost by
+            // measuring and holding only whichever is current.
+            Flickable {
+                id: extraFlick
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.preferredHeight: extraCol.implicitHeight
+                visible: root.ccTab !== "main"
+                clip: true
+                contentWidth: width
+                contentHeight: extraCol.implicitHeight
+                boundsBehavior: Flickable.StopAtBounds
+                interactive: contentHeight > height + 1
+
+                Item {
+                    id: extraCol
+                    width: extraFlick.width
+                    implicitHeight: extraLoader.item?.implicitHeight ?? 0
+
+                    Loader {
+                        id: extraLoader
+                        width: parent.width
+                        active: root.ccTab !== "main"
+                        sourceComponent: {
+                            switch (root.ccTab) {
+                            case "sys":   return sysC;
+                            case "net":   return netC;
+                            case "audio": return audioC;
+                            case "bt":    return btC;
+                            default:      return null;
+                            }
+                        }
+                    }
+                }
+            }
+
+            Component { id: sysC; CcConsumption {} }
+            Component { id: netC; NetPanel { kind: "wifi"; active: root.open && root.ccTab === "net" } }
+            Component { id: audioC; AudioPanel {} }
+            Component { id: btC; NetPanel { kind: "bt"; active: root.open && root.ccTab === "bt" } }
 
             // ── Footer ────────────────────────────────────────────────
             // Caffeine keeps its own full width row rather than joining

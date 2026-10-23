@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import ".."
 import "../components"
 import "../services"
@@ -190,8 +191,59 @@ SettingsPage {
             onPicked: (v) => { Config.wallpaperFormat = v; Config.save(); }
         }
 
+        // The file's own picker, not a path typed by hand: zenity opens
+        // the same dialog every other app on the system already uses,
+        // so finding an image means browsing to it rather than knowing
+        // or copying its absolute path first.
+        NProcess {
+            id: filePicker
+            command: ["zenity", "--file-selection", "--title=Choose a wallpaper",
+                      "--file-filter=Images | *.png *.jpg *.jpeg *.webp *.bmp"]
+            stdout: StdioCollector {
+                onStreamFinished: {
+                    const p = text.trim();
+                    // Every screen, like typing it in does.
+                    if (p !== "")
+                        Wallpapers.set(p, "");
+                }
+            }
+        }
+
         SettingRow {
             key: "wallpaper"
+            label: "Image"
+            hint: Config.wallpaper !== "" ? Config.wallpaper
+                : "Empty = the image shipped in hypr/"
+
+            RowLayout {
+                spacing: Theme.px(6)
+
+                NField {
+                    implicitWidth: Theme.px(150)
+                    text: Config.wallpaper
+                    placeholder: "hypr/wallpaper.png"
+                    onCommitted: (v) => Wallpapers.set(v.trim(), "")
+                }
+
+                NPillButton {
+                    text: "Browse"
+                    // Settings renders on Wayland's Overlay layer, above
+                    // every ordinary window there is - including the
+                    // picker Zenity is about to open. No window rule
+                    // reaches over that: the layer itself outranks it,
+                    // not its stacking position within one. Closing
+                    // Settings first is what actually lets the dialog
+                    // be seen rather than opened behind it.
+                    onActivated: {
+                        GlobalState.settingsOpen = false;
+                        filePicker.running = true;
+                    }
+                }
+            }
+        }
+
+        SettingRow {
+            key: "wallpaperPicker"
             label: "Pictures"
             hint: "Every screen or one, crop or fit, slideshow: SUPER+SHIFT+T. Next picture: SUPER+ALT+W"
             NPillButton {
@@ -203,15 +255,44 @@ SettingsPage {
             }
         }
 
+        NProcess {
+            id: folderPicker
+            command: ["zenity", "--file-selection", "--directory", "--title=Choose the wallpaper folder"]
+            stdout: StdioCollector {
+                onStreamFinished: {
+                    const p = text.trim();
+                    if (p !== "") {
+                        Config.wallpaperFolder = p;
+                        Config.save();
+                    }
+                }
+            }
+        }
+
         SettingRow {
             key: "wallpaperFolder"
             label: "Wallpaper folder"
             hint: "Shown first in the picker and used by the slideshow; empty = ~/Pictures/Wallpapers"
-            NField {
-                implicitWidth: Theme.px(210)
-                text: Config.wallpaperFolder
-                placeholder: "~/Pictures/Wallpapers"
-                onCommitted: (v) => { Config.wallpaperFolder = v.trim(); Config.save(); }
+
+            RowLayout {
+                spacing: Theme.px(6)
+
+                NField {
+                    implicitWidth: Theme.px(150)
+                    text: Config.wallpaperFolder
+                    placeholder: "~/Pictures/Wallpapers"
+                    onCommitted: (v) => { Config.wallpaperFolder = v.trim(); Config.save(); }
+                }
+
+                NPillButton {
+                    text: "Browse"
+                    // Same reason as the image's Browse: Settings would
+                    // otherwise sit over the dialog.
+                    onActivated: {
+                        GlobalState.settingsOpen = false;
+                        folderPicker.running = true;
+                    }
+                }
             }
         }
 
