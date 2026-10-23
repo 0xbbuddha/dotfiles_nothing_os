@@ -3,7 +3,7 @@
 # backup services: the QML functions are pulled out of the files and run
 # in Node against fake commands. No Quickshell, no hardware needed.
 #   tests/logic/run.sh
-set -e
+set -eo pipefail
 cd "$(dirname "$0")"
 S=../../quickshell/nothing/services
 node ddc_test.js       "$S/Ddc.qml" | tail -1
