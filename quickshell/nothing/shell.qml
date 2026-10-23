@@ -32,9 +32,15 @@ ShellRoot {
     // alive from the start instead: between them they are what puts the
     // chosen layout and the window border colour back when the files under
     // ~/.config/hypr and the settings have drifted apart.
+    //
+    // Same for these two, which act at login rather than when opened: the
+    // night light's schedule and "restore at login", and the startup apps
+    // chosen in Settings > System (once per Hyprland session, see there).
     Component.onCompleted: {
         void WindowLayout.probed;
         void HyprAccent.saved;
+        void NightLight.available;
+        void Autostart.ran;
     }
 
     // ── Per screen ────────────────────────────────────────────────────
@@ -424,6 +430,24 @@ ShellRoot {
         function temperature(kelvin: int): void { NightLight.setTemperature(kelvin); }
         function dim(percent: int): void { NightLight.setGamma(percent); }
         function status(): string { return NightLight.status; }
+    }
+
+    // Caffeine from a key: the same switch as the control centre's. The
+    // bar's cup says it is on; a short notification says which way it
+    // just went, since a key press has nothing else to look at.
+    IpcHandler {
+        target: "caffeine"
+        function toggle(): void {
+            Idle.toggle();
+            Quickshell.execDetached(["notify-send", "-a", "Nothing", "-t", "1500",
+                "-h", "string:x-canonical-private-synchronous:caffeine",
+                Idle.inhibited ? "Caffeine on" : "Caffeine off",
+                Idle.inhibited ? "The screen stays awake until you press SUPER+ALT+I again"
+                               : "Dim, lock and sleep are back on their timers"]);
+        }
+        function on(): void { Idle.apply(true); }
+        function off(): void { Idle.apply(false); }
+        function status(): bool { return Idle.inhibited; }
     }
 
     IpcHandler {

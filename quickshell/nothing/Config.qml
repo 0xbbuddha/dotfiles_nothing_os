@@ -114,6 +114,8 @@ Singleton {
     property alias nightRestore: a.nightRestore
     property alias ddcLinked: a.ddcLinked
     property alias displayGrace: a.displayGrace
+    property alias autostartApps: a.autostartApps
+    property alias autostartDelay: a.autostartDelay
 
     // ── Input ─────────────────────────────────────────────────────────
     property alias inputSensitivity: a.inputSensitivity
@@ -795,7 +797,7 @@ Singleton {
         a.barCentre = ["apps", "clock", "essential"];
         a.barRight = ["tray", "net", "bluetooth", "cpu", "ram", "gpu", "temp",
                       "updates", "mic", "volume", "battery",
-                      "notifications", "privacy", "recording"];
+                      "notifications", "privacy", "recording", "caffeine"];
 
         a.showDock = true;
         a.showDesktopWidgets = true;
@@ -859,6 +861,9 @@ Singleton {
         a.nightOn = false;
         a.nightRestore = false;
         a.ddcLinked = false;
+        a.barCaffeineAdded = true;
+        a.autostartApps = [];
+        a.autostartDelay = 3;
         a.displayGrace = 15;
         a.inputSensitivity = 0;
         a.inputAccel = "";
@@ -938,6 +943,17 @@ Singleton {
     // Migration: early versions stored objects
     // { icon, exec, match }. Convert them to .desktop identifiers.
     function migrate(): void {
+        // The caffeine indicator only shows while sleep is held off, so it
+        // is added to bars saved before it existed, once. Taking it out in
+        // Settings > Bar is respected after that.
+        if (!a.barCaffeineAdded) {
+            const right = root._list(a.barRight) ?? [];
+            const all = right.concat(root._list(a.barLeft) ?? [], root._list(a.barCentre) ?? []);
+            if (all.indexOf("caffeine") < 0)
+                a.barRight = right.concat(["caffeine"]);
+            a.barCaffeineAdded = true;
+            root.save();
+        }
         const list = a.dockApps ?? [];
         if (list.length > 0 && typeof list[0] !== "string") {
             const ids = [];
@@ -1047,7 +1063,7 @@ Singleton {
             property var barRight: ["tray", "net", "bluetooth", "cpu", "ram",
                                     "gpu", "temp", "updates", "mic", "volume",
                                     "battery", "notifications", "privacy",
-                                    "recording"]
+                                    "recording", "caffeine"]
 
             property bool showDock: true
             property bool showDesktopWidgets: true
@@ -1170,6 +1186,12 @@ Singleton {
             property bool   nightRestore: false
             // SUPER+P > Light: one slider moves every external monitor.
             property bool   ddcLinked: false
+            // The caffeine bar item was added to an existing bar once.
+            property bool   barCaffeineAdded: false
+            // Settings > System > Startup: .desktop ids started once per
+            // Hyprland session, a few seconds after login.
+            property var    autostartApps: []
+            property int    autostartDelay: 3
             // Seconds a display change waits for Keep before undoing itself.
             property int    displayGrace: 15
 

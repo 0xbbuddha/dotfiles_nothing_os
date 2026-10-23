@@ -47,6 +47,11 @@ FILES=(
     "quickshell/nothing/components/SinkList.qml:$QS/components/SinkList.qml"
     "quickshell/nothing/modules/SettingsPageSound.qml:$QS/modules/SettingsPageSound.qml"
     "quickshell/nothing/modules/SettingsPageAbout.qml:$QS/modules/SettingsPageAbout.qml"
+    "quickshell/nothing/services/Autostart.qml:$QS/services/Autostart.qml"
+    "quickshell/nothing/components/CcRegistry.qml:$QS/components/CcRegistry.qml"
+    "quickshell/nothing/components/cc/CcTile.qml:$QS/components/cc/CcTile.qml"
+    "quickshell/nothing/components/BarRegistry.qml:$QS/components/BarRegistry.qml"
+    "quickshell/nothing/components/bar/BarSlot.qml:$QS/components/bar/BarSlot.qml"
 )
 
 say() { printf '%s\n' "$*"; }

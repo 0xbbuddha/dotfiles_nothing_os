@@ -102,6 +102,8 @@ Singleton {
         { key: "soundInputDevice", label: "Input device",      page: root.pageSound, words: "microphone mic input device source default webcam headset", icon: "󰍬" },
         { key: "soundApps",       label: "Per-app volume",     page: root.pageSound, words: "app application volume mixer stream", icon: "󰎆" },
         // ── Backups (System page) ─────────────────────────────────────
+        { key: "autostartApps",   label: "Startup apps",       page: root.pageAbout, words: "autostart startup login boot open apps exec-once launch discord steam", icon: "󰐊" },
+        { key: "autostartDelay",  label: "Wait after login",   page: root.pageAbout, words: "autostart startup delay login seconds", icon: "󰐊" },
         { key: "settingsBackup",  label: "Back up settings",   page: root.pageAbout, words: "backup export save settings config json copy", icon: "󰁯" },
         { key: "settingsRestore", label: "Restore settings",   page: root.pageAbout, words: "restore import backup settings config json undo", icon: "󰁯" },
         { key: "inputReset",      label: "Input settings file", page: root.pageInput, words: "input reset defaults mouse keyboard file", icon: "󰌌" },
@@ -190,6 +192,8 @@ Singleton {
         "Microphone": "󰍬",
         "Applications": "󰎆",
         "Backups": "󰁯",
+        "Startup apps": "󰐊",
+        "Add a startup app": "󰐕",
         "Space": "󰋖",
         "Search": "󰍉",
         "Mind": "󰍜",

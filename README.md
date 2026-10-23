@@ -228,6 +228,7 @@ Settings live in `~/.config/nothing/config.json`.
 | `SUPER+ALT+L` | Nothing Launcher |
 | `SUPER+P` | displays: arrangement, resolution, scale, rotation; Light page: monitor brightness (DDC/CI), night light, software dim |
 | `SUPER+ALT+B` | night light on/off |
+| `SUPER+ALT+I` | caffeine: keep the screen awake |
 | `SUPER+SHIFT+G` | next Glyph surface |
 | `SUPER+G` | game bar |
 | `SUPER+V` / `SUPER+.` | clipboard / emoji |

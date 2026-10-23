@@ -86,6 +86,15 @@ Settings > System > Backups copies `config.json` to
 file is a JSON object, copies the current one aside as
 `…-before-restore.json`, then replaces it; Config's file watcher reloads.
 
+**Startup apps and caffeine.** Settings > System > Startup apps stores
+.desktop ids and launches them with `DesktopEntry.execute()`, once per
+Hyprland session (a marker in `$XDG_RUNTIME_DIR` named after the
+instance, so reloading the shell does not reopen them), skipping any
+whose executable `pgrep` finds running. `exec-once` lines are untouched.
+SUPER+ALT+I toggles caffeine (`Idle.apply`); the bar's `caffeine` item
+shows only while it holds, and was added once to existing bars
+(`barCaffeineAdded`).
+
 **Idle.** hypridle reads one config file when it starts and has no
 runtime interface, so `services/Idle.qml` generates
 `~/.config/nothing/hypridle.conf` from the four timings in Settings and

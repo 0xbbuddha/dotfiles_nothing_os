@@ -73,7 +73,9 @@ Singleton {
         { id: "privacy",    label: "Privacy",     icon: "󰄀", zone: "right",
           hint: "Shown while the mic, camera or screen is in use" },
         { id: "recording",  label: "Recording",   icon: "󰑊", zone: "right",
-          hint: "Shown while a screen recording is running" }
+          hint: "Shown while a screen recording is running" },
+        { id: "caffeine",   label: "Caffeine",    icon: "󰅶", zone: "right",
+          hint: "Shown while the screen is kept awake (SUPER+ALT+I)" }
     ]
 
     function meta(id: string): var {

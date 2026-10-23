@@ -30,6 +30,9 @@ hl.bind(mainMod .. " + P",          ipc("displays", "toggle"))
 -- Night light on or off, whatever the schedule says; temperature and
 -- schedule live on the Light page of SUPER+P.
 hl.bind(mainMod .. " + ALT + B",    ipc("nightlight", "toggle"))
+-- Keep the screen awake (no dim, lock, screen-off or suspend) until
+-- pressed again; the bar shows a cup while it holds.
+hl.bind(mainMod .. " + ALT + I",    ipc("caffeine", "toggle"))
 hl.bind(mainMod .. " + ALT + G",    ipc("game", "mode"))
 -- Walks off, Matrix, Bar, Strip. The surface that comes up plays its own
 -- notification rhythm, so you can see where you landed without looking.

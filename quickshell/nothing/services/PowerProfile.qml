@@ -66,6 +66,13 @@ Singleton {
         setter.running = true;
     }
 
+    function cycle(): void {
+        if (root.profiles.length === 0)
+            return;
+        const i = root.profiles.indexOf(root.current);
+        root.set(root.profiles[(i + 1) % root.profiles.length]);
+    }
+
     NProcess {
         id: setter
         stderr: StdioCollector {

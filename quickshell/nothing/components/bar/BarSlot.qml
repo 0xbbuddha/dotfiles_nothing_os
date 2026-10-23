@@ -71,6 +71,7 @@ Loader {
         case "notifications": return Config.notificationsEnabled;
         case "privacy":   return Privacy.any;
         case "recording": return Recorder.recording;
+        case "caffeine":  return Idle.inhibited;
         case "window":    return (Hyprland.activeToplevel?.title ?? "") !== "";
         default:          return true;
         }
@@ -113,6 +114,7 @@ Loader {
         case "notifications": return bellPart;
         case "privacy":    return privacyPart;
         case "recording":  return recordingPart;
+        case "caffeine":   return caffeinePart;
         default:           return null;
         }
     }
@@ -711,6 +713,32 @@ Loader {
     }
 
     // ── Recording ─────────────────────────────────────────────────────
+    // Only there while sleep is held off, so a forgotten caffeine is
+    // visible rather than a laptop that never suspends. Click lets go.
+    Component {
+        id: caffeinePart
+        Item {
+            implicitWidth: Theme.px(18)
+            implicitHeight: Theme.px(14)
+
+            NIcon {
+                anchors.centerIn: parent
+                size: Theme.px(11)
+                text: "󰅶"
+                color: cafMa.containsMouse ? Theme.c.on : Theme.c.red
+            }
+
+            MouseArea {
+                id: cafMa
+                anchors.fill: parent
+                anchors.margins: -Theme.px(3)
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: Idle.apply(false)
+            }
+        }
+    }
+
     Component {
         id: recordingPart
         Item {

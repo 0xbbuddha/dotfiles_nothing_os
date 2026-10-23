@@ -52,7 +52,11 @@ Singleton {
         { id: "voice",     label: "Voice note",   icon: "󱑽",
           hint: "Record straight into Essential Space" },
         { id: "dock",      label: "Dock",         icon: "󱂩",
-          hint: "Show or hide the dock" }
+          hint: "Show or hide the dock" },
+        { id: "powerprofile", label: "Power profile", icon: "󰓅",
+          hint: "Saver, balanced, performance. Hidden without power-profiles-daemon" },
+        { id: "caffeine",  label: "Caffeine",     icon: "󰅶",
+          hint: "Keep the screen awake. Also SUPER+ALT+I" }
     ]
 
     // ── Footer buttons ────────────────────────────────────────────────

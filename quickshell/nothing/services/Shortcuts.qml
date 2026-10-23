@@ -28,6 +28,7 @@ Singleton {
                 { keys: ["SUPER", "SHIFT", "G"], label: "Next Glyph surface" },
                 { keys: ["SUPER", "P"],     label: "Displays, brightness, night light" },
                 { keys: ["SUPER", "ALT", "B"], label: "Night light on or off" },
+                { keys: ["SUPER", "ALT", "I"], label: "Keep the screen awake" },
                 { keys: ["SUPER", "SHIFT", "T"], label: "Wallpaper picker" },
                 { keys: ["SUPER", "/"],     label: "This cheatsheet" },
                 { keys: ["CTRL", "ALT", "Del"], label: "Session menu" }

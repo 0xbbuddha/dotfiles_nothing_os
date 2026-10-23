@@ -156,6 +156,141 @@ SettingsPage {
         }
     }
 
+    // Apps opened at login: picked from the installed ones, launched the
+    // way the launcher launches them. See services/Autostart.qml.
+    property string startupFilter: ""
+
+    SettingsSection {
+        title: "Startup apps"
+
+        SettingRow {
+            key: "autostartApps"
+            label: "Open at login"
+            hint: (Config.autostartApps ?? []).length === 0
+                ? "Nothing yet: add apps below. Your own exec-once lines are left alone"
+                : "Once per session, skipped if already running"
+                  + (Autostart.skipped.length > 0
+                     ? ". Last run skipped: " + Autostart.skipped.map(x => x.id + " (" + x.why + ")").join(", ")
+                     : "")
+            NPillButton {
+                visible: (Config.autostartApps ?? []).length > 0
+                text: "Start now"
+                onActivated: Autostart.startNow()
+            }
+        }
+
+        Repeater {
+            model: Config.autostartApps ?? []
+
+            Rectangle {
+                id: chosen
+                required property string modelData
+                readonly property var entry: Apps.entry(modelData)
+
+                Layout.fillWidth: true
+                implicitHeight: Theme.px(34)
+                radius: Theme.r.tiny
+                color: Theme.c.surface2
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: Theme.px(10)
+                    anchors.rightMargin: Theme.px(6)
+                    spacing: Theme.px(9)
+
+                    AppIcon { iconName: chosen.entry?.icon ?? ""; size: Theme.px(17) }
+
+                    NText {
+                        Layout.fillWidth: true
+                        text: chosen.entry ? chosen.entry.name : chosen.modelData + " (not installed)"
+                        color: chosen.entry ? Theme.c.on : Theme.c.onFaint
+                        elide: Text.ElideRight
+                    }
+
+                    CircleButton {
+                        icon: "󰅖"
+                        size: Theme.px(22)
+                        onActivated: Autostart.remove(chosen.modelData)
+                    }
+                }
+            }
+        }
+
+        SettingRow {
+            key: "autostartDelay"
+            label: "Wait after login"
+            hint: "Gives the tray and the keyring time to come up first"
+        }
+
+        DotPicker {
+            options: [
+                { label: "0 s", value: 0 },
+                { label: "3 s", value: 3 },
+                { label: "10 s", value: 10 },
+                { label: "30 s", value: 30 }
+            ]
+            current: Config.autostartDelay
+            onPicked: (v) => { Config.autostartDelay = v; Config.save(); }
+        }
+    }
+
+    SettingsSection {
+        title: "Add a startup app"
+
+        NField {
+            Layout.fillWidth: true
+            placeholder: "Search installed applications…"
+            onTextChanged: page.startupFilter = text
+        }
+
+        Repeater {
+            model: {
+                const q = page.startupFilter.trim().toLowerCase();
+                const pool = Apps.visible.filter(e => !(Config.autostartApps ?? []).includes(e.id));
+                if (q === "") return pool.slice(0, 6);
+                return pool.filter(e => e.name.toLowerCase().includes(q)
+                                     || e.id.toLowerCase().includes(q)).slice(0, 10);
+            }
+
+            Rectangle {
+                id: cand
+                required property var modelData
+
+                Layout.fillWidth: true
+                implicitHeight: Theme.px(34)
+                radius: Theme.r.tiny
+                color: cma.containsMouse ? Theme.c.surface3 : "transparent"
+                Behavior on color { ColorAnimation { duration: Theme.fast } }
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: Theme.px(10)
+                    anchors.rightMargin: Theme.px(10)
+                    spacing: Theme.px(9)
+
+                    AppIcon { iconName: cand.modelData.icon; size: Theme.px(17) }
+
+                    NText {
+                        Layout.fillWidth: true
+                        text: cand.modelData.name
+                        font.pixelSize: Theme.f.body
+                        elide: Text.ElideRight
+                    }
+
+                    NIcon { text: "󰐕"; size: Theme.z.icon; color: Theme.c.onDim }
+                }
+
+                MouseArea {
+                    id: cma
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: Autostart.add(cand.modelData.id)
+                }
+            }
+        }
+    }
+
     // Copies of config.json: one click to save, one to put back. Restoring
     // keeps what it replaces, so it can be undone from the same list.
     SettingsSection {
