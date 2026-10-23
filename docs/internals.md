@@ -71,6 +71,13 @@ screen and never written. `scripts/deploy-display-light.sh` installs just
 these files with a dated backup and a rollback script;
 `scripts/test-display-light.sh [--write]` checks them on the machine.
 
+**Input and power.** Settings > Input writes mouse, touchpad and
+keyboard values to `~/.config/hypr/input.lua` (live through `hyprctl
+eval`, read back by `general.lua` after its own `input` block, before
+`custom.lua`). The file only appears once the page is used. Settings >
+Screen > Power drives `powerprofilesctl` when power-profiles-daemon or
+tuned-ppd answers, and says so when neither does.
+
 **Idle.** hypridle reads one config file when it starts and has no
 runtime interface, so `services/Idle.qml` generates
 `~/.config/nothing/hypridle.conf` from the four timings in Settings and

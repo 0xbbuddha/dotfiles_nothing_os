@@ -76,6 +76,15 @@ PanelWindow {
             "1111111",
             "0001000",
             "0011100"] },
+        // A mouse: the pointer, the touchpad and the keys.
+        { key: "input", label: "Input", glyph: [
+            "0011100",
+            "0101010",
+            "0101010",
+            "0111110",
+            "0100010",
+            "0100010",
+            "0011100"] },
         { key: "essential", label: "Essential", glyph: [
             "0011100",
             "0110110",
@@ -406,6 +415,7 @@ PanelWindow {
                             SettingsPageBar {}
                             SettingsPageWindows {}
                             SettingsPageScreen {}
+                            SettingsPageInput {}
                             SettingsPageEssential {}
                                             SettingsPageDock {}
                             SettingsPageNet {}

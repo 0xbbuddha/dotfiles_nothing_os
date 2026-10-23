@@ -113,6 +113,19 @@ Singleton {
     property alias nightOn: a.nightOn
     property alias nightRestore: a.nightRestore
     property alias ddcLinked: a.ddcLinked
+    property alias displayGrace: a.displayGrace
+
+    // ── Input ─────────────────────────────────────────────────────────
+    property alias inputSensitivity: a.inputSensitivity
+    property alias inputAccel: a.inputAccel
+    property alias inputNaturalScroll: a.inputNaturalScroll
+    property alias inputFollowMouse: a.inputFollowMouse
+    property alias inputRepeatRate: a.inputRepeatRate
+    property alias inputRepeatDelay: a.inputRepeatDelay
+    property alias inputNumlock: a.inputNumlock
+    property alias touchpadNaturalScroll: a.touchpadNaturalScroll
+    property alias touchpadDisableTyping: a.touchpadDisableTyping
+    property alias touchpadScrollFactor: a.touchpadScrollFactor
 
     // ── Game mode ─────────────────────────────────────────────────────
     property alias gameMode: a.gameMode
@@ -846,6 +859,17 @@ Singleton {
         a.nightOn = false;
         a.nightRestore = false;
         a.ddcLinked = false;
+        a.displayGrace = 15;
+        a.inputSensitivity = 0;
+        a.inputAccel = "";
+        a.inputNaturalScroll = false;
+        a.inputFollowMouse = true;
+        a.inputRepeatRate = 25;
+        a.inputRepeatDelay = 600;
+        a.inputNumlock = false;
+        a.touchpadNaturalScroll = true;
+        a.touchpadDisableTyping = true;
+        a.touchpadScrollFactor = 0.5;
 
         a.lockBackground = "black";
 
@@ -1146,6 +1170,22 @@ Singleton {
             property bool   nightRestore: false
             // SUPER+P > Light: one slider moves every external monitor.
             property bool   ddcLinked: false
+            // Seconds a display change waits for Keep before undoing itself.
+            property int    displayGrace: 15
+
+            // ── Input (Settings > Input, written to hypr/input.lua) ───
+            // Defaults are general.lua's own values, so the first change
+            // on that page moves only what was changed.
+            property real   inputSensitivity: 0
+            property string inputAccel: ""
+            property bool   inputNaturalScroll: false
+            property bool   inputFollowMouse: true
+            property int    inputRepeatRate: 25
+            property int    inputRepeatDelay: 600
+            property bool   inputNumlock: false
+            property bool   touchpadNaturalScroll: true
+            property bool   touchpadDisableTyping: true
+            property real   touchpadScrollFactor: 0.5
 
             // ── Game mode ─────────────────────────────────────────────
             property bool gameMode: false

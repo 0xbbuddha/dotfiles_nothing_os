@@ -106,6 +106,75 @@ SettingsPage {
     }
 
     SettingsSection {
+        title: "Displays"
+
+        SettingRow {
+            key: "displayLight"
+            label: "Monitor brightness and night light"
+            hint: "Per-monitor brightness over DDC/CI, colour temperature and software dim: SUPER+P, Light"
+            NPillButton {
+                text: "Open"
+                onActivated: {
+                    GlobalState.closeAll();
+                    GlobalState.displaysTab = "light";
+                    GlobalState.displaysOpen = true;
+                }
+            }
+        }
+
+        SettingRow {
+            key: "nightRestore"
+            label: "Night light comes back at login"
+            hint: "The last on or off you chose; the schedule still decides inside its hours"
+            DotSwitch {
+                checked: Config.nightRestore
+                onToggled: (v) => { Config.nightRestore = v; Config.save(); }
+            }
+        }
+
+        SettingRow {
+            key: "displayGrace"
+            label: "Undo a display change after"
+            hint: "A new resolution, scale or rotation comes back unless you press Keep"
+        }
+
+        DotPicker {
+            options: [
+                { label: "10 s", value: 10 },
+                { label: "15 s", value: 15 },
+                { label: "30 s", value: 30 },
+                { label: "60 s", value: 60 }
+            ]
+            current: Config.displayGrace
+            onPicked: (v) => { Config.displayGrace = v; Config.save(); }
+        }
+    }
+
+    SettingsSection {
+        title: "Power"
+
+        SettingRow {
+            key: "powerProfile"
+            label: "Power profile"
+            hint: !PowerProfile.probed ? ""
+                : (!PowerProfile.available
+                   ? "Needs power-profiles-daemon (or tuned-ppd) running"
+                   : (PowerProfile.error !== "" ? PowerProfile.error
+                      : "Applied at once, kept by the daemon across reboots"))
+        }
+
+        DotPicker {
+            visible: PowerProfile.available
+            options: PowerProfile.profiles.map(p => ({
+                label: p === "power-saver" ? "Saver" : (p === "balanced" ? "Balanced" : "Performance"),
+                value: p
+            }))
+            current: PowerProfile.current
+            onPicked: (v) => PowerProfile.set(v)
+        }
+    }
+
+    SettingsSection {
         title: "Weather"
 
         SettingRow {

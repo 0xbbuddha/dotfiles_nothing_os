@@ -116,5 +116,15 @@ print("  SUPER+ALT+B x%d -> %s" % (len(n), "; ".join(x.get("arg","") for x in n)
 sys.exit(0 if len(p)==1 and len(n)<=1 else 1)' && ok "no duplicate SUPER+P / SUPER+ALT+B" || bad "duplicate binding"
 fi
 
+echo "== input and power"
+f="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/input.lua"
+if [[ -f "$f" ]]; then
+    out=$(hyprctl eval "(function() $(sed '/^--/d' "$f") return \"ok\" end)()" 2>&1)
+    [[ "$out" == ok ]] && ok "input.lua accepted by Hyprland" || bad "input.lua refused: $out"
+else
+    ok "input.lua absent (Settings > Input never used: input untouched)"
+fi
+if have powerprofilesctl && p=$(powerprofilesctl get 2>/dev/null); then ok "power profile: $p"; else nope "no power-profiles-daemon answering"; fi
+
 echo "== $pass passed, $fail failed, $skip skipped"
 (( fail == 0 ))

@@ -217,7 +217,9 @@ Singleton {
     property var undoTo: []
     property bool confirming: false
     property int countdown: 0
-    readonly property int grace: 15
+    // Settings > Screen. Never under 5 s: a screen that went black needs
+    // time to be noticed before it can be undone.
+    readonly property int grace: Math.max(5, Config.displayGrace)
 
     // The current layout as the specs that would recreate it.
     function specsNow(): var {

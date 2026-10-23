@@ -23,11 +23,12 @@ Singleton {
     readonly property int pageBar: 1
     readonly property int pageWindows: 2
     readonly property int pageScreen: 3
-    readonly property int pageEssential: 4
-    readonly property int pageDock: 5
-    readonly property int pageNet: 6
-    readonly property int pageGame: 7
-    readonly property int pageAbout: 8
+    readonly property int pageInput: 4
+    readonly property int pageEssential: 5
+    readonly property int pageDock: 6
+    readonly property int pageNet: 7
+    readonly property int pageGame: 8
+    readonly property int pageAbout: 9
 
     readonly property var entries: [
         // ── Appearance ────────────────────────────────────────────────
@@ -77,6 +78,22 @@ Singleton {
         { key: "osd",             label: "Volume and brightness overlays", page: root.pageScreen, words: "osd bubble volume brightness mute charge glyph", icon: "󰕾" },
         { key: "night",           label: "Night light schedule", page: root.pageScreen, words: "night blue light warm hyprsunset evening", icon: "󰖔" },
         { key: "nightTemp",       label: "Colour temperature", page: root.pageScreen, words: "kelvin warm night light", icon: "󰖔" },
+        { key: "displayLight",    label: "Monitor brightness and night light", page: root.pageScreen, words: "brightness monitor ddc ddcutil backlight dim gamma hyprsunset external screen", icon: "󰃠" },
+        { key: "nightRestore",    label: "Night light comes back at login", page: root.pageScreen, words: "night light login restore startup remember", icon: "󰖔" },
+        { key: "displayGrace",    label: "Undo a display change after", page: root.pageScreen, words: "display revert keep undo resolution timeout seconds", icon: "󰍹" },
+        { key: "powerProfile",    label: "Power profile",      page: root.pageScreen, words: "power profile performance balanced saver battery energy cpu powerprofilesctl", icon: "󰓅" },
+        // ── Input ─────────────────────────────────────────────────────
+        { key: "inputSensitivity", label: "Pointer speed",     page: root.pageInput, words: "mouse pointer speed sensitivity cursor dpi", icon: "󰍽" },
+        { key: "inputAccel",      label: "Mouse acceleration", page: root.pageInput, words: "mouse acceleration flat adaptive raw gaming", icon: "󰍽" },
+        { key: "inputNaturalScroll", label: "Mouse natural scrolling", page: root.pageInput, words: "mouse wheel scroll natural reverse invert", icon: "󰍽" },
+        { key: "inputFollowMouse", label: "Focus follows the pointer", page: root.pageInput, words: "focus follows mouse hover click", icon: "󰍽" },
+        { key: "touchpadNaturalScroll", label: "Touchpad natural scrolling", page: root.pageInput, words: "touchpad trackpad scroll natural reverse", icon: "󰟸" },
+        { key: "touchpadDisableTyping", label: "Ignore touchpad while typing", page: root.pageInput, words: "touchpad trackpad typing palm disable", icon: "󰟸" },
+        { key: "touchpadScrollFactor", label: "Touchpad scroll speed", page: root.pageInput, words: "touchpad trackpad scroll speed factor", icon: "󰟸" },
+        { key: "inputRepeatDelay", label: "Key repeat delay",  page: root.pageInput, words: "keyboard key repeat delay hold", icon: "󰌌" },
+        { key: "inputRepeatRate", label: "Key repeat rate",    page: root.pageInput, words: "keyboard key repeat rate speed", icon: "󰌌" },
+        { key: "inputNumlock",    label: "Num Lock on at login", page: root.pageInput, words: "numlock num lock keypad keyboard", icon: "󰌌" },
+        { key: "inputReset",      label: "Input settings file", page: root.pageInput, words: "input reset defaults mouse keyboard file", icon: "󰌌" },
         { key: "weather",         label: "Weather",            page: root.pageScreen, words: "weather wttr forecast", icon: "󰖐" },
         { key: "weatherCity",     label: "Weather city",       page: root.pageScreen, words: "weather city location", icon: "󰙀" },
         { key: "idleDim",         label: "Dim the screen when idle", page: root.pageScreen, words: "idle dim brightness timeout hypridle sleep away darker", icon: "󰂽" },
@@ -152,6 +169,12 @@ Singleton {
         "Weather": "󰖐",
         "Idle": "󰤄",
         "Lock": "󰌾",
+        "Displays": "󰍹",
+        "Power": "󰓅",
+        "Mouse": "󰍽",
+        "Touchpad": "󰟸",
+        "Keyboard": "󰌌",
+        "Input file": "󰈙",
         "Space": "󰋖",
         "Search": "󰍉",
         "Mind": "󰍜",

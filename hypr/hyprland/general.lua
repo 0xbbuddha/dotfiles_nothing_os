@@ -142,6 +142,9 @@ local function loadShellFile(name)
 end
 
 loadShellFile("layout.lua")
+-- Mouse, touchpad and keyboard from Settings > Input. Absent until that
+-- page is first used; custom.lua is read after this and still wins.
+loadShellFile("input.lua")
 
 -- The window border, following the accent picked in the settings panel.
 -- Without this the frame Hyprland draws stays the red written above while
