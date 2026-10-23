@@ -10,8 +10,18 @@ import ".."
 //
 // The defaults are the measured majority, so a call site only says what
 // makes it different: a size, a dimmer ink, a weight.
+//
+// textFormat is plain on purpose: Text's own default (AutoText) sniffs
+// the string and switches to rich text the moment it looks like HTML,
+// which almost everything shown here is not supposed to be - a window
+// title, a clipboard entry, a notification summary, a phone message, a
+// process name. All of those are somebody else's text, not this
+// shell's, and "<h1>" in a copied string becoming a giant heading (or
+// "<img src=...>" making a request) is a rendering bug, not a feature.
+// A call site that genuinely wants markup says so itself.
 Text {
     color: Theme.c.on
     font.family: Theme.f.sans
     font.pixelSize: Theme.f.small
+    textFormat: Text.PlainText
 }

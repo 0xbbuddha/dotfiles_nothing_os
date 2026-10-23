@@ -387,10 +387,20 @@ Singleton {
         if (mode === "clip") {
             const _ = Clipboard.stamp;
             for (const it of Clipboard.search(text).slice(0, 30)) {
+                // The raw cliphist line ("[[ binary data 15 KiB png
+                // 555x393 ]]") is what used to sit as the row's title -
+                // fine next to a generic glyph, not next to the actual
+                // picture ClipThumb now draws there.
+                const dims = it.isImage
+                    ? it.preview.match(/binary data\s+([\d.]+\s*\w+)\s+(\w+)\s+(\d+x\d+)/i)
+                    : null;
                 out.push({
-                    kind: "clip", title: it.preview,
-                    subtitle: it.isImage ? "Image" : "Clipboard",
+                    kind: "clip",
+                    title: dims ? dims[3].replace("x", " × ") : it.preview,
+                    subtitle: dims ? `${dims[2].toUpperCase()} · ${dims[1]}`
+                        : (it.isImage ? "Image" : "Clipboard"),
                     icon: it.isImage ? "󰋩" : "󰅍",
+                    clipId: it.id, isImage: it.isImage,
                     run: () => Clipboard.copy(it.id, it.preview)
                 });
             }

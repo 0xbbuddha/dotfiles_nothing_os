@@ -549,9 +549,15 @@ PanelWindow {
                     required property var modelData
                     required property int index
                     readonly property bool active: win.selected === index
+                    readonly property bool clipImage:
+                        row.modelData.kind === "clip" && row.modelData.isImage === true
 
                     width: list.width
-                    height: Theme.px(44)
+                    // A thumbnail the size of an app icon showed nothing
+                    // recognisable - taller rows for a clipboard image
+                    // give it room to actually look like the screenshot
+                    // it is.
+                    height: row.clipImage ? Theme.px(76) : Theme.px(44)
                     radius: Theme.r.tiny
                     color: active ? Theme.c.surface3 : "transparent"
                     Behavior on color { ColorAnimation { duration: Theme.fast } }
@@ -574,8 +580,9 @@ PanelWindow {
 
                         // Four possible renders depending on the result kind
                         Item {
-                            Layout.preferredWidth: Theme.px(24)
-                            Layout.preferredHeight: Theme.px(24)
+                            Layout.preferredWidth: row.clipImage ? Theme.px(112) : Theme.px(24)
+                            Layout.preferredHeight: row.clipImage ? Theme.px(64) : Theme.px(24)
+                            Layout.alignment: Qt.AlignVCenter
 
                             AppIcon {
                                 anchors.centerIn: parent
@@ -611,6 +618,17 @@ PanelWindow {
                                 visible: row.modelData.kind !== "app"
                                        && row.modelData.kind !== "emoji"
                                        && (row.modelData.vector ?? "") === ""
+                                       && !(row.modelData.kind === "clip" && row.modelData.isImage)
+                            }
+
+                            // A clipboard image shows its own picture, not
+                            // the generic "Image" glyph above: with more
+                            // than one screenshot in history, the glyph
+                            // alone can't tell you which is which.
+                            ClipThumb {
+                                anchors.fill: parent
+                                visible: row.modelData.kind === "clip" && row.modelData.isImage === true
+                                clipId: row.modelData.clipId ?? ""
                             }
                         }
 
@@ -627,6 +645,15 @@ PanelWindow {
                                     ? Theme.f.mono : Theme.f.sans
                                 font.pixelSize: Theme.f.body
                                 elide: Text.ElideRight
+                                // Raw, not NText, so it needs its own
+                                // override: a clipboard entry ("clip")
+                                // can be any string ever copied, and
+                                // Text's AutoText default renders a
+                                // string that merely looks like HTML as
+                                // HTML - "<h1>salut</h1>" became a giant
+                                // heading in the result list, not the
+                                // literal text that was actually copied.
+                                textFormat: Text.PlainText
                             }
 
                             NText {

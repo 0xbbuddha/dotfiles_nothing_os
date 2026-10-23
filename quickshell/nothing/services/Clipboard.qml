@@ -17,6 +17,14 @@ Singleton {
 
     readonly property bool available: probe.found
 
+    // Decoded image previews (ClipThumb.qml), keyed by cliphist id.
+    // Cleared below at startup and whenever an id is freed (remove,
+    // wipe): cliphist hands a freed id number to different content
+    // later, and a leftover file here would then show the wrong
+    // picture for it, confidently.
+    readonly property string thumbCacheDir:
+        `${Quickshell.env("XDG_RUNTIME_DIR") ?? "/tmp"}/nothing-clip-thumbs`
+
     NProcess {
         // Absent is an answer here, not a fault.
         quiet: true
@@ -69,6 +77,12 @@ Singleton {
     Component.onCompleted: {
         root.refresh();
         Quickshell.execDetached([Quickshell.shellPath("../../scripts/ensure-cliphist.sh")]);
+        // A fresh cache every shell start, not just after our own
+        // remove()/wipe(): an id freed by a `cliphist wipe` run outside
+        // this shell is the same kind of staleness, just one we cannot
+        // see happen.
+        Quickshell.execDetached(["sh", "-c", 'rm -rf "$1"',
+                                  "clip-thumb-init", root.thumbCacheDir]);
     }
     onAvailableChanged: if (available) refresh()
 
@@ -129,15 +143,17 @@ Singleton {
     }
 
     function remove(id: string): void {
-        runner.command = ["sh", "-c", `printf '%s\\t' "$1" | cliphist delete`,
-                          "clip-remove", id];
+        runner.command = ["sh", "-c",
+            `printf '%s\\t' "$1" | cliphist delete; rm -f "$2/$1.png"`,
+            "clip-remove", id, root.thumbCacheDir];
         runner.running = false;
         runner.running = true;
         removeTimer.restart();
     }
 
     function wipe(): void {
-        runner.command = ["cliphist", "wipe"];
+        runner.command = ["sh", "-c", 'cliphist wipe; rm -rf "$1"',
+                          "clip-wipe", root.thumbCacheDir];
         runner.running = false;
         runner.running = true;
         removeTimer.restart();
