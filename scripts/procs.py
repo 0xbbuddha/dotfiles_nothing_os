@@ -23,7 +23,11 @@ PAGE = os.sysconf("SC_PAGE_SIZE")
 # Ending these takes the session or the sound down with it.
 PROTECTED = {"Hyprland", "Xwayland", "quickshell", "qs", "systemd", "dbus-daemon", "dbus-broker",
              "pipewire", "pipewire-pulse", "wireplumber", "sddm", "gdm", "login", "sshd",
-             "xdg-desktop-portal", "xdg-desktop-portal-hyprland", "hypridle", "hyprlock"}
+             "xdg-desktop-portal", "xdg-desktop-portal-hyprland", "xdg-desktop-portal-gtk",
+             "hypridle", "hyprlock"}
+# /proc/<pid>/stat carries comm cut to 15 characters by the kernel, so the
+# names are compared cut the same way ("xdg-desktop-por").
+PROTECTED = {n[:15] for n in PROTECTED}
 
 
 def snapshot():

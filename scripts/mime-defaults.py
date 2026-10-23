@@ -10,8 +10,9 @@
 
 Writes only the [Default Applications] lines of ~/.config/mimeapps.list for
 the category's MIME types, the file xdg-open, portals and file managers
-read. Every other line and section is kept as it was; the previous file is
-copied to mimeapps.list.bak-nothing the first time. An id that does not
+read, editing lines in place: comments, order and every other line and
+section are kept as they were. The previous file is copied to
+mimeapps.list.bak-nothing the first time. An id that does not
 declare the category's types is refused, so nothing here can point PDFs
 at a program that cannot open them.
 """
@@ -127,6 +128,50 @@ def cmd_get(key, user_only=False):
     print(next((cur[m] for m in BY_KEY[key][1] if cur.get(m)), ""))
 
 
+def set_defaults(lines, want):
+    """The file's lines with `want` (mime -> value) set in [Default
+    Applications]. Line-based on purpose: comments, ordering, repeated
+    sections and every other line stay exactly as they were."""
+    out, section, done, first_end = [], None, set(), None
+    for line in lines:
+        st = line.strip()
+        if st.startswith("[") and st.endswith("]"):
+            if section == "Default Applications" and first_end is None:
+                first_end = len(out)
+            section = st[1:-1]
+        elif section == "Default Applications" and "=" in st and not st.startswith("#"):
+            key = st.split("=", 1)[0].strip()
+            if key in want:
+                if key in done:
+                    continue            # a duplicate would shadow the choice
+                out.append(f"{key}={want[key]}")
+                done.add(key)
+                continue
+        out.append(line)
+    if section == "Default Applications" and first_end is None:
+        first_end = len(out)
+    missing = [f"{k}={v}" for k, v in want.items() if k not in done]
+    if missing:
+        if first_end is None:
+            if out and out[-1].strip():
+                out.append("")
+            out += ["[Default Applications]"] + missing
+        else:
+            # Before any blank lines that end that section.
+            at = first_end
+            while at > 0 and not out[at - 1].strip():
+                at -= 1
+            out[at:at] = missing
+    return out
+
+
+def write_file(path, lines):
+    fd, tmp = tempfile.mkstemp(dir=os.path.dirname(path), prefix=".mimeapps.")
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write("\n".join(lines) + "\n")
+    os.replace(tmp, path)
+
+
 def cmd_set(key, did):
     if key not in BY_KEY:
         sys.exit("unknown category")
@@ -137,20 +182,14 @@ def cmd_set(key, did):
     os.makedirs(CONFIG, exist_ok=True)
     if os.path.isfile(MIMEAPPS) and not os.path.exists(MIMEAPPS + ".bak-nothing"):
         shutil.copy2(MIMEAPPS, MIMEAPPS + ".bak-nothing")
-    p = parser()
-    if os.path.isfile(MIMEAPPS):
-        p.read(MIMEAPPS, encoding="utf-8")
-    if not p.has_section("Default Applications"):
-        p.add_section("Default Applications")
     # Only the types this app declares: a viewer that handles PNG but not
     # AVIF keeps the old default for AVIF instead of breaking it.
-    for m in mimes:
-        if m in apps[did][1]:
-            p["Default Applications"][m] = did + ";"
-    fd, tmp = tempfile.mkstemp(dir=CONFIG, prefix=".mimeapps.")
-    with os.fdopen(fd, "w", encoding="utf-8") as f:
-        p.write(f, space_around_delimiters=False)
-    os.replace(tmp, MIMEAPPS)
+    want = {m: did + ";" for m in mimes if m in apps[did][1]}
+    lines = []
+    if os.path.isfile(MIMEAPPS):
+        with open(MIMEAPPS, encoding="utf-8") as f:
+            lines = f.read().splitlines()
+    write_file(MIMEAPPS, set_defaults(lines, want))
     print("ok")
 
 

@@ -107,8 +107,11 @@ Singleton {
         root.wantDetect = false;
         root.detecting = true;
         root.fault = "";
-        root.queue = [];
-        root.enqueue({ kind: "detect" }, false);
+        // Pending brightness reads are redone after detection; queued
+        // capability and feature reads are kept, or a card opened just
+        // before a refresh would wait for them forever.
+        root.queue = root.queue.filter(j => j.kind === "caps" || j.kind === "fread");
+        root.enqueue({ kind: "detect" }, true);
     }
 
     // Re-detect and re-read everything, and lift any block: this is the
@@ -650,9 +653,39 @@ Singleton {
 
     onEveningChanged: root.followSchedule()
 
+    // A shell reload (any QML edit, an update) is not a new period: the
+    // level is applied at most once per period per login session. The
+    // marker lives in $XDG_RUNTIME_DIR, which logout empties.
+    readonly property string periodMarker:
+        (Quickshell.env("XDG_RUNTIME_DIR") ?? "/tmp") + "/nothing-ddc-period"
+
+    NProcess {
+        id: periodCheck
+        quiet: true
+        property string period: ""
+        command: ["sh", "-c",
+            '[ "$(cat "$1" 2>/dev/null)" = "$2" ] && echo same || { printf %s "$2" > "$1"; echo apply; }',
+            "ddc-period", root.periodMarker, periodCheck.period]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                if (text.trim() === "apply")
+                    root.applyPeriod();
+            }
+        }
+    }
+
+    // Login, a period change, or the settings moving: only a new period
+    // (or new levels) writes; a reload of the shell does not.
     function followSchedule(): void {
         if (!Config.ddcEvening)
             return;
+        periodCheck.period = (root.evening ? "evening:" : "day:")
+            + Config.ddcDayLevel + ":" + Config.ddcEveningLevel;
+        periodCheck.running = false;
+        periodCheck.running = true;
+    }
+
+    function applyPeriod(): void {
         root.pendingLevel = (root.evening ? Config.ddcEveningLevel : Config.ddcDayLevel) / 100;
         root.wantDetect = true;
         root.ensure();

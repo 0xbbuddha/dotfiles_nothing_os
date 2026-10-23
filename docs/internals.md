@@ -135,8 +135,10 @@ the pair by screen shape) and runs the folder slideshow
 services/Walls scans `wallpaperFolder` (default ~/Pictures/Wallpapers)
 and the Pictures folders, newest first, 300 at most; the picker decodes
 thumbnails at 320 px. `wallpaper` IPC: set, setOn, next, folder;
-applications/nothing-set-wallpaper.desktop adds "Set as wallpaper" to
-Open With for pictures.
+applications/servicemenus/nothing-set-wallpaper.desktop adds "Set as
+wallpaper" (every screen, or the focused one) to Dolphin's context menu:
+a service menu, not an application, so it can never become the default
+picture opener.
 
 **Idle.** hypridle reads one config file when it starts and has no
 runtime interface, so `services/Idle.qml` generates

@@ -37,7 +37,13 @@ PanelWindow {
         win.fy = 0.15 + Math.random() * 0.7;
     }
 
-    onVisibleChanged: if (visible) win.drift()
+    onVisibleChanged: {
+        if (!visible)
+            return;
+        win.drift();
+        // A new showing: the next pointer position is the new reference.
+        mover.first = Qt.point(-1, -1);
+    }
 
     Timer {
         interval: 60000
@@ -91,6 +97,7 @@ PanelWindow {
 
     // Covers the screen, so any movement over it is the hand coming back.
     MouseArea {
+        id: mover
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.BlankCursor
@@ -101,6 +108,5 @@ PanelWindow {
                 GlobalState.screensaverOn = false;
         }
         onPressed: GlobalState.screensaverOn = false
-        onVisibleChanged: first = Qt.point(-1, -1)
     }
 }

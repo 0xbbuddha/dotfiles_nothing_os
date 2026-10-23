@@ -53,6 +53,8 @@ map_dest() {
         hypr/wallpapers/*)    echo "$CONF/hypr/wallpapers/${1#hypr/wallpapers/}" ;;
         hypr/hyprland.lua|hypr/hypridle.conf|hypr/lockstatus.sh|hypr/passthrough.lua|hypr/wallpaper.png)
                               echo "$CONF/hypr/${1#hypr/}" ;;
+        applications/servicemenus/*.desktop)
+                              echo "$DATA/kio/servicemenus/${1#applications/servicemenus/}" ;;
         applications/*.desktop) echo "$DATA/applications/${1#applications/}" ;;
         *) return 1 ;;
     esac
@@ -67,6 +69,8 @@ known_blobs() {
 new=(); changed=(); edited=()
 while IFS= read -r -d '' f; do
     dst="$(map_dest "$f")" || continue
+    # Tracked but deleted in the working tree (an uncommitted change).
+    [[ -f "$ROOT/$f" ]] || continue
     if [[ ! -e "$dst" ]]; then new+=("$f")
     elif ! cmp -s "$ROOT/$f" "$dst"; then
         changed+=("$f")
@@ -161,6 +165,9 @@ i=0
 for f in "${changed[@]}" "${new[@]}"; do
     i=$((i + 1))
     cp "${merged[$f]:-$ROOT/$f}" "$STAGE/$i"
+    # A merge result is written by redirection (0644): the mode is the
+    # repo file's, or a merged script would lose its executable bit.
+    chmod --reference="$ROOT/$f" "$STAGE/$i"
 done
 
 i=0
@@ -184,6 +191,19 @@ done
 chmod +x "$ROLLBACK"
 
 command -v update-desktop-database >/dev/null && update-desktop-database "$DATA/applications" 2>/dev/null || true
+
+# Files an earlier version of this branch installed and no longer ships.
+# "Set as wallpaper" was a MIME handler for pictures, which could become
+# the default image opener; it is a Dolphin service menu now.
+for old in "$DATA/applications/nothing-set-wallpaper.desktop"; do
+    [[ -e "$old" ]] || continue
+    rel="${old#"$HOME"/}"
+    mkdir -p "$BACKUP/$(dirname "$rel")"
+    cp -a "$old" "$BACKUP/$rel"
+    printf 'cp -a %q %q\n' "$BACKUP/$rel" "$old" >> "$ROLLBACK"
+    rm -f "$old"
+    echo "removed (obsolete): $old"
+done
 
 # One clean reload with every file in place.
 sleep 1

@@ -280,7 +280,7 @@ SettingsPage {
                         NText { text: cat.modelData.label; Layout.preferredWidth: Theme.px(110) }
                         AppIcon {
                             visible: cat.modelData.current !== ""
-                            iconName: Apps.entry(cat.modelData.current)?.icon ?? ""
+                            iconName: Apps.entry(cat.modelData.current.replace(/\.desktop$/, ""))?.icon ?? ""
                             size: Theme.px(16)
                         }
                         NText {
@@ -322,7 +322,7 @@ SettingsPage {
                             anchors.leftMargin: Theme.px(10)
                             anchors.rightMargin: Theme.px(10)
                             spacing: Theme.px(9)
-                            AppIcon { iconName: Apps.entry(cand2.modelData.id)?.icon ?? ""; size: Theme.px(15) }
+                            AppIcon { iconName: Apps.entry(cand2.modelData.id.replace(/\.desktop$/, ""))?.icon ?? ""; size: Theme.px(15) }
                             NText {
                                 Layout.fillWidth: true
                                 text: cand2.modelData.name

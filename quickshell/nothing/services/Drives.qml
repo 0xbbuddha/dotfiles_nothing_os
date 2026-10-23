@@ -162,9 +162,15 @@ Singleton {
         root.run("eject", d.disk, ["sh", "-c", script, "eject"].concat(parts, ["--", d.disk]));
     }
 
+    // One udisksctl at a time; the rest wait their turn (a disk with two
+    // partitions mounts both, not just the first).
+    property var waiting: []
+
     function run(kind: string, path: string, cmd: var): void {
-        if (actor.running)
+        if (actor.running || root.busyPath !== "") {
+            root.waiting = root.waiting.concat([{ kind: kind, path: path, cmd: cmd }]);
             return;
+        }
         root.busyPath = path;
         actor.kind = kind;
         actor.target = path;
@@ -198,6 +204,11 @@ Singleton {
                 root.notify(name + " mounted", (d?.size ?? "") + (at !== "" ? " · " + at : ""));
             }
             root.refresh();
+            if (root.waiting.length > 0) {
+                const n = root.waiting[0];
+                root.waiting = root.waiting.slice(1);
+                Qt.callLater(() => root.run(n.kind, n.path, n.cmd));
+            }
         }
     }
 }

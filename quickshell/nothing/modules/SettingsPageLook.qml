@@ -153,8 +153,9 @@ SettingsPage {
                 onActivated: {
                     if (Wallpapers.dotWallpaperOn)
                         return;
-                    Config.wallpaper = Wallpapers.dotWallpaperKey;
-                    Config.save();
+                    // Every screen, per-screen choices dropped, as the
+                    // picker's "All screens" does.
+                    Wallpapers.set(Wallpapers.dotWallpaperKey, "");
                 }
             }
         }

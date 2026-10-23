@@ -13,8 +13,8 @@ import "../services"
 //     folder first, then Pictures, newest first, as thumbnails
 //   - crop or fit, and the slideshow from the folder
 //
-// No path to type anywhere. SUPER+ALT+W is "next", and a file manager's
-// Open With > "Set as wallpaper" works too (applications/).
+// No path to type anywhere. SUPER+ALT+W is "next", and Dolphin's context
+// menu has "Set as wallpaper" (applications/servicemenus/).
 OverlayWindow {
     id: win
     open: GlobalState.wallpaperPickerOpen

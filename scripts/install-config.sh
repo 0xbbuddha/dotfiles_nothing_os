@@ -75,6 +75,11 @@ for d in "$ROOT"/applications/*.desktop; do
     [[ -e "$d" ]] || continue
     copy_file "$d" "$DATA/applications/$(basename "$d")"
 done
+# Dolphin context-menu actions ("Set as wallpaper"), one file at a time.
+for d in "$ROOT"/applications/servicemenus/*.desktop; do
+    [[ -e "$d" ]] || continue
+    copy_file "$d" "$DATA/kio/servicemenus/$(basename "$d")"
+done
 for i in "$ROOT"/icons/hicolor/scalable/apps/*.svg; do
     [[ -e "$i" ]] || continue
     copy_file "$i" "$DATA/icons/hicolor/scalable/apps/$(basename "$i")"

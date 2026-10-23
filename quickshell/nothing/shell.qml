@@ -483,6 +483,7 @@ ShellRoot {
         target: "wallpaper"
         function set(path: string): void { Wallpapers.set(path, ""); }
         function setOn(path: string, screen: string): void { Wallpapers.set(path, screen); }
+        function setHere(path: string): void { Wallpapers.set(path, Hyprland.focusedMonitor?.name ?? ""); }
         function next(): void { Wallpapers.next(); }
         function folder(path: string): void { Config.wallpaperFolder = path; Config.save(); }
         function current(): string { return Config.wallpaper; }
@@ -542,7 +543,9 @@ ShellRoot {
         // By exact .desktop id, as the launcher would. "ok" or "missing":
         // scripts/open-default.sh falls back on anything but ok.
         function launch(id: string): string {
-            const e = DesktopEntries.byId(id);
+            // mimeapps.list says "firefox.desktop"; Quickshell's ids have no
+            // suffix ("firefox"), as Config.dockApps does.
+            const e = DesktopEntries.byId(id) ?? DesktopEntries.byId(id.replace(/\.desktop$/, ""));
             if (!e)
                 return "missing";
             e.execute();
