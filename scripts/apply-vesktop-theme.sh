@@ -35,22 +35,53 @@ have_vesktop() { [[ -d "$CONF" ]] || command -v vesktop >/dev/null 2>&1; }
 
 # One python call for the read-modify-write: settings.json is JSON, and a
 # sed edit on it is a bug waiting for the day a value contains a comma.
+#
+# A running Vesktop writes this same file too, and the first version of
+# this read it with no guard at all: hitting it mid-write produced a
+# json.JSONDecodeError whose traceback went to stderr, which this
+# script's caller (the settings panel) never reads - so a race that
+# took a fraction of a second showed up as a flat "the script failed",
+# with the real reason thrown away. Retried a few times with a short
+# wait, since a settings.json write is near-instant; written back
+# through a temp file and renamed into place, so this script's own
+# write can never be the half-finished file on the other end of that
+# same race.
 patch_settings() {
     local action="$1"
-    python3 - "$SETTINGS" "$THEME_NAME" "$action" <<'PY'
-import json, sys
+    if ! python3 - "$SETTINGS" "$THEME_NAME" "$action" <<'PY'
+import json, os, sys, time
+
 path, name, action = sys.argv[1], sys.argv[2], sys.argv[3]
-with open(path) as f:
-    d = json.load(f)
+
+d = None
+for attempt in range(5):
+    try:
+        with open(path) as f:
+            d = json.load(f)
+        break
+    except json.JSONDecodeError:
+        if attempt == 4:
+            raise
+        time.sleep(0.2)
+
 themes = [t for t in d.get("enabledThemes", []) if t != name]
 if action == "enable":
     d["useQuickCss"] = True
     themes.append(name)
 d["enabledThemes"] = themes
-with open(path, "w") as f:
+
+tmp = path + ".tmp"
+with open(tmp, "w") as f:
     json.dump(d, f, indent=4)
     f.write("\n")
+os.replace(tmp, path)
 PY
+    then
+        echo "Could not update $SETTINGS (it may be malformed, or Vesktop"
+        echo "kept rewriting it faster than this script could read it)."
+        echo "Close Vesktop and try again."
+        return 1
+    fi
 }
 
 if [[ $STATUS -eq 1 ]]; then

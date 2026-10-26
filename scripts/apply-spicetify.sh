@@ -106,7 +106,7 @@ if [[ $STATUS -eq 1 ]]; then
 fi
 
 if ! have_spicetify; then
-    cat >&2 <<'MSG'
+    cat <<'MSG'
 spicetify is not installed.
 
     yay -S spicetify-cli        # or: paru -S spicetify-cli
@@ -119,14 +119,42 @@ fi
 if [[ $REVERT -eq 1 ]]; then
     echo "→ Restoring Spotify"
     spicetify restore || true
+
+    # spicetify restore reports success (and this script used to take its
+    # word for it with `|| true`) even when it had no backup to restore
+    # from - which happens the moment a Spotify package update replaces
+    # /opt/spotify wholesale and spicetify's own backup copy with it. The
+    # client was left fully themed while this script said "Done."
+    # Checking the one file the theme actually marks is the only way to
+    # know restore did anything at all.
+    #
+    # The fix for that case is a full package reinstall, which needs a
+    # password - and a password belongs in a terminal the user is
+    # looking at, not a process started behind this panel's spinner
+    # with no terminal to answer sudo's prompt in: that combination is
+    # exactly what first looked like "Removing hangs forever" here, not
+    # a clean failure. So this names the problem and the exact command,
+    # and stops - the same reason Spicetify.qml's installSpicetify()
+    # opens an actual terminal for `yay -S spicetify-cli` rather than
+    # running it itself.
+    css="$SPOTIFY_DIR/Apps/xpui/user.css"
+    if [[ -n "$SPOTIFY_DIR" ]] && [[ -f "$css" ]] && grep -q "$MARKER" "$css"; then
+        echo "spicetify's own backup is gone, so restore could not undo"
+        echo "the theme. Run this yourself in a terminal, then reopen"
+        echo "Spotify:"
+        echo
+        echo "    sudo pacman -S spotify"
+        exit 1
+    fi
+
     echo "Done. Reopen Spotify."
     exit 0
 fi
 
 if [[ -z "$SPOTIFY_DIR" ]]; then
-    echo "Spotify's install directory was not found. Is it installed?" >&2
-    echo "A flatpak install works too, but spicetify has to be pointed at" >&2
-    echo "it by hand: see spicetify's docs for spotify_path." >&2
+    echo "Spotify's install directory was not found. Is it installed?"
+    echo "A flatpak install works too, but spicetify has to be pointed at"
+    echo "it by hand: see spicetify's docs for spotify_path."
     exit 1
 fi
 
@@ -148,11 +176,11 @@ if ! writable; then
         elif command -v pkexec >/dev/null 2>&1; then
             pkexec sh -c "$fix"
         else
-            echo "neither sudo on a terminal nor pkexec is available" >&2
+            echo "neither sudo on a terminal nor pkexec is available"
             exit 1
         fi
     else
-        cat >&2 <<MSG
+        cat <<MSG
 $SPOTIFY_DIR is not writable, and spicetify patches Spotify in place.
 
 Run this script with --fix-perms, or run these two yourself:
@@ -198,16 +226,26 @@ spicetify config inject_css 1 replace_colors 1 overwrite_assets 1 >/dev/null
 # find out about a new release, and the shell shows that error to the user.
 spicetify config check_spicetify_update 0 >/dev/null
 
-# backup apply on a machine that has never been patched, plain apply after
-# that: a second backup would snapshot the already-themed client, and
-# spicetify refuses it and does nothing at all rather than falling back.
+# backup apply on a machine that has never been patched, or whose backup
+# no longer matches the Spotify that is actually installed; plain apply
+# once the two agree. Checking only "does a version line exist" (what
+# this used to do) missed the far more common case: Spotify updates on
+# its own every few weeks, the recorded backup does not, and `spicetify
+# apply` against a stale backup is exactly what printed "Spotify version
+# and backup version are mismatched" and left the theme stuck - restore
+# had nothing current to restore from, and apply had nothing current to
+# apply onto. `spotify --version` prints the exact same string spicetify
+# records under [Backup], so the comparison is exact, not a guess.
 #
 # The marker is the version line spicetify writes under [Backup] in its own
 # config, not a Backup directory: 2.x keeps the copy outside the config
 # directory, so looking for the folder there says "never patched" on a
 # machine that has been patched for months.
-if grep -qE '^version[[:space:]]*=[[:space:]]*[^[:space:]]' \
-        <(sed -n '/^\[Backup\]/,$p' "$SPICE_CONF"); then
+backup_version="$(sed -n 's/^version[[:space:]]*=[[:space:]]*//p' \
+    <(sed -n '/^\[Backup\]/,$p' "$SPICE_CONF") | head -1)"
+live_version="$("$SPOTIFY_DIR/spotify" --version 2>/dev/null \
+    | sed -n 's/^Spotify version \([^,]*\),.*/\1/p')"
+if [[ -n "$backup_version" && -n "$live_version" && "$backup_version" == "$live_version" ]]; then
     spicetify apply
 else
     spicetify backup apply
