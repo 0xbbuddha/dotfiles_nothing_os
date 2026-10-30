@@ -25,20 +25,16 @@ Item {
     // Hyprland does not put it in activeworkspace: that stays on the normal
     // workspace underneath. State lives on the monitor, and since
     // refreshMonitors() is async, the activespecialv2 event payload is read
-    // directly: "<id>,<name>,<monitor>".
-    property int specialId: 0
+    // directly: "<id>,<name>,<monitor>". Tracked by name, not id: Hyprland
+    // 0.57 sends the name again in the id field ("special:special") instead
+    // of the old numeric id, which broke isSpecial being driven by an int.
     property string specialRaw: ""
 
-    readonly property bool onSpecial: specialId !== 0
+    readonly property bool onSpecial: specialRaw !== ""
     readonly property string specialName: {
         const n = root.specialRaw;
         if (n.startsWith("special:")) return n.slice(8) || "special";
         return n || "special";
-    }
-
-    function applySpecial(id: int, name: string): void {
-        root.specialId = (isFinite(id) && id !== 0) ? id : 0;
-        root.specialRaw = root.specialId !== 0 ? name : "";
     }
 
     Component.onCompleted: {
@@ -46,7 +42,7 @@ Item {
         const mon = (Hyprland.monitors?.values ?? [])
             .find(m => m.name === root.monitorName);
         const sp = mon?.lastIpcObject?.specialWorkspace ?? null;
-        root.applySpecial(sp?.id ?? 0, sp?.name ?? "");
+        root.specialRaw = sp?.name ?? "";
     }
 
     Connections {
@@ -56,7 +52,7 @@ Item {
             const p = String(event.data).split(",");
             // the name may contain a comma; the monitor is the last field
             if (p[p.length - 1] !== root.monitorName) return;
-            root.applySpecial(parseInt(p[0]), p.slice(1, -1).join(","));
+            root.specialRaw = p.slice(1, -1).join(",");
         }
     }
 
