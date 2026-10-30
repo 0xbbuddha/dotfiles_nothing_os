@@ -173,7 +173,9 @@ hl.bind(mainMod .. " + BracketRight", hl.dsp.focus({ direction = "r" }))
 local function closeSpecial()
     local sp = hl.get_active_special_workspace()
     if sp then
-        hl.dispatch(hl.dsp.workspace.toggle_special(sp.name:gsub("^special:", "")))
+        -- gsub returns (string, count); the extra parens drop count so
+        -- toggle_special gets one argument, not two.
+        hl.dispatch(hl.dsp.workspace.toggle_special((sp.name:gsub("^special:", ""))))
     end
 end
 
