@@ -1,0 +1,180 @@
+/* Nothing OS theme for Zen Browser's internal pages (about:newtab,
+ * about:preferences, about:addons, about:protections). See
+ * userChrome.css for how NOTHING_ACCENT gets substituted.
+ */
+
+@media (prefers-color-scheme: dark) {
+  @-moz-document url-prefix("about:") {
+    :root {
+      --in-content-page-color: #ffffff !important;
+      --color-accent-primary: NOTHING_ACCENT !important;
+      background-color: #0b0b0b !important;
+      --in-content-page-background: #0b0b0b !important;
+    }
+  }
+
+  @-moz-document url("about:newtab"), url("about:home") {
+    :root {
+      --newtab-background-color: #0b0b0b !important;
+      --newtab-background-color-secondary: #161616 !important;
+      --newtab-element-hover-color: #212121 !important;
+      --newtab-text-primary-color: #ffffff !important;
+      --newtab-wordmark-color: #ffffff !important;
+      --newtab-primary-action-background: NOTHING_ACCENT !important;
+    }
+
+    /* The dot field every panel in the shell sits on
+     * (components/DotField.qml: 14px spacing, 1px dots, 0.55 alpha). */
+    body {
+      background-image: radial-gradient(
+        circle,
+        rgba(69, 69, 69, 0.55) 1px,
+        transparent 1.5px
+      ) !important;
+      background-size: 14px 14px !important;
+    }
+
+    .icon {
+      color: NOTHING_ACCENT !important;
+    }
+
+    .card-outer:is(:hover, :focus, .active):not(.placeholder) .card-title {
+      color: NOTHING_ACCENT !important;
+    }
+  }
+
+  @-moz-document url-prefix("about:preferences") {
+    :root {
+      --zen-colors-tertiary: #0b0b0b !important;
+      --in-content-text-color: #ffffff !important;
+      --link-color: NOTHING_ACCENT !important;
+      --zen-colors-primary: #161616 !important;
+      --in-content-box-background: #161616 !important;
+      --zen-primary-color: NOTHING_ACCENT !important;
+    }
+
+    groupbox,
+    moz-card {
+      background: #0b0b0b !important;
+    }
+
+    button,
+    groupbox menulist {
+      background: #161616 !important;
+      color: #ffffff !important;
+    }
+
+    .main-content {
+      background-color: #000000 !important;
+    }
+  }
+
+  @-moz-document url-prefix("about:addons") {
+    :root {
+      --zen-dark-color-mix-base: #0b0b0b !important;
+      --background-color-box: #0b0b0b !important;
+    }
+  }
+
+  @-moz-document url-prefix("about:protections") {
+    :root {
+      --zen-primary-color: #0b0b0b !important;
+      --in-content-primary-button-background: #212121 !important;
+      --in-content-primary-button-text-color: #ffffff !important;
+    }
+
+    .card {
+      background-color: #161616 !important;
+    }
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  @-moz-document url-prefix("about:") {
+    :root {
+      --in-content-page-color: #0b0b0b !important;
+      --color-accent-primary: NOTHING_ACCENT !important;
+      background-color: #ffffff !important;
+      --in-content-page-background: #ffffff !important;
+    }
+  }
+
+  @-moz-document url("about:newtab"), url("about:home") {
+    :root {
+      --newtab-background-color: #ffffff !important;
+      --newtab-background-color-secondary: #f1f1f1 !important;
+      --newtab-element-hover-color: #e4e4e4 !important;
+      --newtab-text-primary-color: #0b0b0b !important;
+      --newtab-wordmark-color: #0b0b0b !important;
+      --newtab-primary-action-background: NOTHING_ACCENT !important;
+    }
+
+    body {
+      background-image: radial-gradient(
+        circle,
+        rgba(180, 180, 180, 0.55) 1px,
+        transparent 1.5px
+      ) !important;
+      background-size: 14px 14px !important;
+    }
+
+    .icon {
+      color: NOTHING_ACCENT !important;
+    }
+
+    .card-outer:is(:hover, :focus, .active):not(.placeholder) .card-title {
+      color: NOTHING_ACCENT !important;
+    }
+  }
+
+  @-moz-document url-prefix("about:preferences") {
+    :root {
+      --zen-colors-tertiary: #ffffff !important;
+      --in-content-text-color: #0b0b0b !important;
+      --link-color: NOTHING_ACCENT !important;
+      --zen-colors-primary: #f1f1f1 !important;
+      --in-content-box-background: #f1f1f1 !important;
+      --zen-primary-color: NOTHING_ACCENT !important;
+    }
+
+    groupbox,
+    moz-card {
+      background: #ffffff !important;
+    }
+
+    button,
+    groupbox menulist {
+      background: #f1f1f1 !important;
+      color: #0b0b0b !important;
+    }
+
+    .main-content {
+      background-color: #e4e4e4 !important;
+    }
+  }
+
+  @-moz-document url-prefix("about:addons") {
+    :root {
+      --zen-dark-color-mix-base: #ffffff !important;
+      --background-color-box: #ffffff !important;
+    }
+  }
+
+  @-moz-document url-prefix("about:protections") {
+    :root {
+      --zen-primary-color: #ffffff !important;
+      --in-content-primary-button-background: #e4e4e4 !important;
+      --in-content-primary-button-text-color: #0b0b0b !important;
+    }
+
+    .card {
+      background-color: #f1f1f1 !important;
+    }
+  }
+}
+
+@-moz-document url-prefix("about:") {
+  :root {
+    --font-family: "Inter Variable", "Inter", sans-serif !important;
+  }
+}

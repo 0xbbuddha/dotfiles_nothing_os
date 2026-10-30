@@ -1,0 +1,215 @@
+/* Nothing OS theme for Zen Browser's chrome (tabs, toolbar, sidebar).
+ * Installed by scripts/apply-zen-theme.sh - NOTHING_ACCENT below is
+ * replaced with the shell's live Config.accent at apply time, the same
+ * way apply-spicetify.sh patches Spotify's color.ini. Do not edit the
+ * accent by hand here; it will be overwritten on the next apply.
+ *
+ * Dark and light both ship so this never needs regenerating when the
+ * shell's theme toggles - apply-app-theme.sh already keeps the system
+ * GTK theme (and so prefers-color-scheme) in sync with Config.theme.
+ */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --zen-colors-primary: #161616 !important;
+    --zen-primary-color: NOTHING_ACCENT !important;
+    --zen-colors-secondary: #161616 !important;
+    --zen-colors-tertiary: #0b0b0b !important;
+    --zen-colors-border: #2a2a2a !important;
+    --toolbarbutton-icon-fill: #ffffff !important;
+    --lwt-text-color: #ffffff !important;
+    --toolbar-field-color: #ffffff !important;
+    --tab-selected-textcolor: #ffffff !important;
+    --toolbar-field-focus-color: #ffffff !important;
+    --toolbar-color: #ffffff !important;
+    --newtab-text-primary-color: #ffffff !important;
+    --arrowpanel-color: #ffffff !important;
+    --arrowpanel-background: #161616 !important;
+    --sidebar-text-color: #ffffff !important;
+    --lwt-sidebar-text-color: #ffffff !important;
+    --lwt-sidebar-background-color: #0b0b0b !important;
+    --toolbar-bgcolor: #0b0b0b !important;
+    --newtab-background-color: #0b0b0b !important;
+    --zen-themed-toolbar-bg: #0b0b0b !important;
+    --zen-main-browser-background: #0b0b0b !important;
+    --toolbox-bgcolor-inactive: #0b0b0b !important;
+  }
+
+  .sidebar-placesTree,
+  .urlbar-background,
+  #zen-workspaces-button {
+    background-color: #0b0b0b !important;
+  }
+
+  #TabsToolbar,
+  hbox#titlebar,
+  #zen-appcontent-navbar-container {
+    background-color: #000000 !important;
+  }
+
+  .content-shortcuts {
+    background-color: #0b0b0b !important;
+    border-color: NOTHING_ACCENT !important;
+  }
+
+  #zenEditBookmarkPanelFaviconContainer {
+    background: #000000 !important;
+  }
+
+  #zen-media-controls-toolbar #zen-media-progress-bar::-moz-range-track {
+    background: #161616 !important;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --zen-colors-primary: #f1f1f1 !important;
+    --zen-primary-color: NOTHING_ACCENT !important;
+    --zen-colors-secondary: #f1f1f1 !important;
+    --zen-colors-tertiary: #ffffff !important;
+    --zen-colors-border: #dcdcdc !important;
+    --toolbarbutton-icon-fill: #0b0b0b !important;
+    --lwt-text-color: #0b0b0b !important;
+    --toolbar-field-color: #0b0b0b !important;
+    --tab-selected-textcolor: #0b0b0b !important;
+    --toolbar-field-focus-color: #0b0b0b !important;
+    --toolbar-color: #0b0b0b !important;
+    --newtab-text-primary-color: #0b0b0b !important;
+    --arrowpanel-color: #0b0b0b !important;
+    --arrowpanel-background: #ffffff !important;
+    --sidebar-text-color: #0b0b0b !important;
+    --lwt-sidebar-text-color: #0b0b0b !important;
+    --lwt-sidebar-background-color: #ffffff !important;
+    --toolbar-bgcolor: #ffffff !important;
+    --newtab-background-color: #ffffff !important;
+    --zen-themed-toolbar-bg: #ffffff !important;
+    --zen-main-browser-background: #ffffff !important;
+    --toolbox-bgcolor-inactive: #ffffff !important;
+  }
+
+  .sidebar-placesTree,
+  .urlbar-background,
+  #zen-workspaces-button {
+    background-color: #ffffff !important;
+  }
+
+  #TabsToolbar,
+  hbox#titlebar,
+  #zen-appcontent-navbar-container {
+    background-color: #f1f1f1 !important;
+  }
+
+  .content-shortcuts {
+    background-color: #ffffff !important;
+    border-color: NOTHING_ACCENT !important;
+  }
+
+  #zenEditBookmarkPanelFaviconContainer {
+    background: #f1f1f1 !important;
+  }
+
+  #zen-media-controls-toolbar #zen-media-progress-bar::-moz-range-track {
+    background: #f1f1f1 !important;
+  }
+}
+
+/* Theme-independent: Nothing's own type and shape, not tied to dark/light. */
+:root {
+  /* Nothing's panels stay nearly square - a pill and a panel never share
+     a radius there, and Zen's default is rounder than that. */
+  --zen-border-radius: 4px !important;
+}
+
+#TabsToolbar,
+.tabbrowser-tab,
+#urlbar,
+.urlbarView-row,
+menupopup,
+panel {
+  font-family: "Inter Variable", "Inter", sans-serif !important;
+}
+
+.urlbarView-url {
+  color: NOTHING_ACCENT !important;
+}
+
+/* Nothing is flat - no soft elevation anywhere. Zen's shadows are all
+ * composed from these two colour tiers plus a handful of named
+ * levels; zeroing the tiers collapses every shadow built from them in
+ * one place instead of chasing each selector. The few that aren't
+ * built from a tier (urlbar, tabs, compact mode) are named directly. */
+:root {
+  --box-shadow-color-darker-layer-1: transparent !important;
+  --box-shadow-color-darker-layer-2: transparent !important;
+  --box-shadow-color-lighter-layer-1: transparent !important;
+  --box-shadow-color-lighter-layer-2: transparent !important;
+  --chrome-box-shadow: transparent !important;
+  --urlbar-background-box-shadow-open: none !important;
+  --tab-box-shadow-selected: none !important;
+  --smartbar-box-shadow: none !important;
+  --zen-compact-mode-styles-shadow: none !important;
+}
+
+/* The active tab reads as a sharp line, not a glow - same idea as the
+ * bar's own workspace indicator (components/WorkspaceStrip.qml): a
+ * short underline, not a pill or a blur. */
+.tabbrowser-tab[selected] {
+  box-shadow: none !important;
+  outline: 1px solid NOTHING_ACCENT !important;
+  outline-offset: -1px !important;
+}
+
+/* The tiny ultra-tracked uppercase label (components/NLabel.qml) is
+ * the one Nothing signature every settings row and bar label in this
+ * rice shares. Bookmarks toolbar items only - a single, well-defined
+ * target. The app menu's own subviewbutton classes cover several
+ * different kinds of row (back button, section heading, plain entry,
+ * a submenu's own toggle) under overlapping selectors, and styling
+ * only some of those is how a menu ends up with some rows upper-cased
+ * and others not, which read as broken rather than deliberate. */
+#PersonalToolbar .bookmark-item .toolbarbutton-text {
+  font-family: "JetBrainsMono NF", monospace !important;
+  letter-spacing: 1.4px !important;
+  text-transform: uppercase !important;
+}
+
+/* The dot field every panel in the shell sits on
+ * (components/DotField.qml: 14px spacing, 1px dots, 0.55 alpha) -
+ * same numbers, done as a CSS radial-gradient since chrome has no
+ * shader stage to borrow.
+ *
+ * #zen-browser-background (browser.xhtml) is Zen's own dedicated
+ * background layer, absolutely positioned behind everything - but
+ * painting on the element itself did nothing, because its actual
+ * visible paint comes from its own ::after pseudo-element
+ * (background: var(--zen-main-browser-background); opacity:
+ * var(--zen-background-opacity)), drawn on top of the parent at the
+ * same inset:0. The parent's own background-image sat underneath
+ * that, fully covered. ::before is a second, older-background layer
+ * Zen cross-fades from on a theme change; both get the dots so
+ * neither shows through as a flat patch mid-transition. Setting only
+ * background-image here (not the background shorthand) leaves
+ * Zen's own background-color/opacity on these pseudo-elements alone. */
+@media (prefers-color-scheme: dark) {
+  #zen-browser-background::after,
+  #zen-browser-background::before {
+    background-image: radial-gradient(
+      circle,
+      rgba(69, 69, 69, 0.55) 1px,
+      transparent 1.5px
+    ) !important;
+    background-size: 14px 14px !important;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  #zen-browser-background::after,
+  #zen-browser-background::before {
+    background-image: radial-gradient(
+      circle,
+      rgba(180, 180, 180, 0.55) 1px,
+      transparent 1.5px
+    ) !important;
+    background-size: 14px 14px !important;
+  }
+}

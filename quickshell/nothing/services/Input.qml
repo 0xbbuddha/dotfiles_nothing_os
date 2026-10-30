@@ -31,11 +31,14 @@ Singleton {
     function luaBool(b: bool): string { return b ? "true" : "false"; }
 
     // Only names Hyprland documents for `input` and `input:touchpad`.
-    // accel_profile "" is libinput's own default (adaptive on most mice).
+    // Hyprland 0.57 rejects accel_profile = "" (used to mean "libinput's
+    // own default"); the key is now omitted entirely for that case, same
+    // effect.
     readonly property string settingsLua: `hl.config({
     input = {
         sensitivity = ${Number(Config.inputSensitivity).toFixed(2)},
-        accel_profile = "${Config.inputAccel === "flat" || Config.inputAccel === "adaptive" ? Config.inputAccel : ""}",
+        ${(Config.inputAccel === "flat" || Config.inputAccel === "adaptive")
+            ? `accel_profile = "${Config.inputAccel}",` : ""}
         natural_scroll = ${root.luaBool(Config.inputNaturalScroll)},
         follow_mouse = ${Config.inputFollowMouse ? 1 : 0},
         repeat_rate = ${Math.round(Config.inputRepeatRate)},
