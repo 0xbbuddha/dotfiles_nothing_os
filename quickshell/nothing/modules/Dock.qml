@@ -50,13 +50,16 @@ PanelWindow {
     }
 
     // Active workspace of THIS screen (not global focus, which may be
-    // on the other monitor).
-    readonly property int activeWsId: {
+    // on the other monitor). var, not int: Hyprland 0.57 dropped
+    // specialWorkspace.id entirely (monitors -j and clients -j both
+    // give {address,type,name} now, no id), so the special workspace
+    // is identified by name here and matched by name below.
+    readonly property var activeWsId: {
         const m = win.monitor;
         const ipc = m?.lastIpcObject ?? {};
         const sp = ipc.specialWorkspace;
-        if (sp && (sp.id ?? 0) !== 0)
-            return sp.id;
+        if (sp?.name)
+            return sp.name;
         return m?.activeWorkspace?.id
             ?? ipc.activeWorkspace?.id
             ?? Hyprland.focusedWorkspace?.id
@@ -78,7 +81,7 @@ PanelWindow {
                 continue;
             if (t.lastIpcObject?.hidden)
                 continue;
-            if (w.id === ws)
+            if (w.id === ws || w.name === ws)
                 return true;
         }
         return false;
