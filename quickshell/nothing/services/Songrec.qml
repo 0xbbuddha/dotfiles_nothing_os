@@ -92,8 +92,7 @@ Singleton {
     function openTrack(): void {
         if (!root.hasResult) return;
         const q = encodeURIComponent(`${root.title} ${root.artist}`);
-        lookup.command = ["sh", "-c",
-            `xdg-open "https://www.youtube.com/results?search_query=${q}"`];
+        lookup.command = ["xdg-open", `https://www.youtube.com/results?search_query=${q}`];
         lookup.running = true;
     }
 

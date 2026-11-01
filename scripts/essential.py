@@ -20,6 +20,7 @@ Commands:
   set-key          (API key on stdin)
   set-backend NAME
   ask              (question on stdin or argv)
+  consent KEY      (prints yes or no, asks once)
 """
 from __future__ import annotations
 
@@ -43,9 +44,25 @@ INDEX = DIR / "index.json"
 FILES = DIR / "files"
 LAST_RECORD = Path(os.environ.get("XDG_RUNTIME_DIR") or "/tmp") / "nothing-record.last"
 LAST_VOICE = Path(os.environ.get("XDG_RUNTIME_DIR") or "/tmp") / "nothing-voice.last"
+STATE = Path(os.environ.get("XDG_STATE_HOME") or (Path.home() / ".local/state"))
+CONSENT = STATE / "nothing" / "consent.json"
 MIND_ENV = Path.home() / ".config" / "nothing" / "mind.env"
 PATTERNS = Path.home() / ".config" / "nothing" / "essential-patterns.json"
 CAP = 80
+CONSENT_TEXT = {
+    "gemini": (
+        "Send captures to Google Gemini?",
+        "Google receives the text of your captures, clipboard entries, "
+        "screenshots and voice notes, and for Ask a few vault excerpts.\n\n"
+        "Nothing is sent until you allow it. This choice is remembered.",
+    ),
+    "lens": (
+        "Upload this selection to uguu.se?",
+        "The screen region you select is uploaded to uguu.se, a public file "
+        "host, and its link is opened in Google Lens, so Google fetches it "
+        "too.\n\nThis choice is remembered.",
+    ),
+}
 
 
 def ensure() -> None:
@@ -128,6 +145,49 @@ def write_env(env: dict) -> None:
         os.chmod(MIND_ENV, 0o600)
     finally:
         os.umask(old)
+
+
+def consent_store() -> dict:
+    try:
+        data = json.loads(CONSENT.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def consent_given(key: str) -> bool:
+    return consent_store().get(key) is True
+
+
+def consent_ask(key: str, title: str, text: str) -> bool:
+    if consent_given(key):
+        return True
+    if not have("zenity"):
+        return False
+    try:
+        answer = subprocess.run(
+            ["zenity", "--question", "--default-cancel", "--no-markup",
+             "--timeout=120", "--width=460", "--ok-label=Allow",
+             "--cancel-label=Refuse", f"--title={title}", f"--text={text}"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except OSError:
+        return False
+    if answer.returncode != 0:
+        return False
+    store = consent_store()
+    store[key] = True
+    CONSENT.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(CONSENT, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as handle:
+        json.dump(store, handle, indent=2)
+    return True
+
+
+def named_consent(key: str) -> bool:
+    title, text = CONSENT_TEXT[key]
+    return consent_ask(key, title, text)
 
 
 def parse_json_obj(body: str) -> dict:
@@ -468,6 +528,11 @@ def gemini_mind(entry: dict, env: dict) -> dict:
         entry["mind"] = "nokey"
         entry["summary"] = "Add a Gemini key in settings"
         return entry
+    if not named_consent("gemini"):
+        stub_mind(entry)
+        entry["mind"] = "error"
+        entry["summary"] = "Gemini not allowed, nothing was sent"
+        return entry
     models = []
     for name in (env.get("MODEL"), "gemini-3.6-flash", "gemini-3.5-flash"):
         if name and name not in models:
@@ -539,6 +604,8 @@ def gemini_text(prompt: str, env: dict, timeout: int = 30) -> tuple[str, str]:
     key = env.get("GEMINI_API_KEY") or os.environ.get("GEMINI_API_KEY") or ""
     if not key:
         return "", "Add a Gemini key in settings"
+    if not named_consent("gemini"):
+        return "", "Gemini not allowed, nothing was sent"
     models: list[str] = []
     for name in (env.get("MODEL"), "gemini-3.6-flash", "gemini-3.5-flash"):
         if name and name not in models:
@@ -634,6 +701,12 @@ def cmd_ask(question: str) -> None:
             f"title={it.get('title') or ''}: {body}"
         )
     vault = "\n".join(lines) if lines else "(empty)"
+    env = read_env()
+    backend = (os.environ.get("NOTHING_MIND_BACKEND") or env.get("BACKEND")
+               or "stub").strip().lower()
+    if backend not in ("gemini", "ollama"):
+        out({"answer": "Ask needs a Gemini or Ollama backend in settings", "ids": []})
+        return
     prompt = (
         "You are Essential Search on a Nothing OS desktop. "
         "Answer in 2 or 3 short sentences. Prefer the vault if it answers. "
@@ -643,7 +716,13 @@ def cmd_ask(question: str) -> None:
         f"Vault:\n{vault}\n"
         f"Question: {q}\n"
     )
-    raw, err = gemini_text(prompt, read_env(), 30)
+    if backend == "ollama":
+        try:
+            raw, err = ollama_text(prompt, env.get("MODEL") or "llama3.2", 45), ""
+        except (subprocess.SubprocessError, OSError):
+            raw, err = "", "Ollama did not answer"
+    else:
+        raw, err = gemini_text(prompt, env, 30)
     if err:
         out({"answer": err, "ids": []})
         return
@@ -970,7 +1049,12 @@ def cmd_set_backend(name: str) -> None:
     print("ok")
 
 
+def cmd_consent(key: str) -> None:
+    print("yes" if key in CONSENT_TEXT and named_consent(key) else "no")
+
+
 def main() -> None:
+    os.umask(0o077)
     args = sys.argv[1:]
     if not args:
         fail("usage: essential.py <command>", 2)
@@ -1035,6 +1119,8 @@ def main() -> None:
         if not q:
             q = sys.stdin.read()
         cmd_ask(q)
+    elif cmd == "consent":
+        cmd_consent(args[1] if len(args) > 1 else "")
     else:
         fail("unknown command: " + cmd, 2)
 

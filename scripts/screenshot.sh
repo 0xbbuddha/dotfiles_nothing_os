@@ -102,7 +102,11 @@ case "$ACTION" in
         # other actions use. Spawning slurp instead meant asking for a
         # pointer grab while the launcher still held one, and it never
         # got one: no crosshair appeared and the process waited forever.
-        URL="$(curl -sF "files[]=@$FILE" "https://uguu.se/upload" \
+        if [[ "$(python3 -I "$ROOT/scripts/essential.py" consent lens)" != "yes" ]]; then
+            rm -f "$FILE"
+            echo "Cancelled"; exit 1
+        fi
+        URL="$(curl -sS --max-time 60 -F "files[]=@$FILE" "https://uguu.se/upload" 2>/dev/null \
             | jq -r '.files[0].url' 2>/dev/null)"
         rm -f "$FILE"
         if [[ -z "$URL" || "$URL" == "null" ]]; then
@@ -115,7 +119,7 @@ case "$ACTION" in
         if [[ -n "${BROWSER:-}" ]] && ! command -v "${BROWSER%% *}" >/dev/null 2>&1; then
             unset BROWSER
         fi
-        setsid xdg-open "https://lens.google.com/uploadbyurl?url=${URL}" \
+        setsid xdg-open "https://lens.google.com/uploadbyurl?url=$(jq -rn --arg u "$URL" '$u | @uri')" \
             >/dev/null 2>&1 </dev/null &
         disown 2>/dev/null || true
         echo "Opened in Google Lens"

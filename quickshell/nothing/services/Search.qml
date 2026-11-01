@@ -193,7 +193,7 @@ Singleton {
         root.askFor = text;
         asker.payload = text;
         asker.running = false;
-        asker.command = ["python3", Essentials.script, "ask"];
+        asker.command = Essentials.envBackend().concat(["python3", Essentials.script, "ask"]);
         asker.stdinEnabled = true;
         asker.running = true;
     }
