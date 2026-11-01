@@ -13,7 +13,7 @@ Singleton {
     readonly property string script: Quickshell.shellPath("../../scripts/screenshot.sh")
     readonly property string grabScript: Quickshell.shellPath("../../scripts/grab-outputs.py")
     readonly property string detectScript: Quickshell.shellPath("../../scripts/find-regions.py")
-    readonly property string snipDir: "/tmp/nothing-snip"
+    readonly property string snipDir: `${Quickshell.env("XDG_RUNTIME_DIR")}/nothing-snip`
     property string status: ""
     property bool busy: false
     property bool picking: false
@@ -65,10 +65,18 @@ Singleton {
         runner.running = true;
     }
 
+    function sweep(): void {
+        Quickshell.execDetached(["sh", "-c",
+            'for f in "$1"/*.png; do [ "$f" = "$1/key.png" ] || rm -f -- "$f"; done',
+            "snip-sweep", root.snipDir]);
+    }
+
     function confirmRegion(output: string, localGeo: string): void {
         root.picking = false;
-        if (output === "" || localGeo === "")
+        if (output === "" || localGeo === "") {
+            root.sweep();
             return;
+        }
         root.busy = true;
         runner.command = ["sh", root.script, "freeze", root.pendingAction, localGeo, output];
         runner.running = true;
@@ -78,6 +86,7 @@ Singleton {
         root.grabPending = false;
         pregrab.running = false;
         root.picking = false;
+        root.sweep();
         root.cancelled();
     }
 }

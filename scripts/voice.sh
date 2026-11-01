@@ -5,9 +5,10 @@
 #   voice.sh status
 set -uo pipefail
 
-LAST="${XDG_RUNTIME_DIR:-/tmp}/nothing-voice.last"
-LOG="${XDG_RUNTIME_DIR:-/tmp}/nothing-voice.log"
-OUT="${XDG_RUNTIME_DIR:-/tmp}/nothing-voice.oga"
+RUNTIME="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+LAST="$RUNTIME/nothing-voice.last"
+LOG="$RUNTIME/nothing-voice.log"
+OUT="$RUNTIME/nothing-voice.oga"
 
 case "${1:-status}" in
   status)
@@ -37,7 +38,7 @@ case "${1:-status}" in
     fi
 
     if command -v parec >/dev/null 2>&1; then
-        OUT="${XDG_RUNTIME_DIR:-/tmp}/nothing-voice.wav"
+        OUT="$RUNTIME/nothing-voice.wav"
         echo "$OUT" > "$LAST"
         exec parec --file-format=wav --format=s16le --rate=16000 --channels=1 \
             --latency-msec=100 "$OUT" >"$LOG" 2>&1

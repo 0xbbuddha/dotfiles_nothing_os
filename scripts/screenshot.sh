@@ -5,7 +5,7 @@
 # WARNING: the lens action SENDS the crop to a third-party host
 # (uguu.se) to get a public URL, then opens it in Google Lens.
 #
-# freeze: crop the pre-overlay grim in /tmp/nothing-snip/<output>.png
+# freeze: crop the pre-overlay grim in $XDG_RUNTIME_DIR/nothing-snip/<output>.png
 # so the picker veil is not baked into the shot.
 # Writes a short message to stdout, shown as a notification by the shell.
 #
@@ -19,12 +19,25 @@ GEO="${3:-}"
 OUTPUT="${4:-}"
 DIR="${XDG_PICTURES_DIR:-$HOME/Pictures}/Captures"
 FILE="$DIR/$(date +%Y-%m-%d_%H-%M-%S).png"
-SNIP_DIR="/tmp/nothing-snip"
+SNIP_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/nothing-snip"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 mkdir -p "$DIR"
 
 have() { command -v "$1" >/dev/null 2>&1; }
+
+snip_dir() {
+    (umask 077; mkdir -p -- "$SNIP_DIR") || return 1
+    [[ -d "$SNIP_DIR" && ! -L "$SNIP_DIR" && -O "$SNIP_DIR" ]] || return 1
+    chmod 700 -- "$SNIP_DIR"
+}
+
+drop_frames() {
+    local f
+    for f in "$SNIP_DIR"/*.png; do
+        [[ "$f" == "$SNIP_DIR/key.png" ]] || rm -f -- "$f"
+    done
+}
 
 capture() {
     if [[ "$MODE" == "freeze" ]]; then
@@ -75,9 +88,12 @@ capture() {
     if [[ -n "$geo" ]]; then grim -g "$geo" "$FILE"; else grim "$FILE"; fi
 }
 
-capture || { echo "Cancelled"; exit 1; }
+capture
+captured=$?
+[[ "$MODE" == "freeze" ]] && drop_frames
+(( captured == 0 )) || { echo "Cancelled"; exit 1; }
 
-mkdir -p "$SNIP_DIR"
+snip_dir || { echo "Cancelled"; exit 1; }
 printf '%s\n' "$FILE" > "$SNIP_DIR/last"
 
 case "$ACTION" in

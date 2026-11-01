@@ -7,10 +7,14 @@
 set -uo pipefail
 
 DURATION="${1:-16}"
-TMP="$(mktemp -u /tmp/nothing-songrec-XXXXXX.wav)"
+command -v songrec >/dev/null 2>&1 || { echo "songrec is not installed"; exit 1; }
+
+TMP="$(mktemp "${XDG_RUNTIME_DIR:-/tmp}/nothing-songrec-XXXXXX.wav")" \
+    || { echo "No temporary file"; exit 1; }
 trap 'rm -f "$TMP"' EXIT
 
-command -v songrec >/dev/null 2>&1 || { echo "songrec is not installed"; exit 1; }
+notify-send -a Nothing -t 3000 "Recognising music" \
+    "A fingerprint of the system audio is sent to Shazam" 2>/dev/null
 
 # Monitor of the default output: what you hear.
 SINK="$(pactl get-default-sink 2>/dev/null).monitor"

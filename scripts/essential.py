@@ -42,8 +42,10 @@ DATA = Path(os.environ.get("XDG_DATA_HOME") or (Path.home() / ".local/share"))
 DIR = DATA / "nothing" / "essentials"
 INDEX = DIR / "index.json"
 FILES = DIR / "files"
-LAST_RECORD = Path(os.environ.get("XDG_RUNTIME_DIR") or "/tmp") / "nothing-record.last"
-LAST_VOICE = Path(os.environ.get("XDG_RUNTIME_DIR") or "/tmp") / "nothing-voice.last"
+RUNTIME = Path(os.environ.get("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}")
+LAST_RECORD = RUNTIME / "nothing-record.last"
+LAST_VOICE = RUNTIME / "nothing-voice.last"
+SNIP = RUNTIME / "nothing-snip"
 STATE = Path(os.environ.get("XDG_STATE_HOME") or (Path.home() / ".local/state"))
 CONSENT = STATE / "nothing" / "consent.json"
 MIND_ENV = Path.home() / ".config" / "nothing" / "mind.env"
@@ -940,10 +942,11 @@ def cmd_ingest_voice(backend: str) -> None:
 
 
 def cmd_ingest_last(kind: str, backend: str) -> None:
-    last = Path("/tmp/nothing-snip/last")
-    if not last.exists():
+    last = SNIP / "last"
+    if SNIP.is_symlink() or not last.is_file() or last.is_symlink():
         fail("No capture")
     path = last.read_text(encoding="utf-8").strip()
+    last.unlink(missing_ok=True)
     if not path or not Path(path).is_file():
         fail("No capture")
     if kind == "ocr":
