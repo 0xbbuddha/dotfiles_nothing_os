@@ -194,7 +194,9 @@ PanelWindow {
         const out = {};
         for (const t of (Hyprland.toplevels?.values ?? [])) {
             const c = t.lastIpcObject?.class;
-            if (c) out[String(c).toLowerCase()] = true;
+            const address = String(t.lastIpcObject?.address ?? "");
+            if (c && /^0x[0-9a-fA-F]+$/.test(address))
+                out[String(c).toLowerCase()] = address;
         }
         return out;
     }
@@ -525,7 +527,7 @@ PanelWindow {
                         readonly property string appId: modelData.id
                         readonly property var entry: modelData.entry
                         readonly property bool running:
-                            win.openClasses[Apps.classFor(appId)] ?? false
+                            (win.openClasses[Apps.classFor(appId)] ?? "") !== ""
 
                         Layout.preferredWidth: Theme.z.dockSlot
                         Layout.preferredHeight: Theme.z.dockSlot
@@ -564,7 +566,7 @@ PanelWindow {
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
                                 if (slot.running)
-                                    Hyprland.dispatch(`hl.dsp.focus({ window = "class:${Apps.classFor(slot.appId)}" })`);
+                                    Hyprland.dispatch(`hl.dsp.focus({ window = "address:${win.openClasses[Apps.classFor(slot.appId)]}" })`);
                                 else
                                     Apps.launch(slot.appId);
                             }
