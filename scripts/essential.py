@@ -68,7 +68,9 @@ CONSENT_TEXT = {
 
 
 def ensure() -> None:
-    FILES.mkdir(parents=True, exist_ok=True)
+    for folder in (DIR, FILES):
+        folder.mkdir(parents=True, exist_ok=True)
+        os.chmod(folder, 0o700)
 
 
 def load() -> list:
@@ -898,6 +900,7 @@ def cmd_ingest(kind: str, path: str, text: str, backend: str) -> None:
         dest_path = FILES / f"{eid}{src.suffix}"
         try:
             shutil.copy2(src, dest_path)
+            os.chmod(dest_path, 0o600)
             dest = str(dest_path)
         except OSError:
             dest = str(src)
