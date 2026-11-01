@@ -291,9 +291,10 @@ Item {
                             active: parent.on
                             sourceComponent: {
                                 switch (root.expanded) {
-                                case "light": return lightPanelC;
-                                case "audio": return audioPanelC;
-                                default:      return netPanelC;
+                                case "light":  return lightPanelC;
+                                case "audio":  return audioPanelC;
+                                case "record": return recordPanelC;
+                                default:       return netPanelC;
                                 }
                             }
                         }
@@ -316,6 +317,7 @@ Item {
 
                     Component { id: audioPanelC; AudioPanel {} }
                     Component { id: lightPanelC; BrightnessPanel {} }
+                    Component { id: recordPanelC; RecordPanel {} }
 
                     MediaCard {
                         Layout.fillWidth: true
