@@ -5,6 +5,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
+import Quickshell.Wayland
 import "components"
 import "modules"
 import "services"
@@ -55,6 +56,24 @@ ShellRoot {
         target: Quickshell
         property: "watchFiles"
         value: !Lock.locked
+    }
+
+    PanelWindow {
+        id: idleSurface
+        implicitWidth: 1
+        implicitHeight: 1
+        color: "transparent"
+        anchors { top: true; left: true }
+        exclusionMode: ExclusionMode.Ignore
+        mask: Region {}
+        WlrLayershell.layer: WlrLayer.Background
+        WlrLayershell.namespace: "nothing-idle-inhibit"
+        WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+    }
+
+    IdleInhibitor {
+        window: idleSurface
+        enabled: Idle.inhibited
     }
 
     // ── Per screen ────────────────────────────────────────────────────
