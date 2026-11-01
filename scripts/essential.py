@@ -564,11 +564,11 @@ def gemini_once(entry: dict, key: str, model: str) -> tuple[bool, str]:
     }).encode("utf-8")
     url = (
         "https://generativelanguage.googleapis.com/v1beta/models/"
-        f"{model}:generateContent?key={key}"
+        f"{model}:generateContent"
     )
     req = urllib.request.Request(
         url, data=body, method="POST",
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": "application/json", "x-goog-api-key": key},
     )
     try:
         with urllib.request.urlopen(req, timeout=75 if entry.get("kind") == "voice" else 45) as resp:
@@ -640,11 +640,11 @@ def gemini_text_once(prompt: str, key: str, model: str, timeout: int) -> tuple[s
     }).encode("utf-8")
     url = (
         "https://generativelanguage.googleapis.com/v1beta/models/"
-        f"{model}:generateContent?key={key}"
+        f"{model}:generateContent"
     )
     req = urllib.request.Request(
         url, data=body, method="POST",
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": "application/json", "x-goog-api-key": key},
     )
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
