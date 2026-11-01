@@ -90,6 +90,7 @@ Item {
             NLabel {
                 Layout.fillWidth: true
                 text: (root.spec?.title || root.spec?.name || "").toString()
+                textFormat: Text.PlainText
                 elide: Text.ElideRight
                 visible: root.face !== "media"
             }
@@ -106,6 +107,7 @@ Item {
                     const v = root.txt("value", "—");
                     return v === "" ? "—" : v;
                 }
+                textFormat: Text.PlainText
                 size: root.sizeKey === "s" ? Theme.px(28) : Theme.px(36)
                 elide: Text.ElideRight
             }
@@ -266,6 +268,7 @@ Item {
             NLabel {
                 Layout.fillWidth: true
                 text: (root.spec?.title || root.spec?.name || "").toString()
+                textFormat: Text.PlainText
                 elide: Text.ElideRight
             }
 

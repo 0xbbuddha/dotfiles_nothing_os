@@ -9,6 +9,7 @@ Commands:
   list / get ID / gen / refine ID / put ID / remove ID / rename ID
   state ID / reset ID / versions ID / revert ID N
   seed / presets / install NAME / schema
+  hosts / ask-host HOST KIND NAME
 """
 from __future__ import annotations
 
@@ -25,6 +26,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from essential import consent_ask, consent_given, consent_store  # noqa: E402
 from essential import gemini_text, parse_json_obj, read_env  # noqa: E402
 
 DATA = Path(os.environ.get("XDG_DATA_HOME") or (Path.home() / ".local/share"))
@@ -67,6 +69,12 @@ CONSTRUCT = re.compile(r"\bnew\s+[A-Za-z]")
 BRACKET_NAME = re.compile(r"\[\s*['\"]")
 STRINGS = re.compile(r"'[^']*'|\"[^\"]*\"")
 PLAIN_TEXT = re.compile(r"^[A-Za-z][A-Za-z0-9 _\-·•!?%,.:/]*$")
+APP_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}")
+LITERAL = re.compile(r"'[^']*'|\"[^\"]*\"")
+URL_HOST = re.compile(r"https://([^/?#\\@\s]+)(?:[/?#]\S*)?")
+HOST_NAME = re.compile(r"[a-z0-9](?:[a-z0-9.-]{0,251}[a-z0-9])?")
+PICK_BLOCKED = {"constructor", "prototype", "__proto__"}
+META_KEYS = ("prompt", "created", "version", "history", "preset", "chat")
 EXPR_ROOTS = SOURCES | {
     "state", "data", "it", "i", "fmt", "Math", "String", "Number", "Date",
     "isNaN", "parseInt", "parseFloat", "JSON", "Object", "Array",
@@ -104,13 +112,38 @@ def spec_path(app_id: str) -> Path:
 def read_json(path: Path):
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, ValueError):
         return None
 
 
+def valid_id(app_id) -> bool:
+    return isinstance(app_id, str) and APP_ID.fullmatch(app_id) is not None
+
+
+def host_of(url: str) -> str:
+    match = URL_HOST.fullmatch(url)
+    if not match:
+        return ""
+    host = re.sub(r":\d+$", "", match.group(1)).lower()
+    return host if HOST_NAME.fullmatch(host) else ""
+
+
+def revalidate(data, app_id: str) -> dict | None:
+    if not isinstance(data, dict) or not valid_id(app_id):
+        return None
+    spec, _ = safe_validate(data, app_id)
+    if not spec:
+        return None
+    for key in META_KEYS:
+        if key in data:
+            spec[key] = data[key]
+    return spec
+
+
 def load_spec(app_id: str) -> dict | None:
-    data = read_json(spec_path(app_id))
-    return data if isinstance(data, dict) else None
+    if not valid_id(app_id):
+        return None
+    return revalidate(read_json(spec_path(app_id)), app_id)
 
 
 def save_spec(spec: dict) -> None:
@@ -189,7 +222,8 @@ def clean_key(value, budget: Budget, where: str) -> str:
     return key
 
 
-def clean_steps(raw, budget: Budget, where: str) -> list:
+def clean_steps(raw, budget: Budget, where: str,
+                in_tick: bool = False, can_notify: bool = False) -> list:
     if not isinstance(raw, list):
         return []
     steps = []
@@ -213,22 +247,26 @@ def clean_steps(raw, budget: Budget, where: str) -> list:
                 step = {"toggle": key}
         elif "notify" in item:
             title = clean_expr(item.get("notify"), budget, where)
-            if title:
-                step = {"notify": title,
-                        "body": clean_expr(item.get("body"), budget, where)}
-        elif "copy" in item:
-            expr = clean_expr(item.get("copy"), budget, where)
-            if expr:
-                step = {"copy": expr}
-        elif "open" in item:
-            expr = clean_expr(item.get("open"), budget, where)
-            if expr:
-                step = {"open": expr}
+            body = clean_expr(item.get("body"), budget, where)
+            quiet = in_tick and not (
+                can_notify and LITERAL.fullmatch(title)
+                and (not body or LITERAL.fullmatch(body)))
+            if quiet:
+                budget.note(f"{where}: a tick can only notify fixed text")
+            elif title:
+                step = {"notify": title, "body": body}
+        elif "copy" in item or "open" in item:
+            kind = "copy" if "copy" in item else "open"
+            expr = clean_expr(item.get(kind), budget, where)
+            if in_tick:
+                budget.note(f"{where}: {kind} needs a click, not a tick")
+            elif expr:
+                step = {kind: expr}
         elif "refetch" in item:
             step = {"refetch": True}
         elif "if" in item:
             cond = clean_expr(item.get("if"), budget, where)
-            inner = clean_steps(item.get("do"), budget, where)
+            inner = clean_steps(item.get("do"), budget, where, in_tick, can_notify)
             if cond and inner:
                 step = {"if": cond, "do": inner}
         if step:
@@ -327,12 +365,15 @@ def clean_fetch(raw, budget: Budget) -> dict | None:
     if not isinstance(raw, dict):
         return None
     url = str(raw.get("url") or "").strip()
-    if not url.startswith("https://") or len(url) > 500:
+    if not host_of(url) or len(url) > 500:
         if url:
             budget.note("fetch.url must be https")
         return None
     every = int(raw.get("every") or raw.get("interval") or 900)
     pick = str(raw.get("pick") or "")[:120]
+    if PICK_BLOCKED & set(re.split(r"[.\[\]]", pick)):
+        budget.note("fetch.pick: forbidden name")
+        pick = ""
     return {"url": url, "pick": pick, "every": max(30, min(86400, every))}
 
 
@@ -383,7 +424,8 @@ def validate(raw, keep_id: str = "") -> tuple[dict | None, list[str]]:
             if steps:
                 actions[str(key)] = steps
 
-    sources = [s for s in (raw.get("sources") or []) if s in SOURCES][:8]
+    sources = [s for s in (raw.get("sources") or [])
+               if isinstance(s, str) and s in SOURCES][:8]
     fetch = clean_fetch(raw.get("fetch"), budget)
     if fetch and "net" not in sources:
         sources.append("net")
@@ -399,7 +441,7 @@ def validate(raw, keep_id: str = "") -> tuple[dict | None, list[str]]:
         "state": state,
         "slots": slots,
         "actions": actions,
-        "tick": clean_steps(raw.get("tick"), budget, "tick"),
+        "tick": clean_steps(raw.get("tick"), budget, "tick", True, "notify" in sources),
         "plus": str(raw.get("plus") or "+")[:8],
         "minus": str(raw.get("minus") or "−")[:8],
         "primary": str(raw.get("primary") or "")[:16],
@@ -409,6 +451,13 @@ def validate(raw, keep_id: str = "") -> tuple[dict | None, list[str]]:
     if fetch:
         spec["fetch"] = fetch
     return spec, budget.errors
+
+
+def safe_validate(raw, keep_id: str = "") -> tuple[dict | None, list[str]]:
+    try:
+        return validate(raw, keep_id)
+    except (AttributeError, TypeError, ValueError, OverflowError):
+        return None, ["the widget has a field of the wrong type"]
 
 
 SCHEMA_DOC = """You build ONE homescreen widget for a Nothing OS desktop.
@@ -451,15 +500,27 @@ FACES — pick one, fill the slots it needs:
 STEPS: {"set":"k","to":<expr>} {"inc":"k","by":<expr>} {"toggle":"k"}
   {"notify":<expr>,"body":<expr>} {"copy":<expr>} {"open":<expr>}
   {"refetch":true} {"if":<expr>,"do":[steps]}
+  tick runs on its own every second: it cannot copy or open, and it can only
+  notify fixed text in quotes, with "notify" listed in sources.
 
-EXPRESSIONS: read-only JS, no assignment, no semicolon, no `new`.
+SOURCES: list every name your expressions read, from time, weather, sys,
+  media, net, vault, audio, battery, updates, notifs, desktop. One left out
+  reads as undefined. state, data, fmt, it and i are always there.
+
+EXPRESSIONS: a read-only subset of JS. Operators, ?:, ?., ??, array and object
+  literals, and arrow functions as arguments to array methods. No assignment,
+  no semicolon, no `new`, no regular expressions, no template strings.
   state.* data time.hhmm time.dayShort time.dateLong time.epoch
   weather.temp weather.desc weather.city
   sys.cpu sys.ram battery.percent battery.charging
   media.title media.artist media.playing
   audio.volume notifs.unread vault.latest vault.count
   fmt.mmss(s) fmt.until(iso) fmt.ago(iso) fmt.date(iso) fmt.round(x,n) fmt.num(x)
-  Math, Date.parse, .map .filter .sort .slice .reduce
+  Math, Date.now, Date.parse, JSON, Object.keys, Object.values, Array.isArray,
+  String, Number, parseInt, parseFloat, isNaN
+  strings: length slice split trim includes replace toUpperCase toLowerCase
+  numbers: toFixed
+  arrays: length map filter sort slice reduce find join some every concat
 Guard data: it is null until the fetch lands. (data && data[0] ? data[0].x : "-")
 
 BLOCKS for custom only: text, stat, row, col, grid, button, toggle, field,
@@ -518,12 +579,12 @@ def generate(request: str, current: dict | None, keep_id: str) -> tuple[dict | N
     if err:
         return None, err
     data = parse_json_obj(raw)
-    spec, errors = validate(data, keep_id)
+    spec, errors = safe_validate(data, keep_id)
     if not spec:
         return None, (errors[0] if errors else "the widget could not be built")
     spec["_say"] = str((data or {}).get("say") or "Done.")[:400]
     fetch = spec.get("fetch")
-    if isinstance(fetch, dict) and fetch.get("url"):
+    if isinstance(fetch, dict) and consent_given(f"host:{host_of(fetch.get('url', ''))}"):
         ok, note = probe(fetch["url"])
         if not ok:
             spec["_note"] = note + " — the tile still works, data may stay empty"
@@ -542,10 +603,13 @@ def cmd_list() -> None:
     items = []
     for path in DIR.glob("*.json"):
         data = read_json(path)
-        if not isinstance(data, dict) or not data.get("id"):
+        spec = None
+        if isinstance(data, dict) and data.get("id") == path.stem:
+            spec = revalidate(data, path.stem)
+        if not spec:
             continue
-        data["saved"] = load_state(data["id"])
-        items.append(data)
+        spec["saved"] = load_state(path.stem)
+        items.append(spec)
     items.sort(key=lambda s: str(s.get("created") or ""), reverse=True)
     sys.stdout.write(json.dumps(items[:CAP], ensure_ascii=False) + "\n")
 
@@ -618,7 +682,7 @@ def cmd_put(app_id: str, payload: str) -> None:
     except json.JSONDecodeError as exc:
         fail(f"not valid JSON: {exc.msg} at line {exc.lineno}")
         return
-    spec, errors = validate(raw, app_id)
+    spec, errors = safe_validate(raw, app_id)
     if not spec:
         fail(errors[0] if errors else "the widget did not validate")
         return
@@ -699,13 +763,11 @@ def cmd_versions(app_id: str) -> None:
 
 
 def cmd_revert(app_id: str, number: int) -> None:
-    old = read_json(VERSIONS / app_id / f"{number}.json")
-    if not isinstance(old, dict):
+    spec = revalidate(read_json(VERSIONS / app_id / f"{number}.json"), app_id)
+    if not spec:
         fail("no such version")
         return
     current = load_spec(app_id) or {}
-    spec = dict(old)
-    spec["id"] = app_id
     spec["version"] = int(current.get("version") or 1) + 1
     spec["history"] = (current.get("history") or []) + [f"revert to v{number}"]
     spec["chat"] = current.get("chat") or []
@@ -724,7 +786,9 @@ def install_preset(path: Path) -> str | None:
     data = read_json(path)
     if not isinstance(data, dict):
         return None
-    spec, _ = validate(data, data.get("id") or slug(data.get("name") or path.stem))
+    wanted = data.get("id")
+    spec, _ = safe_validate(data, wanted if valid_id(wanted)
+                            else slug(data.get("name") or path.stem))
     if not spec:
         return None
     spec["prompt"] = str(data.get("prompt") or "")[:600]
@@ -769,7 +833,7 @@ def cmd_presets() -> None:
 
 def cmd_install(name: str) -> None:
     path = PRESETS / f"{name}.json"
-    if not path.exists():
+    if not valid_id(name) or not path.exists():
         fail("no such preset")
     app_id = install_preset(path)
     if not app_id:
@@ -777,12 +841,38 @@ def cmd_install(name: str) -> None:
     out({"ok": True, "id": app_id})
 
 
+def cmd_hosts() -> None:
+    prefix = "host:"
+    out([k[len(prefix):] for k, v in consent_store().items()
+         if k.startswith(prefix) and v is True])
+
+
+def cmd_ask_host(host: str, kind: str, name: str) -> None:
+    if not HOST_NAME.fullmatch(host):
+        out({"ok": True, "allowed": False})
+        return
+    verb = "download images from" if kind == "image" else "read data from"
+    text = (f"The widget “{name[:36]}” wants to {verb} {host}.\n\n"
+            "That server sees your IP address and everything in the address "
+            "the widget asks for, which can include what the widget reads.\n\n"
+            "This choice is remembered for this host.")
+    allowed = consent_ask(f"host:{host}", f"Let a widget contact {host}?", text)
+    out({"ok": True, "allowed": allowed})
+
+
+ID_COMMANDS = {"get", "refine", "put", "remove", "rename", "state", "reset",
+               "versions", "revert"}
+
+
 def main() -> None:
+    os.umask(0o077)
     args = sys.argv[1:]
     if not args:
         fail("usage: essential-app.py <command>", 2)
     cmd = args[0]
     rest = args[1:]
+    if cmd in ID_COMMANDS and not (rest and valid_id(rest[0])):
+        fail("id required")
 
     if cmd == "list":
         cmd_list()
@@ -797,21 +887,15 @@ def main() -> None:
         text = " ".join(rest).strip() or sys.stdin.read()
         cmd_gen(text)
     elif cmd == "refine":
-        if not rest:
-            fail("id required")
         text = " ".join(rest[1:]).strip() or sys.stdin.read()
         cmd_refine(rest[0], text)
     elif cmd == "put":
-        if not rest:
-            fail("id required")
         cmd_put(rest[0], sys.stdin.read())
     elif cmd == "remove":
         cmd_remove(rest[0] if rest else "")
     elif cmd == "rename":
         cmd_rename(rest[0] if rest else "", " ".join(rest[1:]))
     elif cmd == "state":
-        if not rest:
-            fail("id required")
         cmd_state(rest[0], sys.stdin.read())
     elif cmd == "reset":
         cmd_reset(rest[0] if rest else "")
@@ -830,6 +914,12 @@ def main() -> None:
         cmd_presets()
     elif cmd == "install":
         cmd_install(rest[0] if rest else "")
+    elif cmd == "hosts":
+        cmd_hosts()
+    elif cmd == "ask-host":
+        if len(rest) < 3:
+            fail("host, kind and name required")
+        cmd_ask_host(rest[0], rest[1], rest[2])
     else:
         fail("unknown command: " + cmd, 2)
 
