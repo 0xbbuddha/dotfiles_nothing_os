@@ -23,3 +23,10 @@ __pycache__/
 # screenshots you drop in while writing the README
 /exemple*.png
 /tmp/
+
+.env
+*.pem
+*.key
+*.log
+mind.env
+fish_variables
