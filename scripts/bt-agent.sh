@@ -19,12 +19,11 @@ command -v bluetoothctl >/dev/null 2>&1 || exit 0
 exec 9>"${XDG_RUNTIME_DIR:-/tmp}/nothing-bt-agent.lock"
 flock -n 9 || exit 0
 
-# Restart if bluetoothctl dies, and ride out a bluetoothd restart.
+# Restart if bluetoothctl dies, and ride out a bluetoothd restart. The
+# coprocess keeps stdin open, which bluetoothctl needs to keep its agent.
 while true; do
-    # The pipe must stay open. bluetoothctl drops its agent the moment
-    # stdin closes, so the two commands alone would register it and
-    # unregister it in the same breath.
-    { printf 'agent NoInputNoOutput\ndefault-agent\n'; sleep infinity; } \
-        | bluetoothctl >/dev/null 2>&1
+    coproc AGENT { exec bluetoothctl >/dev/null 2>&1; }
+    printf 'pairable off\nagent NoInputNoOutput\ndefault-agent\n' >&"${AGENT[1]}"
+    wait "$AGENT_PID" 2>/dev/null
     sleep 5
 done
