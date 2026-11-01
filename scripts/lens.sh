@@ -6,6 +6,11 @@
 # Do not select anything confidential.
 set -uo pipefail
 
+ROOT="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+if [[ "$(python3 -I "$ROOT/scripts/essential.py" consent lens)" != "yes" ]]; then
+    echo "Cancelled"; exit 1
+fi
+
 ENDPOINT="https://uguu.se/upload"
 LENS="https://lens.google.com/uploadbyurl?url="
 DIR="$(mktemp -d /tmp/nothing-lens-XXXXXX)"
@@ -33,7 +38,7 @@ grim -g "$GEO" "$TMP" || { echo "Capture failed"; exit 1; }
 
 [[ -s "$TMP" ]] || { echo "Cancelled"; exit 1; }
 
-URL="$(curl -sF "files[]=@$TMP" "$ENDPOINT" | jq -r '.files[0].url' 2>/dev/null)"
+URL="$(curl -sS --max-time 60 -F "files[]=@$TMP" "$ENDPOINT" 2>/dev/null | jq -r '.files[0].url' 2>/dev/null)"
 if [[ -z "$URL" || "$URL" == "null" ]]; then
     echo "Upload failed"; exit 1
 fi
@@ -48,6 +53,6 @@ if [[ -n "${BROWSER:-}" ]] && ! command -v "${BROWSER%% *}" >/dev/null 2>&1; the
 fi
 
 # xdg-open returns immediately; detach cleanly
-setsid xdg-open "${LENS}${URL}" >/dev/null 2>&1 < /dev/null &
+setsid xdg-open "${LENS}$(jq -rn --arg u "$URL" '$u | @uri')" >/dev/null 2>&1 < /dev/null &
 disown 2>/dev/null || true
 echo "Opened in Google Lens"

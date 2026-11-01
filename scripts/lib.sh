@@ -45,7 +45,7 @@ case "$(_colour_depth)" in
         ;;
 esac
 
-NOCONFIRM=false
+NOCONFIRM="${NOTHING_NOCONFIRM:-false}"
 
 # ── Dot matrix ────────────────────────────────────────────────────────
 # Nothing's wordmark is a dot grid, so the banner is one too: lit dots in

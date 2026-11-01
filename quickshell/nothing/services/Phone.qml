@@ -122,14 +122,15 @@ Singleton {
     function ring(id: string): void { root.act(id, ["--ring"], "Ringing"); }
     function ping(id: string): void { root.act(id, ["--ping"], "Pinged"); }
 
-    // The clipboard as text, read by wl-paste and passed as an argument.
+    // KDE Connect sends its own view of the clipboard, so the text never
+    // lands on a command line.
     function sendClipboard(id: string): void {
         if (!id)
             return;
         actor.done = "Clipboard sent";
         actor.command = ["sh", "-c",
-            't="$(wl-paste -n -t text 2>/dev/null)"; [ -n "$t" ] || { echo "The clipboard has no text" >&2; exit 2; }; '
-            + 'kdeconnect-cli -d "$1" --share-text "$t"', "phone-send", id];
+            '[ -n "$(wl-paste -n -t text 2>/dev/null)" ] || { echo "The clipboard has no text" >&2; exit 2; }; '
+            + 'kdeconnect-cli -d "$1" --send-clipboard', "phone-send", id];
         actor.running = true;
     }
 

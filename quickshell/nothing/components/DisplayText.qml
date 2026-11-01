@@ -13,4 +13,5 @@ Text {
     color: Theme.c.on
     renderType: Text.QtRendering
     verticalAlignment: Text.AlignVCenter
+    textFormat: Text.PlainText
 }

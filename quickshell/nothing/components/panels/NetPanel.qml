@@ -17,10 +17,13 @@ ColumnLayout {
     property string kind: "wifi"
     property bool active: false
 
-    onActiveChanged: {
+    function syncScan(): void {
         Net.scanWifi(root.active && root.kind === "wifi");
         Net.scanBt(root.active && root.kind === "bt" && Net.btConnected.length === 0);
     }
+
+    onActiveChanged: root.syncScan()
+    onKindChanged: if (root.active) root.syncScan()
 
     // Discovery is renewed only while nothing is connected or mid
     // handshake. An active scan steals the radio from A2DP, and blindly
@@ -258,9 +261,9 @@ ColumnLayout {
                             implicitHeight: Theme.px(30)
                             secret: true
                             placeholder: "Password"
-                            onCommitted: (v) => {
-                                Net.connectWifiPsk(row.modelData, v);
+                            onSubmitted: (v) => {
                                 psk.clear();
+                                Net.connectWifiPsk(row.modelData, v);
                             }
                             // The field appears because a click already
                             // happened, so it takes the keyboard rather

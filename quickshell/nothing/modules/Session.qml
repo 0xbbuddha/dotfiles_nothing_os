@@ -28,20 +28,48 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
 
     property int armed: -1     // index waiting for confirmation
+    // True once an armed action may actually fire. The lock screen's
+    // pending action arrives here already armed, with no click of its
+    // own in this menu yet - without this gap a reflexive click the
+    // instant the menu appears (aimed at dismissing it, not confirming
+    // anything) would fire a destructive action on what is, in this
+    // window's own lifecycle, a single click.
+    property bool armReady: true
 
-    onVisibleChanged: if (!visible) armed = -1
+    function armPending(): void {
+        const i = win.actions.findIndex(a => a.id === Lock.pendingAction);
+        if (i >= 0) {
+            win.armed = i;
+            win.armReady = false;
+            armGrace.restart();
+        }
+    }
+
+    Timer { id: armGrace; interval: 400; onTriggered: win.armReady = true }
+
+    onVisibleChanged: {
+        if (visible) {
+            win.armPending();
+        } else {
+            win.armed = -1;
+            win.armReady = true;
+            Lock.pendingAction = "";
+        }
+    }
+
+    Component.onCompleted: if (visible) win.armPending()
 
     readonly property var actions: [
         { icon: "󰌾", label: "Lock",      run: () => Power.lock(),     confirm: false },
         { icon: "󰤄", label: "Sleep",     run: () => Power.suspend(),  confirm: false },
-        { icon: "󰗽", label: "Log out",   run: () => Power.logout(),   confirm: true  },
-        { icon: "󰜉", label: "Restart",   run: () => Power.reboot(),   confirm: true  },
-        { icon: "󰐥", label: "Shut down", run: () => Power.poweroff(), confirm: true  }
+        { icon: "󰗽", label: "Log out",   run: () => Power.logout(),   confirm: true, id: "logout" },
+        { icon: "󰜉", label: "Restart",   run: () => Power.reboot(),   confirm: true, id: "reboot" },
+        { icon: "󰐥", label: "Shut down", run: () => Power.poweroff(), confirm: true, id: "poweroff" }
     ]
 
     function trigger(i: int): void {
         const a = win.actions[i];
-        if (a.confirm && win.armed !== i) { win.armed = i; return; }
+        if (a.confirm && (win.armed !== i || !win.armReady)) { win.armed = i; return; }
         GlobalState.sessionOpen = false;
         a.run();
     }

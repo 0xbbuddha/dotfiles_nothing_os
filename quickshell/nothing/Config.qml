@@ -901,7 +901,7 @@ Singleton {
         a.essentialSearch = true;
         a.mindBackend = "stub";
 
-        a.weatherEnabled = true;
+        a.weatherEnabled = false;
         a.weatherCity = "";
 
         a.terminal = "kitty";
@@ -1263,7 +1263,7 @@ Singleton {
             property bool   essentialSearch: true    // mix captures + Ask in SUPER
             property string mindBackend: "stub"      // stub | ollama | gemini
 
-            property bool   weatherEnabled: true
+            property bool   weatherEnabled: false
             property string weatherCity: ""
 
             property string terminal: "kitty"

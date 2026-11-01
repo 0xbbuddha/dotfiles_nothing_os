@@ -154,20 +154,22 @@ Singleton {
     }
 
     function ctxFor(spec: var): var {
+        const sources = spec.sources ?? [];
+        const has = name => sources.indexOf(name) >= 0;
         return {
             state: root.stateBag[spec.id] ?? ({}),
             data: root.dataBag[spec.id] ?? null,
-            time: root.timeCtx,
-            weather: root.weatherCtx,
-            sys: root.sysCtx,
-            media: root.mediaCtx,
-            net: root.netCtx,
-            vault: root.vaultCtx,
-            audio: root.audioCtx,
-            battery: root.batteryCtx,
-            updates: root.updatesCtx,
-            notifs: root.notifsCtx,
-            desktop: root.desktopCtx
+            time: has("time") || spec.face === "clock" ? root.timeCtx : undefined,
+            weather: has("weather") ? root.weatherCtx : undefined,
+            sys: has("sys") ? root.sysCtx : undefined,
+            media: has("media") || spec.face === "media" ? root.mediaCtx : undefined,
+            net: has("net") ? root.netCtx : undefined,
+            vault: has("vault") ? root.vaultCtx : undefined,
+            audio: has("audio") ? root.audioCtx : undefined,
+            battery: has("battery") ? root.batteryCtx : undefined,
+            updates: has("updates") ? root.updatesCtx : undefined,
+            notifs: has("notifs") ? root.notifsCtx : undefined,
+            desktop: has("desktop") ? root.desktopCtx : undefined
         };
     }
 
@@ -186,7 +188,7 @@ Singleton {
         return String(value ?? "").slice(0, 400);
     }
 
-    function exec(spec: var, steps: var, item: var, index: int): bool {
+    function exec(spec: var, steps: var, item: var, index: int, inTick: bool): bool {
         if (!spec || !Array.isArray(steps))
             return false;
         const st = root.stateBag[spec.id];
@@ -200,7 +202,7 @@ Singleton {
             const step = steps[i];
             if (step.if !== undefined) {
                 if (Expr.asBool(step.if, ctx, item, index))
-                    changed = root.exec(spec, step.do, item, index) || changed;
+                    changed = root.exec(spec, step.do, item, index, inTick) || changed;
                 continue;
             }
             if (step.set !== undefined) {
@@ -227,6 +229,9 @@ Singleton {
                 continue;
             }
             if (step.notify !== undefined) {
+                if (inTick && !(Expr.isLiteral(step.notify)
+                        && (!step.body || Expr.isLiteral(step.body))))
+                    continue;
                 const title = Expr.asText(step.notify, ctx, item, index);
                 if (title !== "")
                     Quickshell.execDetached(["notify-send", "-a", spec.name || "Essential Apps",
@@ -235,13 +240,16 @@ Singleton {
                 continue;
             }
             if (step.copy !== undefined) {
+                if (inTick)
+                    continue;
                 const text = Expr.asText(step.copy, ctx, item, index);
-                // argv, never `sh -c`: the value can come from a feed.
                 if (text !== "")
-                    Quickshell.execDetached(["wl-copy", "--", text]);
+                    Clipboard.setText(text);
                 continue;
             }
             if (step.open !== undefined) {
+                if (inTick)
+                    continue;
                 const url = Expr.asText(step.open, ctx, item, index);
                 if (/^https?:\/\//.test(url))
                     Quickshell.execDetached(["xdg-open", url]);
@@ -262,7 +270,7 @@ Singleton {
         const steps = (spec.actions ?? {})[action];
         if (!steps)
             return;
-        if (root.exec(spec, steps, item ?? null, index ?? 0))
+        if (root.exec(spec, steps, item ?? null, index ?? 0, false))
             root.commit(id);
     }
 
@@ -296,7 +304,7 @@ Singleton {
                 const spec = src[i];
                 if (!spec.tick || spec.tick.length === 0)
                     continue;
-                if (root.exec(spec, spec.tick, null, 0)) {
+                if (root.exec(spec, spec.tick, null, 0, true)) {
                     touched = true;
                     root.pending[spec.id] = true;
                 }
@@ -313,8 +321,100 @@ Singleton {
     // One curl at a time, driven by the tick. Apps only ever declare a
     // URL: the shell is what talks to the network, never the spec.
 
+    property var allowedHosts: ({})
+    property var refusedHosts: ({})
+    property var hostAsked: ({})
+    property var hostQueue: []
+    property bool hostsLoaded: false
+    readonly property int hostAskLimit: 4
+
+    // Same HOST_NAME charset/length bound as essential-app.py's host_of():
+    // consent is granted keyed by whatever this returns, so a host this
+    // accepted but the backend's own check rejected (or vice versa) would
+    // mean the consent shown and the host actually gated silently drift.
+    function hostOf(url: string): string {
+        const m = String(url ?? "").match(/^https:\/\/([^\/?#\\@\s]+)(?:[\/?#]\S*)?$/);
+        if (!m)
+            return "";
+        const host = m[1].replace(/:\d+$/, "").toLowerCase();
+        return /^[a-z0-9][a-z0-9.-]{0,251}[a-z0-9]$|^[a-z0-9]$/.test(host) ? host : "";
+    }
+
+    function hostAllowed(url: string): bool {
+        return root.allowedHosts[root.hostOf(url)] === true;
+    }
+
+    function requestHost(url: string, kind: string, id: string): void {
+        const host = root.hostOf(url);
+        if (host === "" || !root.hostsLoaded || root.allowedHosts[host] === true
+                || root.refusedHosts[host] === true
+                || root.hostQueue.some(q => q.host === host))
+            return;
+        const asked = root.hostAsked[id] ?? 0;
+        if (asked >= root.hostAskLimit)
+            return;
+        root.hostAsked[id] = asked + 1;
+        root.hostQueue = root.hostQueue.concat([{
+            host: host, kind: kind, name: root.specOf(id)?.name ?? "Essential App"
+        }]);
+        root.nextHost();
+    }
+
+    function nextHost(): void {
+        if (hostAsker.running || root.hostQueue.length === 0)
+            return;
+        const q = root.hostQueue[0];
+        hostAsker.host = q.host;
+        hostAsker.command = ["python3", root.script, "ask-host", q.host, q.kind, q.name];
+        hostAsker.running = true;
+    }
+
+    NProcess {
+        id: hostAsker
+        property string host: ""
+        stdout: StdioCollector {
+            onStreamFinished: {
+                let allowed = false;
+                try {
+                    allowed = JSON.parse(text).allowed === true;
+                } catch (e) {
+                    allowed = false;
+                }
+                const next = Object.assign({}, allowed ? root.allowedHosts : root.refusedHosts);
+                next[hostAsker.host] = true;
+                if (allowed)
+                    root.allowedHosts = next;
+                else
+                    root.refusedHosts = next;
+                root.hostQueue = root.hostQueue.filter(q => q.host !== hostAsker.host);
+                Qt.callLater(() => {
+                    root.nextHost();
+                    root.pumpFetch();
+                });
+            }
+        }
+    }
+
+    NProcess {
+        id: hostLister
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const next = {};
+                try {
+                    for (const host of JSON.parse(text))
+                        next[host] = true;
+                } catch (e) {
+                    console.warn("MiniApps hosts unreadable", e);
+                }
+                root.allowedHosts = next;
+                root.hostsLoaded = true;
+                Qt.callLater(() => root.pumpFetch());
+            }
+        }
+    }
+
     function pumpFetch(): void {
-        if (fetcher.running)
+        if (fetcher.running || !root.hostsLoaded)
             return;
         const nowSec = Date.now() / 1000;
         const src = root.specs;
@@ -325,12 +425,19 @@ Singleton {
             const last = root.fetchAt[spec.id] ?? 0;
             if (nowSec - last < (spec.fetch.every ?? 900))
                 continue;
+            if (!root.hostAllowed(spec.fetch.url)) {
+                if (GlobalState.appsOpen || Config.hasDeskApp(spec.id))
+                    root.requestHost(spec.fetch.url, "fetch", spec.id);
+                continue;
+            }
             root.fetchAt[spec.id] = nowSec;
             fetcher.appId = spec.id;
             fetcher.pickPath = spec.fetch.pick ?? "";
             fetcher.command = ["curl", "-sfLg", "--max-time", "12",
+                               "--proto", "=https", "--proto-redir", "=https", "--max-redirs", "3",
                                "-H", "Accept: application/json, application/vnd.api+json, */*",
-                               "-A", "Mozilla/5.0 (compatible; nothing-essential-apps/1)", spec.fetch.url];
+                               "-A", "Mozilla/5.0 (compatible; nothing-essential-apps/1)",
+                               "--url", spec.fetch.url];
             fetcher.running = true;
             return;
         }
@@ -579,7 +686,9 @@ Singleton {
 
     function rename(id: string, name: string): void {
         simple.running = false;
-        simple.command = ["python3", root.script, "rename", id, name];
+        simple.payload = name;
+        simple.command = ["python3", root.script, "rename", id];
+        simple.stdinEnabled = true;
         simple.running = true;
     }
 
@@ -603,6 +712,20 @@ Singleton {
 
     NProcess {
         id: simple
+        // Only rename() uses stdinEnabled/payload (both set right
+        // before running, same as writer above): a typed name, like
+        // the clipboard contents and notes this PR already moved off
+        // argv, does not belong in argv either. Every other call on
+        // this shared process leaves stdinEnabled at its default
+        // false, so they are unaffected, and this handler resets it
+        // right after writing - never left true for the next call.
+        property string payload: ""
+        onRunningChanged: {
+            if (running && stdinEnabled) {
+                write(payload);
+                stdinEnabled = false;
+            }
+        }
         stdout: StdioCollector {
             onStreamFinished: root.refresh()
         }
@@ -637,6 +760,8 @@ Singleton {
         seeder.running = true;
         presetLister.command = ["python3", root.script, "presets"];
         presetLister.running = true;
+        hostLister.command = ["python3", root.script, "hosts"];
+        hostLister.running = true;
         root.refresh();
     }
 }

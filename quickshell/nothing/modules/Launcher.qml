@@ -265,7 +265,7 @@ PanelWindow {
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.top: parent.bottom
                         anchors.topMargin: Theme.px(6)
-                        text: "Google Lens · the selection is uploaded to a third party"
+                        text: "Google Lens · the selection is uploaded to uguu.se, then Google"
                         shown: lensMa.containsMouse
                         z: 50
                     }
@@ -326,7 +326,7 @@ PanelWindow {
                         anchors.top: parent.bottom
                         anchors.topMargin: Theme.px(6)
                         text: Songrec.available
-                            ? "Identify the music playing"
+                            ? "Identify the music playing · a fingerprint goes to Shazam"
                             : "songrec is not installed"
                         shown: songMa.containsMouse
                         z: 50
@@ -380,8 +380,7 @@ PanelWindow {
                         NPillButton {
                             text: "Copy"
                             visible: Search.askAnswer !== "" && !Search.askBusy
-                            onActivated: Search.run(
-                                `printf '%s' ${JSON.stringify(Search.askAnswer)} | wl-copy`)
+                            onActivated: Clipboard.setText(Search.askAnswer)
                         }
                     }
 
@@ -594,6 +593,7 @@ PanelWindow {
                             Text {
                                 anchors.centerIn: parent
                                 text: row.modelData.emoji ?? ""
+                                textFormat: Text.PlainText
                                 font.pixelSize: Theme.px(20)
                                 visible: row.modelData.kind === "emoji"
                             }

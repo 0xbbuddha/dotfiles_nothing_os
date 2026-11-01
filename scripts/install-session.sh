@@ -18,6 +18,8 @@ LAUNCHER=/usr/local/bin/nothing-session
 DESKTOP=/usr/share/wayland-sessions/nothing.desktop
 THEME_DIR=/usr/share/sddm/themes/sddm-astronaut-theme
 THEME_GIT=https://github.com/keyitdev/sddm-astronaut-theme.git
+THEME_SHA=abb3163c724935af888ba5ea9ac0c4f22afd8048
+THEME_MARK="$THEME_DIR/.nothing-pinned-sha"
 THEME_CONF=Themes/hyprland_kath.conf
 SDDM_DROPIN=/etc/sddm.conf.d/10-nothing.conf
 
@@ -31,29 +33,43 @@ if [[ "${1:-}" == "--remove" ]]; then
     echo "Removed: $DESKTOP"
     echo "Removed: $LAUNCHER"
     echo "Removed: $SDDM_DROPIN"
+    if [[ -f /etc/sddm.conf ]] && [[ "$(cat /etc/sddm.conf)" == $'[Theme]\nCurrent=sddm-astronaut-theme' ]]; then
+        rm -f /etc/sddm.conf
+        echo "Removed: /etc/sddm.conf (written by an earlier version)"
+    fi
     echo "Left in place: $THEME_DIR (the greeter theme)"
     exit 0
 fi
 
 clone_theme() {
+    local work as_owner
+    as_owner=(runuser -u "$OWNER" -- env "HOME=$(getent passwd "$OWNER" | cut -d: -f6)")
+    work="$(mktemp -d)"
+    chown "$OWNER" "$work"
+    "${as_owner[@]}" git -C "$work" init -q </dev/null
+    "${as_owner[@]}" git -C "$work" fetch -q --depth 1 "$THEME_GIT" "$THEME_SHA" </dev/null
+    "${as_owner[@]}" git -C "$work" -c advice.detachedHead=false checkout -q --detach FETCH_HEAD </dev/null
+    if [[ "$("${as_owner[@]}" git -C "$work" rev-parse HEAD)" != "$THEME_SHA" ]]; then
+        rm -rf "$work"
+        echo "  FAIL: fetched commit is not $THEME_SHA" >&2
+        return 1
+    fi
     mkdir -p "$(dirname "$THEME_DIR")"
     rm -rf "$THEME_DIR"
-    # stdin must not be a consumed sudo -S pipe: git checkout then
-    # writes 0-byte files (Main.qml empty → SDDM refuses the theme).
-    git clone --depth 1 -b master "$THEME_GIT" "$THEME_DIR" </dev/null
+    mkdir -p "$THEME_DIR"
+    tar -C "$work" --exclude=.git -cf - . | tar -C "$THEME_DIR" --no-same-owner -xf -
+    chmod -R u=rwX,go=rX "$THEME_DIR"
+    printf '%s\n' "$THEME_SHA" > "$THEME_MARK"
+    rm -rf "$work"
 }
 
 theme_ok() {
-    [[ -s "$THEME_DIR/Main.qml" && -s "$THEME_DIR/$THEME_CONF" ]]
+    [[ -s "$THEME_DIR/Main.qml" && -s "$THEME_DIR/$THEME_CONF" \
+        && "$(cat "$THEME_MARK" 2>/dev/null)" == "$THEME_SHA" ]]
 }
 
 install_theme() {
     echo "Greeter  : sddm-astronaut-theme ($THEME_CONF)"
-    if ! theme_ok; then
-        if [[ -d "$THEME_DIR/.git" ]]; then
-            git -C "$THEME_DIR" reset --hard HEAD </dev/null || true
-        fi
-    fi
     if ! theme_ok; then
         clone_theme
     fi
@@ -82,11 +98,7 @@ install_theme() {
         '[General]' \
         'InputMethod=' \
         > "$SDDM_DROPIN"
-    printf '%s\n' \
-        '[Theme]' \
-        'Current=sddm-astronaut-theme' \
-        > /etc/sddm.conf
-    chmod 644 "$SDDM_DROPIN" /etc/sddm.conf
+    chmod 644 "$SDDM_DROPIN"
     if [[ ! -s "$SDDM_DROPIN" ]]; then
         echo "  FAIL: $SDDM_DROPIN is empty" >&2
         return 1

@@ -65,10 +65,15 @@ Singleton {
         return ["env", `NOTHING_MIND_BACKEND=${Config.mindBackend}`];
     }
 
-    function run(args: var): void {
+    function run(args: var, payload: var, isKey: var): void {
         root.busy = true;
         worker.running = false;
+        worker.isKey = isKey === true;
+        if (worker.isKey)
+            keySweep.restart();
         worker.command = root.envBackend().concat(["python3", root.script]).concat(args);
+        worker.payload = payload ?? "";
+        worker.stdinEnabled = payload !== undefined;
         worker.running = true;
     }
 
@@ -84,14 +89,14 @@ Singleton {
         const t = text.trim();
         if (t === "")
             return;
-        if (t.startsWith("=")) {
+        if (t.startsWith("=") && Search.calcSafe(t.slice(1).trim())) {
             calc.expr = t.slice(1).trim();
             calc.running = false;
-            calc.command = ["qalc", "-t", calc.expr];
+            calc.command = ["qalc", "-t", " " + calc.expr];
             calc.running = true;
             return;
         }
-        root.run(["add", "note", t]);
+        root.run(["add", "note"], t);
     }
 
     function addClip(): void {
@@ -164,8 +169,9 @@ Singleton {
         keyGrim.mon = mon;
         keyGrim.running = false;
         keyGrim.command = ["sh", "-c",
-            "mkdir -p /tmp/nothing-snip && grim -o \"$1\" /tmp/nothing-snip/key.png && printf '%s\\n' /tmp/nothing-snip/key.png > /tmp/nothing-snip/last",
-            "grim", mon];
+            'umask 077; mkdir -p -- "$2" && [ -d "$2" ] && [ ! -L "$2" ] && [ -O "$2" ] && chmod 700 -- "$2" '
+            + '&& grim -o "$1" "$2/key.png" && printf "%s\\n" "$2/key.png" > "$2/last"',
+            "grim", mon, Shot.snipDir];
         keyGrim.running = true;
     }
 
@@ -173,6 +179,19 @@ Singleton {
         GlobalState.essentialFlyPath = "";
         GlobalState.essentialPulse = false;
         root.startPeek(GlobalState.essentialFlyScreen);
+        root.keyFlying = false;
+        root.dropKeyShot();
+    }
+
+    property bool keyFlying: false
+    property bool keyIngesting: false
+    readonly property string keyPath: `${Shot.snipDir}/key.png`
+
+    function dropKeyShot(): void {
+        if (root.keyFlying || root.keyIngesting)
+            return;
+        keySweep.stop();
+        Quickshell.execDetached(["rm", "-f", "--", root.keyPath]);
     }
 
     function startPeek(screen: string): void {
@@ -286,8 +305,7 @@ Singleton {
             return;
         }
         if (it.text)
-            Quickshell.execDetached(["sh", "-c", `printf '%s' "$1" | wl-copy`,
-                                     "copy-item", it.text]);
+            Clipboard.setText(it.text);
     }
 
     function openItem(it: var): void {
@@ -353,10 +371,23 @@ Singleton {
 
     NProcess {
         id: worker
+        property string payload: ""
+        property bool isKey: false
+        onRunningChanged: {
+            if (running && stdinEnabled) {
+                write(payload);
+                stdinEnabled = false;
+            }
+        }
         stdout: StdioCollector {
             onStreamFinished: {
                 root.busy = false;
                 root.status = text.trim();
+                if (worker.isKey) {
+                    worker.isKey = false;
+                    root.keyIngesting = false;
+                    root.dropKeyShot();
+                }
                 // Only after a capture, and only with a backend that can
                 // answer. "mind" itself prints Mind, so this cannot arm
                 // itself in a loop.
@@ -402,7 +433,7 @@ Singleton {
                 const line = r !== ""
                     ? `${calc.expr} = ${r}`
                     : calc.expr;
-                root.run(["add", "calc", line]);
+                root.run(["add", "calc"], line);
             }
         }
     }
@@ -456,9 +487,22 @@ Singleton {
         interval: 20
         onTriggered: {
             GlobalState.essentialFlyScreen = keyGrim.mon;
-            GlobalState.essentialFlyPath = "/tmp/nothing-snip/key.png";
+            GlobalState.essentialFlyPath = root.keyPath;
             GlobalState.essentialPulse = true;
-            root.run(["ingest-last", "snip"]);
+            root.keyFlying = true;
+            root.keyIngesting = true;
+            keySweep.restart();
+            root.run(["ingest-last", "snip"], undefined, true);
+        }
+    }
+
+    Timer {
+        id: keySweep
+        interval: 20000
+        onTriggered: {
+            root.keyFlying = false;
+            root.keyIngesting = false;
+            root.dropKeyShot();
         }
     }
 

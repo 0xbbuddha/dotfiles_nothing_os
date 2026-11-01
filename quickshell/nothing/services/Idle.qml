@@ -26,7 +26,13 @@ Singleton {
     property bool written: false
     readonly property string config: root.written ? root.generated : root.bundled
 
-    property bool inhibited: false      // true = sleep is disabled
+    readonly property bool inhibited: persisted.inhibited
+
+    PersistentProperties {
+        id: persisted
+        reloadableId: "idleInhibit"
+        property bool inhibited: false
+    }
 
     // ── The timeline ──────────────────────────────────────────────────
     // Absolute, because the daemon is restarted from here rather than
@@ -111,10 +117,6 @@ Singleton {
     NProcess { id: restarter }
 
     function reload(): void {
-        // Sleep is off on purpose. Rewriting the timings must not bring
-        // the daemon back from under a game.
-        if (root.inhibited)
-            return;
         // No lock. flock was tried here first and is worse than nothing:
         // it returns 1 without a word when it cannot take the file, and
         // under `exec flock ... sh -c`, that failure means the restart
@@ -144,35 +146,28 @@ Singleton {
     }
 
     // ── Inhibiting ────────────────────────────────────────────────────
-    NProcess { id: runner }
-
     NProcess {
-        id: status
-        stdout: StdioCollector {
-            onStreamFinished: root.inhibited = text.trim() === ""
-        }
+        id: watchdog
+        quiet: true
+        command: ["sh", "-c",
+            'pgrep -x hypridle >/dev/null && exit 0; '
+            + 'command -v hypridle >/dev/null || exit 0; '
+            + 'setsid -f hypridle -c "$0" >/dev/null 2>&1',
+            root.config]
     }
 
     Timer {
         interval: 5000
         running: true
         repeat: true
-        triggeredOnStart: true
         onTriggered: {
-            status.command = ["sh", "-c", "pgrep -x hypridle || true"];
-            status.running = true;
+            if (!restarter.running)
+                watchdog.running = true;
         }
     }
 
     function apply(inhibit: bool): void {
-        root.inhibited = inhibit;
-        runner.command = ["sh", "-c", inhibit
-            ? "pkill -x hypridle 2>/dev/null || true"
-            // Positional, and quoted: the config path is interpolated by
-            // nobody, so a space in it cannot split the command.
-            : 'pgrep -x hypridle >/dev/null || hypridle -c "$1" &',
-            "idle", root.config];
-        runner.running = true;
+        persisted.inhibited = inhibit;
     }
 
     function toggle(): void { root.apply(!root.inhibited); }

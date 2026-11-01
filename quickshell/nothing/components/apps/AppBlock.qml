@@ -110,6 +110,7 @@ Loader {
             horizontalAlignment: root.align(root.block.align)
             verticalAlignment: Text.AlignVCenter
             renderType: Text.QtRendering
+            textFormat: Text.PlainText
 
             font.family: {
                 if (style === "display") return Theme.f.display;
@@ -182,6 +183,7 @@ Loader {
                     id: value
                     anchors.left: parent.left
                     text: root.txt("value", "")
+                    textFormat: Text.PlainText
                     size: root.statSize(root.block.size)
                     elide: Text.ElideRight
                     width: Math.max(0, Math.min(implicitWidth,
@@ -193,6 +195,7 @@ Loader {
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
                 text: root.txt("caption", "")
+                textFormat: Text.PlainText
                 visible: text !== ""
                 elide: Text.ElideRight
             }
@@ -382,6 +385,7 @@ Loader {
                 NLabel {
                     Layout.fillWidth: true
                     text: root.txt("label", "")
+                    textFormat: Text.PlainText
                     elide: Text.ElideRight
                 }
 
@@ -440,6 +444,7 @@ Loader {
             NLabel {
                 Layout.fillWidth: true
                 text: root.txt("label", "")
+                textFormat: Text.PlainText
                 visible: text !== ""
                 elide: Text.ElideRight
             }
@@ -501,6 +506,7 @@ Loader {
             NLabel {
                 anchors.centerIn: parent
                 text: root.txt("label", "")
+                textFormat: Text.PlainText
                 dim: false
             }
         }
@@ -523,6 +529,7 @@ Loader {
             NLabel {
                 Layout.fillWidth: true
                 text: root.txt("label", "")
+                textFormat: Text.PlainText
                 visible: text !== ""
                 elide: Text.ElideRight
             }
@@ -632,6 +639,7 @@ Loader {
                 Layout.fillWidth: true
                 visible: list.rows.length === 0
                 text: root.txt("empty", "") || "NOTHING YET"
+                textFormat: Text.PlainText
             }
         }
     }
@@ -659,12 +667,16 @@ Loader {
         id: cImage
 
         // Rounded like the album art elsewhere in the shell: a Rectangle
-        // that clips, with the Image filling it. Only https is loaded,
-        // so a spec cannot point the shell at a local file.
+        // that clips, with the Image filling it. Only https from a host the
+        // user allowed is loaded, so a spec cannot point the shell at a local
+        // file or phone home.
         Rectangle {
             id: frame
             readonly property string url: root.txt("src", "")
-            readonly property bool allowed: /^https:\/\//.test(frame.url)
+            readonly property bool allowed: MiniApps.hostAllowed(frame.url)
+
+            onUrlChanged: MiniApps.requestHost(frame.url, "image", root.appId)
+            Component.onCompleted: MiniApps.requestHost(frame.url, "image", root.appId)
 
             implicitHeight: Theme.px(root.block.height ?? 64)
             implicitWidth: (root.block.width ?? 0) > 0
@@ -709,6 +721,7 @@ Loader {
 
         NIcon {
             text: root.txt("glyph", "")
+            textFormat: Text.PlainText
             size: root.glyphSize(root.block.size)
             color: root.paint(root.block.color)
         }

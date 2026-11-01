@@ -17,6 +17,7 @@ Rectangle {
         id: label
         anchors.centerIn: parent
         text: root.text
+        textFormat: Text.PlainText
         color: Theme.c.on
         font.family: Theme.f.mono
         font.pixelSize: Theme.f.tiny

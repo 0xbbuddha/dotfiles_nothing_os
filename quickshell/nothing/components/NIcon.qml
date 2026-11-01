@@ -15,6 +15,7 @@ Text {
     font.pixelSize: size
     color: Theme.c.on
     renderType: Text.QtRendering
+    textFormat: Text.PlainText
     verticalAlignment: Text.AlignVCenter
     horizontalAlignment: Text.AlignHCenter
     transform: Translate { x: root.dx; y: root.dy }

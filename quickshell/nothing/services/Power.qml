@@ -14,10 +14,8 @@ import Quickshell
 Singleton {
     id: root
 
-    // The wrapper hypridle is pointed at. It does nothing but ask the
-    // running shell to lock: there is no second locker to fall back to
-    // any more, and a session action armed on the lock screen is carried
-    // out by the shell itself, once PAM has accepted the password.
+    // The wrapper hypridle is pointed at. It asks the running shell to
+    // lock and falls back to scripts/fallback-lock when the shell cannot.
     readonly property string lockScript:
         Quickshell.shellPath("../../scripts/lock.sh")
 
@@ -26,8 +24,7 @@ Singleton {
     }
 
     function lock(): void {
-        Lock.reset();
-        Lock.locked = true;
+        Lock.activate();
     }
 
     function suspend(): void {
@@ -60,12 +57,16 @@ Singleton {
     // command itself contains "qs -p <dir>". The sh would kill itself
     // before the relaunch, and the bar would never come back.
     function restartShell(): void {
+        if (Lock.locked)
+            return;
         Quickshell.reload(true);
     }
 
     // hyprctl reload re-reads hyprland.lua: binds are not duplicated
     // and "hyprland.start" programs are not relaunched.
     function reloadAll(): void {
+        if (Lock.locked)
+            return;
         root.run("hyprctl reload");
         Quickshell.reload(true);
     }

@@ -15,6 +15,13 @@ Singleton {
     property bool applying: false
     property bool mangohudAvailable: false
 
+    PersistentProperties {
+        id: idleHold
+        reloadableId: "gameIdleHold"
+        property bool active: false
+        property bool before: false
+    }
+
     NProcess {
         // Absent is an answer here, not a fault.
         quiet: true
@@ -30,6 +37,23 @@ Singleton {
     function hyprEval(lua: string): void {
         runner.command = ["hyprctl", "eval", lua];
         runner.running = true;
+    }
+
+    function holdIdle(on: bool): void {
+        if (on) {
+            if (!Config.gameInhibitIdle)
+                return;
+            if (!idleHold.active) {
+                idleHold.before = Idle.inhibited;
+                idleHold.active = true;
+            }
+            Idle.apply(true);
+            return;
+        }
+        if (idleHold.active) {
+            idleHold.active = false;
+            Idle.apply(idleHold.before);
+        }
     }
 
     function apply(on: bool): void {
@@ -56,9 +80,7 @@ Singleton {
         if (parts.length > 0)
             root.hyprEval(`hl.config({ ${parts.join(", ")} })`);
 
-        // hypridle is started directly by the Hyprland config, not by
-        // systemd: go through the dedicated service.
-        if (Config.gameInhibitIdle) Idle.apply(on);
+        root.holdIdle(on);
 
         applyDone.restart();
     }

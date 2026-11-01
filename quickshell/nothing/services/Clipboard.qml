@@ -72,7 +72,35 @@ Singleton {
     // NProcess reports stderr and a non-zero exit on its own, and the
     // script name passed as argv[0] is what it labels them with, so a
     // failure shows up as "clip-copy: id 370 not found" instead of nothing.
-    NProcess { id: runner }
+    NProcess {
+        id: runner
+        property string payload: ""
+        onRunningChanged: {
+            if (running && stdinEnabled) {
+                write(payload);
+                stdinEnabled = false;
+            }
+        }
+    }
+
+    NProcess {
+        id: setter
+        command: ["wl-copy"]
+        property string payload: ""
+        onRunningChanged: {
+            if (running) {
+                write(payload);
+                stdinEnabled = false;
+            }
+        }
+    }
+
+    function setText(text: string): void {
+        setter.running = false;
+        setter.payload = text;
+        setter.stdinEnabled = true;
+        setter.running = true;
+    }
 
     Component.onCompleted: {
         root.refresh();
@@ -121,14 +149,15 @@ Singleton {
     // second chance: it is the exact string cliphist itself printed, which
     // makes it safe to compare against a fresh listing.
     //
-    // Both arguments are positional ($1, $2), never interpolated into the
-    // script text, so a preview full of quotes or newlines cannot escape.
+    // The id is positional ($1) and the preview comes in on stdin, never
+    // interpolated into the script text and never on a command line.
     readonly property string copyScript: `
+        p=$(cat)
         t=$(mktemp) || exit 1
         trap 'rm -f "$t"' EXIT
         cliphist decode "$1" >"$t" 2>/dev/null
-        if [ ! -s "$t" ] && [ -n "$2" ]; then
-            id=$(cliphist list | awk -v p="$2" '{ i = index($0, "\t")
+        if [ ! -s "$t" ] && [ -n "$p" ]; then
+            id=$(cliphist list | P="$p" awk 'BEGIN { p = ENVIRON["P"] } { i = index($0, "\t")
                 if (i && substr($0, i + 1) == p) { print substr($0, 1, i - 1); exit } }')
             [ -n "$id" ] && cliphist decode "$id" >"$t" 2>/dev/null
         fi
@@ -136,9 +165,10 @@ Singleton {
     `
 
     function copy(id: string, preview: string): void {
-        runner.command = ["sh", "-c", root.copyScript, "clip-copy",
-                          id, preview ?? ""];
         runner.running = false;
+        runner.command = ["sh", "-c", root.copyScript, "clip-copy", id];
+        runner.payload = preview ?? "";
+        runner.stdinEnabled = true;
         runner.running = true;
     }
 

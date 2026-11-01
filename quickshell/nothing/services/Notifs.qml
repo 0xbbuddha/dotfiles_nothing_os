@@ -139,18 +139,16 @@ Singleton {
             aliases.push("vesktop", "discord", "vesktop.exe", "discord.exe");
         }
         const tops = Hyprland.toplevels?.values ?? [];
-        let matched = "";
         for (let i = 0; i < tops.length; i++) {
             const c = String(tops[i]?.lastIpcObject?.class ?? "").toLowerCase();
-            if (aliases.indexOf(c) >= 0) {
-                matched = c;
-                break;
-            }
+            if (aliases.indexOf(c) < 0)
+                continue;
+            const address = String(tops[i]?.lastIpcObject?.address ?? "");
+            if (/^0x[0-9a-fA-F]+$/.test(address))
+                Hyprland.dispatch(`hl.dsp.focus({ window = "address:${address}" })`);
+            return;
         }
-        if (matched)
-            Hyprland.dispatch(`hl.dsp.focus({ window = "class:${matched}" })`);
-        else
-            Apps.launch(id);
+        Apps.launch(id);
     }
 
     function dismissPopup(key: int): void {

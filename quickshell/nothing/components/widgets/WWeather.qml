@@ -115,6 +115,7 @@ Item {
                             NIcon { text: "󰁝"; size: Theme.px(9); color: Theme.c.onDim }
                             Text {
                                 text: Weather.hi + "°"
+                                textFormat: Text.PlainText
                                 font.family: Theme.f.mono
                                 font.pixelSize: Theme.f.small
                                 color: Theme.c.on
@@ -126,6 +127,7 @@ Item {
                             NIcon { text: "󰁅"; size: Theme.px(9); color: Theme.c.onDim }
                             Text {
                                 text: Weather.lo + "°"
+                                textFormat: Text.PlainText
                                 font.family: Theme.f.mono
                                 font.pixelSize: Theme.f.small
                                 color: Theme.c.onDim

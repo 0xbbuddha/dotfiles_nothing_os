@@ -84,13 +84,13 @@ SettingsPage {
         SettingRow {
             key: "gameInhibitIdle"
             label: "Keep the screen awake"
-            hint: "Suspends hypridle while the game is running"
+            hint: "Holds off dimming, the lock and sleep while game mode is on"
             DotSwitch {
                 checked: Config.gameInhibitIdle
                 onToggled: (v) => {
                     Config.gameInhibitIdle = v;
                     Config.save();
-                    if (Config.gameMode) Idle.apply(v);
+                    if (Config.gameMode) Game.holdIdle(v);
                 }
             }
         }

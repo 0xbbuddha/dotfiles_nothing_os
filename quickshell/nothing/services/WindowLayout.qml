@@ -88,7 +88,12 @@ Singleton {
     // you already chose rather than on the defaults.
     // The two globals the essential layout reads, written above the
     // hl.config call because that is a plain Lua file and order is order.
-    readonly property string settingsLua: `ESSENTIAL_SIDE = "${Config.shelfSide}"
+    readonly property string shelfSide: Config.shelfSide === "left" ? "left" : "right"
+    readonly property string scrollDirection:
+        ["right", "left", "down", "up"].indexOf(Config.scrollDirection) >= 0
+            ? Config.scrollDirection : "right"
+
+    readonly property string settingsLua: `ESSENTIAL_SIDE = "${root.shelfSide}"
 ESSENTIAL_RATIO = ${Config.mainWidth.toFixed(3)}
 
 hl.config({
@@ -98,7 +103,7 @@ hl.config({
         focus_fit_method = ${root.fitMethod},
         fullscreen_on_one_column = ${Config.scrollFullscreenOne ? "true" : "false"},
         follow_focus = ${Config.scrollFollowFocus ? "true" : "false"},
-        direction = "${Config.scrollDirection}",
+        direction = "${root.scrollDirection}",
     },
 })`
 

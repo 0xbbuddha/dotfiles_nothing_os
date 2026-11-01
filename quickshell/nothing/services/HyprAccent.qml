@@ -30,6 +30,10 @@ Singleton {
     // value: an unparseable colour is not an error, it is ignored.
     function hyprColour(c: var): string {
         const hex = String(c).replace("#", "").toLowerCase();
+        // Length alone is not validation: this is spliced straight into a
+        // Lua string literal written to accent.lua, run on every startup.
+        if (!/^[0-9a-f]+$/.test(hex))
+            return "rgba(d71921ff)";
         if (hex.length === 8)
             return "rgba(" + hex.slice(2) + hex.slice(0, 2) + ")";
         if (hex.length === 6)

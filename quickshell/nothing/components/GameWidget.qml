@@ -120,6 +120,7 @@ Item {
                 Text {
                     Layout.fillWidth: true
                     text: root.meta?.label ?? root.wid
+                    textFormat: Text.PlainText
                     color: Theme.c.onDim
                     font.family: Theme.f.mono
                     font.pixelSize: Theme.f.micro

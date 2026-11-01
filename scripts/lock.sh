@@ -1,27 +1,48 @@
 #!/usr/bin/env bash
-# Locks the session by asking the running shell to do it.
+# Locks the session by asking the running shell to do it, and checks that
+# the compositor really locked.
 #
-# This is what hypridle's lock_cmd and SUPER+L both call. There is no
-# second locker any more: the shell draws the lock itself on
-# ext-session-lock, and the compositor keeps those surfaces up even if
-# the shell dies, which is what makes a single locker safe.
+# This is what hypridle's lock_cmd and SUPER+L both call. The shell draws
+# the lock itself on ext-session-lock, and the compositor keeps those
+# surfaces up even if the shell dies. When the shell does not answer,
+# scripts/fallback-lock locks on its own.
 #
-# The three buttons on the lock screen do not act. They arm an intent
-# that the shell carries out itself, and only once PAM has accepted the
-# password, so anyone else can press them as much as they like.
+# The three buttons on the lock screen do not act. They arm an intent that
+# expires, and that still asks for confirmation once PAM has accepted the
+# password.
 set -u
 
 HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-SHELLDIR="${NOTHING_SHELL_DIR:-$HERE/../quickshell/nothing}"
+. "$HERE/fallback-lock/common.sh"
 
-if [ "$(qs -p "$SHELLDIR" ipc call lock activate 2>/dev/null)" = "ok" ]; then
+lock_with_shell() {
+    local dir="$1" attempt answer
+    for attempt in 1 2; do
+        answer="$(timeout 1.5 qs -p "$dir" ipc call lock activate 2>/dev/null)"
+        case "$answer" in
+            ok) return 0 ;;
+            pending) wait_secure "$dir" 7; return ;;
+        esac
+        [ "$attempt" = 1 ] && sleep 0.2
+    done
+    return 1
+}
+
+if fallback_running && wait_secure "$FALLBACK_DIR" 1; then
     exit 0
 fi
 
-# Deliberately loud. A shell that does not answer cannot lock, and the
-# screen is still open: saying nothing here is how a machine ends up
-# sitting unlocked because a lock command quietly failed.
-echo "nothing: the shell did not answer, the session is NOT locked" >&2
-notify-send -u critical "Lock failed" \
-    "The Nothing shell did not answer. The session is not locked." 2>/dev/null
+SHELLDIR="$(shell_dir)"
+lock_with_shell "$SHELLDIR" && exit 0
+
+if ! fallback_running; then
+    setsid -f flock -n "$FALLBACK_GUARD" qs -p "$FALLBACK_DIR" >/dev/null 2>&1
+fi
+wait_secure "$FALLBACK_DIR" 7 && exit 0
+is_secure "$SHELLDIR" && exit 0
+
+# Deliberately loud, and through the compositor: the notification server
+# lives in the shell, which is the part that just failed.
+echo "nothing: neither the shell nor the fallback locked, the session is NOT locked" >&2
+hyprctl notify 0 15000 "rgb(ff4444)" "Lock failed: the session is NOT locked" >/dev/null 2>&1
 exit 1

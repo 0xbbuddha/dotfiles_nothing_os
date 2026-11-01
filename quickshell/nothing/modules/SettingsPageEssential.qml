@@ -188,8 +188,8 @@ SettingsPage {
             label: "Mind"
             hint: Config.mindBackend === "gemini"
                 ? (Essentials.hasGeminiKey
-                    ? "Gemini, key saved locally"
-                    : "Gemini, paste a key from Google AI Studio")
+                    ? "Gemini: Google receives captures, clipboard entries, screenshots and voice notes, once you allow it"
+                    : "Gemini: Google receives your captures once you allow it. Paste a key from Google AI Studio")
                 : (Config.mindBackend === "ollama"
                     ? "Ollama must be running locally"
                     : "Stub: title from the first line. Apps cannot be written on stub.")

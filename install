@@ -54,6 +54,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 need_root_denied
+export NOTHING_NOCONFIRM="$NOCONFIRM"
 
 # The step numbers are worked out up front rather than counted as we go:
 # each stage runs in its own process, so a counter living in this shell

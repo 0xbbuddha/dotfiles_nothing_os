@@ -5,6 +5,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
+import Quickshell.Wayland
 import "components"
 import "modules"
 import "services"
@@ -48,6 +49,31 @@ ShellRoot {
         void ConfigBackup.list;
         // Starts KDE Connect's daemon if installed and wanted (Phone).
         void Phone.available;
+        void Polkit.registered;
+    }
+
+    Binding {
+        target: Quickshell
+        property: "watchFiles"
+        value: !Lock.locked
+    }
+
+    PanelWindow {
+        id: idleSurface
+        implicitWidth: 1
+        implicitHeight: 1
+        color: "transparent"
+        anchors { top: true; left: true }
+        exclusionMode: ExclusionMode.Ignore
+        mask: Region {}
+        WlrLayershell.layer: WlrLayer.Background
+        WlrLayershell.namespace: "nothing-idle-inhibit"
+        WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+    }
+
+    IdleInhibitor {
+        window: idleSurface
+        enabled: Idle.inhibited
     }
 
     // ── Per screen ────────────────────────────────────────────────────
@@ -340,13 +366,12 @@ ShellRoot {
 
     IpcHandler {
         target: "lock"
-        // Answering at all is the test scripts/lock.sh performs: a shell
-        // that does not reply is a shell that cannot lock, and the script
-        // says so rather than leaving the session open in silence.
         function activate(): string {
-            Lock.reset();
-            Lock.locked = true;
-            return "ok";
+            Lock.activate();
+            return Lock.locked && Lock.secure ? "ok" : "pending";
+        }
+        function secure(): string {
+            return Lock.locked && Lock.secure ? "true" : "false";
         }
     }
 

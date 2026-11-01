@@ -15,7 +15,11 @@ Singleton {
     property string message: ""
 
     function dismiss(): void { root.shown = false; }
-    function retry(): void { Quickshell.reload(true); }
+    function retry(): void {
+        if (Lock.locked)
+            return;
+        Quickshell.reload(true);
+    }
 
     Connections {
         target: Quickshell

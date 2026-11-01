@@ -25,6 +25,7 @@ Singleton {
 
     property string query: ""
     property string mathResult: ""
+    property bool mathRefused: false
     property var emojis: []
     property string askAnswer: ""
     property string askFor: ""
@@ -93,10 +94,46 @@ Singleton {
         }
     }
 
+    readonly property var calcFunctions: [
+        "abs", "acos", "acosh", "asin", "asinh", "atan", "atan2", "atanh", "bin",
+        "binomial", "cbrt", "ceil", "cos", "cosh", "dec", "exp", "factorial",
+        "floor", "frac", "gcd", "hex", "lcm", "ln", "log", "max", "min", "mod",
+        "oct", "pow", "rem", "root", "round", "sgn", "sin", "sinh", "sq", "sqrt",
+        "tan", "tanh", "trunc"
+    ]
+
+    // No denylist for bare words (save, load, function, ...): qalc's
+    // interactive-mode commands only exist when qalc is run with no
+    // expression argument. Given one on argv - which compute() below
+    // always does - every one of those words is just an undefined
+    // variable name to it, verified directly: `qalc -t "save x"`
+    // prints an expression result, not a write to disk, and feeding
+    // the same word on stdin alongside an argv expression is ignored
+    // entirely. A translated word list could never cover every qalc
+    // locale anyway; this has nothing to cover.
+    function calcSafe(expr: string): bool {
+        const text = String(expr ?? "");
+        if (text.length > 200 || /["'`;$\\:\u0000-\u001f\u007f\u200b-\u200f\u2060\ufeff]/.test(text))
+            return false;
+        const calls = text.match(/[A-Za-z_\u0080-\uffff][A-Za-z0-9_\u0080-\uffff]*\s*\(/g) ?? [];
+        for (const call of calls) {
+            if (root.calcFunctions.indexOf(call.replace(/\s*\($/, "")) < 0)
+                return false;
+        }
+        return true;
+    }
+
     function compute(expr: string): void {
-        if (expr.trim() === "") { root.mathResult = ""; return; }
         math.running = false;
-        math.command = ["qalc", "-t", expr];
+        root.mathResult = "";
+        root.mathRefused = false;
+        if (expr.trim() === "")
+            return;
+        if (!root.calcSafe(expr)) {
+            root.mathRefused = true;
+            return;
+        }
+        math.command = ["qalc", "-t", " " + expr];
         math.running = true;
     }
 
@@ -150,7 +187,7 @@ Singleton {
         root.askFor = text;
         asker.payload = text;
         asker.running = false;
-        asker.command = ["python3", Essentials.script, "ask"];
+        asker.command = Essentials.envBackend().concat(["python3", Essentials.script, "ask"]);
         asker.stdinEnabled = true;
         asker.running = true;
     }
@@ -286,8 +323,8 @@ Singleton {
           run: () => Notifs.clearHistory() },
         { name: "clipboard", label: "Clear the clipboard", icon: "󰅍",
           run: () => Clipboard.wipe() },
-        // Power.lock() locks the shell directly: "loginctl lock-session"
-        // goes through hypridle, which caffeine mode kills.
+        // Power.lock() locks the shell directly rather than going through
+        // "loginctl lock-session" and hypridle.
         { name: "lock", label: "Lock the session",     icon: "󰌾",
           run: () => Power.lock() },
         { name: "suspend",     label: "Suspend",            icon: "󰒲",
@@ -446,7 +483,7 @@ Singleton {
                     kind: "emoji", title: e.e,
                     subtitle: e.k.split(" ").slice(0, 4).join(" "),
                     emoji: e.e,
-                    run: () => root.run(`printf '%s' ${JSON.stringify(e.e)} | wl-copy`)
+                    run: () => Clipboard.setText(e.e)
                 });
             }
             return out;
@@ -521,11 +558,15 @@ Singleton {
 
         // Calculator, prioritised if explicitly requested
         if (mode === "math" || (text !== "" && /^[\d\s().+\-*\/^%]+$/.test(text) && /[\d]/.test(text))) {
-            const shown = root.mathResult !== "" ? root.mathResult : "…";
+            const shown = root.mathRefused ? "Not allowed in the calculator"
+                : (root.mathResult !== "" ? root.mathResult : "…");
             const entry = {
                 kind: "math", title: shown, subtitle: text + " =",
                 icon: "󰪚",
-                run: () => root.run(`printf '%s' ${JSON.stringify(root.mathResult)} | wl-copy`)
+                run: () => {
+                    if (root.mathResult !== "")
+                        Clipboard.setText(root.mathResult);
+                }
             };
             if (mode === "math") out.unshift(entry); else out.push(entry);
         }
@@ -541,7 +582,7 @@ Singleton {
             out.unshift({
                 kind: "web", title: text, subtitle: "Search the web",
                 icon: "󰖟",
-                run: () => root.run(`xdg-open ${JSON.stringify(root.engine + encodeURIComponent(text))}`)
+                run: () => Quickshell.execDetached(["xdg-open", root.engine + encodeURIComponent(text)])
             });
         }
 
@@ -563,7 +604,7 @@ Singleton {
             out.push({
                 kind: "web", title: text, subtitle: "Search the web",
                 icon: "󰖟",
-                run: () => root.run(`xdg-open ${JSON.stringify(root.engine + encodeURIComponent(text))}`)
+                run: () => Quickshell.execDetached(["xdg-open", root.engine + encodeURIComponent(text)])
             });
             out.push({
                 kind: "shell", title: text, subtitle: "Run the command",
@@ -581,7 +622,7 @@ Singleton {
         if (mode === "math" || (/^[\d\s().+\-*\/^%]+$/.test(text) && /[\d]/.test(text)))
             root.compute(text);
         else
-            root.mathResult = "";
+            root.compute("");
         if (text !== root.askFor)
             root.askAnswer = "";
         if (mode === "files")

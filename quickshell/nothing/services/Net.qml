@@ -235,6 +235,11 @@ Singleton {
             return;
         const argv = ["nmcli", "device", "wifi", "connect", name,
                       "ifname", root.wifiDevice.name];
+        // shortcut: the PSK sits in this process's own argv (readable via
+        // /proc/<pid>/cmdline for its short lifetime) - nmcli has no
+        // non-interactive way to read it from stdin instead (--ask is
+        // documented as interactive-only, "do not use for scripts").
+        // Upgrade if nmcli ever adds one.
         if ((psk ?? "") !== "")
             argv.push("password", psk);
         if (hidden)
@@ -316,6 +321,7 @@ Singleton {
             return;
         root.btMessage = "";
         btClear.stop();
+        root.btJoining = false;
         root.btPending = device.address;
         btWatch.restart();
 
@@ -340,8 +346,9 @@ Singleton {
         // A device that has never been paired only exists in BlueZ for as
         // long as discovery holds it: stop scanning first and pairing
         // fails outright with "not available". So the scan stays up, and
-        // `pairWatch` takes it down the moment the pairing lands.
+        // settleBt takes it down and connects the moment the pairing lands.
         root.scanBt(true);
+        root.btJoining = true;
         device.pair();
     }
 
@@ -366,6 +373,10 @@ Singleton {
         if (!root.btWizard)
             return;
         root.scanBt(false);
+        if (adapter) {
+            adapter.pairableTimeout = 120;
+            adapter.pairable = true;
+        }
         Quickshell.execDetached(["bluedevil-wizard"]);
     }
 
@@ -374,6 +385,9 @@ Singleton {
     // the difference between "still trying" and "gave up".
     property string btMessage: ""
     property string btPending: ""
+    property bool btJoining: false
+    readonly property var btPendingDevice: root.btPending !== ""
+        ? (root.btDevices.find(d => d.address === root.btPending) ?? null) : null
 
     Timer {
         id: btWatch
@@ -381,6 +395,7 @@ Singleton {
         onTriggered: {
             const target = root.btDevices.find(d => d.address === root.btPending);
             root.btPending = "";
+            root.btJoining = false;
             if (!target || target.connected)
                 return;
             root.btMessage = target.paired
@@ -396,18 +411,36 @@ Singleton {
         onTriggered: root.btMessage = ""
     }
 
-    // Pairing done: hand the radio back and make the device stick, so
-    // BlueZ brings it in by itself next time.
+    // Pairing done: hand the radio back and make the device you paired
+    // stick, so BlueZ brings it in by itself next time. Only that one:
+    // anything else that shows up paired was not started from here.
     Connections {
         target: root.adapter?.devices ?? null
         ignoreUnknownSignals: true
         function onValuesChanged(): void { root.settleBt(); }
     }
 
+    Connections {
+        target: root.btPendingDevice
+        ignoreUnknownSignals: true
+        function onPairedChanged(): void { root.settleBt(); }
+        function onConnectedChanged(): void { root.settleBt(); }
+    }
+
+    onBtWorkingChanged: root.settleBt()
+
     function settleBt(): void {
-        for (const d of root.btDevices) {
-            if (d.paired && !d.trusted)
-                d.trusted = true;
+        const pending = root.btPending !== ""
+            ? root.btDevices.find(d => d.address === root.btPending) : null;
+        if (pending && pending.paired && !pending.trusted)
+            pending.trusted = true;
+        if (root.btJoining && pending && pending.paired && !pending.pairing) {
+            root.btJoining = false;
+            root.scanBt(false);
+            if (!pending.connected) {
+                btWatch.restart();
+                pending.connect();
+            }
         }
         if (root.btConnected.length > 0 && root.btScanning)
             root.scanBt(false);
@@ -472,7 +505,27 @@ Singleton {
     function toggleWifi(): void { Networking.wifiEnabled = !Networking.wifiEnabled; }
     function toggleBt(): void { if (adapter) adapter.enabled = !adapter.enabled; }
     function scanWifi(on: bool): void { if (wifiDevice) wifiDevice.scannerEnabled = on; }
-    function scanBt(on: bool): void { if (adapter) adapter.discovering = on; }
+    function scanBt(on: bool): void {
+        if (!adapter)
+            return;
+        if (on) {
+            adapter.pairableTimeout = 120;
+            adapter.pairable = true;
+        } else if (!root.btWorking) {
+            adapter.pairable = false;
+        }
+        adapter.discovering = on;
+    }
+
+    function lockPairing(): void {
+        if (!adapter || adapter.discovering)
+            return;
+        adapter.pairableTimeout = 120;
+        adapter.pairable = false;
+    }
+
+    onAdapterChanged: root.lockPairing()
+    Component.onCompleted: root.lockPairing()
 
     function sortedNetworks(): var {
         return networks.slice().sort((x, y) => {

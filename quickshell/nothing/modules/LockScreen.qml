@@ -16,9 +16,39 @@ import "../services"
 Scope {
     id: root
 
+    function checkLock(): void {
+        Lock.secure = session.secure;
+        if (Lock.locked && !session.locked)
+            Lock.compositorReleased();
+    }
+
+    PersistentProperties {
+        id: persisted
+        reloadableId: "lockState"
+        property bool locked: false
+        onReloaded: {
+            Lock.locked = persisted.locked;
+            Qt.callLater(root.checkLock);
+        }
+    }
+
+    Connections {
+        target: Lock
+        function onLockedChanged(): void {
+            persisted.locked = Lock.locked;
+            Qt.callLater(root.checkLock);
+        }
+    }
+
     WlSessionLock {
         id: session
         locked: Lock.locked
+
+        onSecureStateChanged: {
+            Lock.secure = session.secure;
+            if (!session.secure && Lock.locked)
+                Qt.callLater(Lock.compositorReleased);
+        }
 
         surface: WlSessionLockSurface {
             id: pane
@@ -101,7 +131,10 @@ Scope {
                 }
 
                 Keys.onPressed: (event) => {
-                    if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                    if (event.matches(StandardKey.Paste)
+                        || (event.key === Qt.Key_Insert && (event.modifiers & Qt.ShiftModifier))) {
+                        event.accepted = true;
+                    } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                         Lock.submit();
                         event.accepted = true;
                     } else if (event.key === Qt.Key_Escape) {
@@ -294,9 +327,9 @@ Scope {
                 spacing: Theme.px(12)
 
             // ── Session chips ────────────────────────────────────
-            // In the corner, away from the clock. They arm an intent
-            // carried out only once PAM has said yes, so they are not
-            // controls anyone can press to get anywhere.
+            // In the corner, away from the clock. They arm an intent that
+            // expires and asks for confirmation once PAM has said yes, so
+            // they are not controls anyone can press to get anywhere.
             RowLayout {
                 spacing: Theme.px(14)
 
@@ -350,44 +383,14 @@ Scope {
                 visible: Lock.action !== ""
                 text: {
                     switch (Lock.action) {
-                    case "logout":   return "LOG OUT AFTER UNLOCK";
-                    case "reboot":   return "RESTART AFTER UNLOCK";
-                    case "poweroff": return "SHUT DOWN AFTER UNLOCK";
+                    case "logout":   return "CONFIRM LOG OUT AFTER UNLOCK";
+                    case "reboot":   return "CONFIRM RESTART AFTER UNLOCK";
+                    case "poweroff": return "CONFIRM SHUT DOWN AFTER UNLOCK";
                     default:         return "";
                     }
                 }
                 color: Theme.c.red
             }
-            }
-
-            // ── System line ──────────────────────────────────────────
-            // Bottom left, under the column and inside the veil. It sat
-            // top right first and was simply unreadable there: over a
-            // photograph, faint grey on whatever the picture happens to
-            // be is not a colour, it is a guess.
-            RowLayout {
-                anchors.left: column.left
-                anchors.top: column.bottom
-                anchors.topMargin: Theme.px(40)
-                spacing: Theme.px(18)
-
-
-                NLabel {
-                    text: Sys.kernel !== "" ? "CPU " + Math.round(Sys.cpu * 100) + "%" : ""
-                    font.pixelSize: Theme.px(13)
-                    color: Theme.c.onFaint
-                }
-                NLabel {
-                    text: Net.kind.toUpperCase()
-                    font.pixelSize: Theme.px(13)
-                    color: Theme.c.onFaint
-                }
-                NLabel {
-                    text: Player.playing ? "▸  " + Player.cleanTitle : ""
-                    visible: text !== ""
-                    font.pixelSize: Theme.px(13)
-                    color: Theme.c.onFaint
-                }
             }
         }
     }
@@ -396,14 +399,11 @@ Scope {
     Connections {
         target: Lock
         function onGranted(action: string): void {
-            // Unlock before acting: the compositor shows an unusable
-            // fallback lock if the client goes away while still locked.
             Lock.locked = false;
             Lock.reset();
-            switch (action) {
-            case "logout":   Power.logout(); break;
-            case "reboot":   Power.reboot(); break;
-            case "poweroff": Power.poweroff(); break;
+            if (action !== "") {
+                Lock.pendingAction = action;
+                GlobalState.sessionOpen = true;
             }
         }
     }

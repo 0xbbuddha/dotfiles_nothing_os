@@ -240,8 +240,8 @@ examples for the model.
 **Google Lens.** `scripts/lens.sh` uploads the selection to `uguu.se`
 for a public URL. Do not select anything confidential.
 
-**Weather.** On by default, `wttr.in` every 15 minutes. Toggle on the
-Interface settings page.
+**Weather.** Off by default. Once enabled, `wttr.in` every 15 minutes.
+Toggle on the Interface settings page.
 
 **hyprshot.** The packaged `getopt` treats `-r` as taking an argument.
 Scripts use `-o DIR -f NAME` instead.

@@ -19,7 +19,7 @@ Item {
         const urls = [];
         const seen = {};
         const add = u => {
-            if (!u || seen[u])
+            if (!u || seen[u] || !/^(file|image|qrc):/.test(u))
                 return;
             seen[u] = true;
             urls.push(u);

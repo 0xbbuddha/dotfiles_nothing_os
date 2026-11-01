@@ -5,7 +5,6 @@
 # (title + first lines). To use Gemini or Ollama, pick it in settings or:
 #
 #   echo 'BACKEND=gemini' >> ~/.config/nothing/mind.env
-#   echo 'GEMINI_API_KEY=…' >> ~/.config/nothing/mind.env
 #   echo 'MODEL=gemini-3.6-flash' >> ~/.config/nothing/mind.env
 #
 #   echo 'BACKEND=ollama' >> ~/.config/nothing/mind.env

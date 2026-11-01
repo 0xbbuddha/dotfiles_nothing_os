@@ -6,7 +6,7 @@ import Quickshell.Io
 import ".."
 import "../components"
 
-// Weather via wttr.in (can be disabled in Config.qml).
+// Weather via wttr.in. Off until enabled in Settings; nothing is contacted before.
 Singleton {
     id: root
 
@@ -59,7 +59,7 @@ Singleton {
     NProcess {
         id: fetch
         running: Config.weatherEnabled
-        command: ["curl", "-sf", "--max-time", "8",
+        command: ["curl", "-sf", "--proto", "=https", "--proto-redir", "=https", "--max-time", "8",
                   "-H", "Accept-Language: fr", root.endpoint]
 
         stdout: StdioCollector {
