@@ -3,7 +3,7 @@
 #
 #   ./scripts/apply-spicetify.sh              install and apply
 #   ./scripts/apply-spicetify.sh --light      force the light scheme
-#   ./scripts/apply-spicetify.sh --fix-perms  make /opt/spotify writable first
+#   ./scripts/apply-spicetify.sh --fix-perms  give your user write access to /opt/spotify first
 #   ./scripts/apply-spicetify.sh --revert     put Spotify back
 #   ./scripts/apply-spicetify.sh --status     print the state, change nothing
 #
@@ -12,8 +12,8 @@
 # to. The flags are there to override that from a terminal.
 #
 # The one thing this needs root for: spicetify patches Spotify in place, so
-# /opt/spotify has to be writable by your user. --fix-perms asks for that,
-# through sudo on a terminal and through pkexec when there is no terminal
+# /opt/spotify has to be writable by your user. --fix-perms asks for that
+# with an ACL for your user alone, through sudo on a terminal and through pkexec when there is no terminal
 # to type into, which is how the settings panel calls it.
 set -euo pipefail
 
@@ -163,18 +163,25 @@ fi
 # rewrites the app bundle in place.
 if ! writable; then
     if [[ $FIX_PERMS -eq 1 ]]; then
-        # One escalation, not two: two chmod calls behind two prompts is
+        # One escalation, not two: two setfacl calls behind two prompts is
         # two passwords for one action. sudo when there is a terminal to
         # type the password into, pkexec when there is not, which is the
         # case whenever the settings panel is the caller. The shell runs
         # its own polkit agent, so pkexec gets a dialog in the same
         # language as the rest of the desktop.
-        fix="chmod a+wr '$SPOTIFY_DIR' && chmod -R a+wr '$SPOTIFY_DIR/Apps'"
-        echo "→ Making $SPOTIFY_DIR writable"
+        if ! command -v setfacl >/dev/null 2>&1; then
+            echo "setfacl is missing: install the acl package, or make"
+            echo "$SPOTIFY_DIR writable for your user yourself."
+            echo "It is never opened to everyone."
+            exit 1
+        fi
+        me="$(id -un)"
+        fix='setfacl -m "u:$1:rwx" "$2" && setfacl -R -m "u:$1:rwX" "$2/Apps"'
+        echo "→ Giving $me write access to $SPOTIFY_DIR (ACL for $me only)"
         if [[ -t 0 ]] && command -v sudo >/dev/null 2>&1; then
-            sudo sh -c "$fix"
+            sudo sh -c "$fix" "nothing-spicetify-grant-$me" "$me" "$SPOTIFY_DIR"
         elif command -v pkexec >/dev/null 2>&1; then
-            pkexec sh -c "$fix"
+            pkexec sh -c "$fix" "nothing-spicetify-grant-$me" "$me" "$SPOTIFY_DIR"
         else
             echo "neither sudo on a terminal nor pkexec is available"
             exit 1
@@ -185,8 +192,8 @@ $SPOTIFY_DIR is not writable, and spicetify patches Spotify in place.
 
 Run this script with --fix-perms, or run these two yourself:
 
-    sudo chmod a+wr $SPOTIFY_DIR
-    sudo chmod -R a+wr $SPOTIFY_DIR/Apps
+    sudo setfacl -m u:$USER:rwx $SPOTIFY_DIR
+    sudo setfacl -R -m u:$USER:rwX $SPOTIFY_DIR/Apps
 
 A Spotify update resets both, and the theme goes with them. Re-run this
 script after any spotify upgrade.
