@@ -19,6 +19,8 @@
 # streams across to it.
 set -u
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 command -v bluetoothctl >/dev/null 2>&1 || exit 0
 
 # One only, same reasoning as bt-agent.sh: a lock rather than pgrep, which
@@ -66,10 +68,7 @@ route_audio() {
     # set-default only redirects new streams; pull the playing ones over
     # by hand so music that was already going switches to the headset.
     if have pactl && [[ -n "$name" && "$name" != "null" ]]; then
-        pactl list short sink-inputs 2>/dev/null | while read -r sinput _; do
-            [[ "$sinput" =~ ^[0-9]+$ ]] || continue
-            pactl move-sink-input "$sinput" "$name" >/dev/null 2>&1
-        done
+        "$SCRIPT_DIR/move-sink-inputs.sh" "$name"
     fi
 }
 

@@ -159,8 +159,19 @@ case "${1:-status}" in
             [[ -n "$ID" ]] && MODS+=("$ID")
             ID="$(pactl load-module module-loopback source="$MICSRC" sink="$MIXNAME" latency_msec=60 2>/dev/null || true)"
             [[ -n "$ID" ]] && MODS+=("$ID")
-            printf '%s\n' "${MODS[@]}" > "$MODFILE"
-            ARGS+=(--audio="${MIXNAME}.monitor")
+            if [[ "${#MODS[@]}" -eq 3 ]]; then
+                printf '%s\n' "${MODS[@]}" > "$MODFILE"
+                ARGS+=(--audio="${MIXNAME}.monitor")
+            else
+                # Partial mix: the null sink or one loopback didn't load,
+                # so the monitor would silently carry only one source (or
+                # nothing at all). Tear down whatever did load and fall
+                # back to a single source, same as the "one half missing"
+                # case above - never report "both" while recording less.
+                for id in "${MODS[@]}"; do pactl unload-module "$id" 2>/dev/null || true; done
+                SRC="${MONSRC:-$MICSRC}"
+                if [[ -n "$SRC" ]]; then ARGS+=(--audio="$SRC"); else ARGS+=(--audio); fi
+            fi
         fi
         ;;
     esac

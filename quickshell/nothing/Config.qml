@@ -1234,7 +1234,7 @@ Singleton {
             property real   mainWidth: 0.62      // 0.25 to 0.9
 
             // The defaults are the panel exactly as it was before any of
-            // this was configurable: same six tiles, same five buttons,
+            // this was configurable: same seven tiles, same five buttons,
             // every block on. Nobody's control centre changes by updating.
             property var ccTiles: ["wifi", "bluetooth", "warp",
                                    "sound", "light", "notify", "record"]

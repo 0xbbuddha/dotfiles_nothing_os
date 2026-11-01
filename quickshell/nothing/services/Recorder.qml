@@ -13,10 +13,6 @@ Singleton {
     readonly property string script:
         Quickshell.shellPath("../../scripts/record.sh")
 
-    // Only a label now; openFolder resolves the real XDG videos dir at
-    // click time, so it matches where record.sh actually writes.
-    readonly property string saveDir: `${Quickshell.env("HOME")}/Videos/Captures`
-
     property bool recording: false
     property bool picking: false
     property int elapsed: 0

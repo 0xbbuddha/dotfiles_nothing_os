@@ -9,6 +9,12 @@ import ".."
 Singleton {
     id: root
 
+    // Shared with bt-a2dp-fix.sh's route_audio(): the same "move every
+    // playing stream onto the new sink" loop used to live independently
+    // in both and had already drifted into two slightly different ones.
+    readonly property string moveScript:
+        Quickshell.shellPath("../../scripts/move-sink-inputs.sh")
+
     readonly property var sink: Pipewire.defaultAudioSink
     readonly property var audio: sink?.audio ?? null
     readonly property real volume: audio?.volume ?? 0
@@ -73,11 +79,10 @@ Singleton {
             return;
         // set the default and drag playing streams over, else a pinned one
         // stays put. runs first so a Pipewire binding hiccup can't skip it.
+        sinkMover.running = false;
         sinkMover.command = ["sh", "-c",
-            "wpctl set-default \"$1\" 2>/dev/null; "
-            + "for i in $(pactl list short sink-inputs | cut -f1); do "
-            + "pactl move-sink-input \"$i\" \"$2\" 2>/dev/null; done",
-            "set-sink", String(node.id), String(node.name)];
+            "wpctl set-default \"$1\" 2>/dev/null; \"$2\" \"$3\"",
+            "set-sink", String(node.id), root.moveScript, String(node.name)];
         sinkMover.running = true;
         Pipewire.preferredDefaultAudioSink = node;
     }
