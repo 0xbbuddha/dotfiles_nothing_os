@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Services.Pipewire
+import ".."
 
 // Pipewire sinks, microphone, per-application streams.
 Singleton {
@@ -68,9 +69,20 @@ Singleton {
     }
 
     function setSink(node): void {
-        if (node)
-            Pipewire.preferredDefaultAudioSink = node;
+        if (!node)
+            return;
+        // set the default and drag playing streams over, else a pinned one
+        // stays put. runs first so a Pipewire binding hiccup can't skip it.
+        sinkMover.command = ["sh", "-c",
+            "wpctl set-default \"$1\" 2>/dev/null; "
+            + "for i in $(pactl list short sink-inputs | cut -f1); do "
+            + "pactl move-sink-input \"$i\" \"$2\" 2>/dev/null; done",
+            "set-sink", String(node.id), String(node.name)];
+        sinkMover.running = true;
+        Pipewire.preferredDefaultAudioSink = node;
     }
+
+    NProcess { id: sinkMover; label: "set sink" }
 
     function isDefaultSource(node): bool {
         return (root.source?.id ?? -1) === (node?.id ?? -2);
