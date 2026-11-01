@@ -33,9 +33,16 @@ if ! have pacman; then
     die "pacman not found. This installer targets Arch Linux and EndeavourOS."
 fi
 
-# Refresh the databases. A full -Syu is opt-in: rice installers that
-# upgrade the world tend to surprise people mid-session.
-run sudo pacman -Sy --needed --noconfirm archlinux-keyring
+# A full -Syu is opt-in: rice installers that upgrade the world tend to
+# surprise people mid-session. Without it the databases are left alone,
+# because refreshing them and installing on top is an unsupported partial
+# upgrade on Arch.
+if ask_yn "Upgrade the system first (pacman -Syu)?" n; then
+    run sudo pacman -Syu --needed archlinux-keyring
+else
+    warn "Databases not refreshed. If a download fails with a 404: sudo pacman -Syu"
+    run sudo pacman -S --needed archlinux-keyring
+fi
 
 PACMAN_PKGS=(
     # greeter
@@ -120,7 +127,7 @@ else
             ok "Bibata cursor already installed, skipping $p"
             continue
         fi
-        run yay -S --needed --noconfirm "$p" || warn "could not install $p"
+        run yay -S --needed "$p" || warn "could not install $p"
     done
 fi
 
@@ -144,11 +151,11 @@ offer_ear_native() {
         warn "yay is not installed. Later: yay -S ear-native"
         return
     fi
-    if ! ask_yn "Install ear-native for the Nothing X app?" y; then
+    if ! ask_yn "Install ear-native for the Nothing X app?" n; then
         warn "Skipped. Later: yay -S ear-native"
         return
     fi
-    run yay -S --needed --noconfirm ear-native \
+    run yay -S --needed ear-native \
         || { warn "could not install ear-native"; return; }
     ok "Nothing X is ready. Find it in the launcher, or type # for the lot."
 }
@@ -188,7 +195,7 @@ offer_rog() {
         "  supergfxctl for the hybrid graphics switch, and" \
         "  rog-control-center to drive both. No kernel is touched."
 
-    if ! ask_yn "Install the ASUS ROG tools?" y; then
+    if ! ask_yn "Install the ASUS ROG tools?" n; then
         warn "Skipped. See https://asus-linux.org/guides/arch-guide/"
         return
     fi
@@ -211,7 +218,7 @@ offer_rog() {
     fi
     if ((${#from_aur[@]})); then
         if have yay; then
-            run yay -S --needed --noconfirm "${from_aur[@]}" \
+            run yay -S --needed "${from_aur[@]}" \
                 || { warn "could not install ${from_aur[*]}"; failed=1; }
         else
             warn "not in your repos and yay is missing: ${from_aur[*]}"
@@ -254,11 +261,11 @@ offer_warp() {
         warn "yay is not installed. Later: yay -S cloudflare-warp-bin"
         return
     fi
-    if ! ask_yn "Install Cloudflare WARP from the AUR?" y; then
+    if ! ask_yn "Install Cloudflare WARP from the AUR?" n; then
         warn "Skipped. Later: yay -S cloudflare-warp-bin"
         return
     fi
-    run yay -S --needed --noconfirm cloudflare-warp-bin \
+    run yay -S --needed cloudflare-warp-bin \
         || { warn "could not install cloudflare-warp-bin"; return; }
     if systemctl list-unit-files warp-svc.service >/dev/null 2>&1; then
         run sudo systemctl enable --now warp-svc.service \
