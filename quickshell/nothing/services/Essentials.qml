@@ -65,10 +65,12 @@ Singleton {
         return ["env", `NOTHING_MIND_BACKEND=${Config.mindBackend}`];
     }
 
-    function run(args: var): void {
+    function run(args: var, payload: var): void {
         root.busy = true;
         worker.running = false;
         worker.command = root.envBackend().concat(["python3", root.script]).concat(args);
+        worker.payload = payload ?? "";
+        worker.stdinEnabled = payload !== undefined;
         worker.running = true;
     }
 
@@ -91,7 +93,7 @@ Singleton {
             calc.running = true;
             return;
         }
-        root.run(["add", "note", t]);
+        root.run(["add", "note"], t);
     }
 
     function addClip(): void {
@@ -286,8 +288,7 @@ Singleton {
             return;
         }
         if (it.text)
-            Quickshell.execDetached(["sh", "-c", `printf '%s' "$1" | wl-copy`,
-                                     "copy-item", it.text]);
+            Clipboard.setText(it.text);
     }
 
     function openItem(it: var): void {
@@ -353,6 +354,13 @@ Singleton {
 
     NProcess {
         id: worker
+        property string payload: ""
+        onRunningChanged: {
+            if (running && stdinEnabled) {
+                write(payload);
+                stdinEnabled = false;
+            }
+        }
         stdout: StdioCollector {
             onStreamFinished: {
                 root.busy = false;
@@ -402,7 +410,7 @@ Singleton {
                 const line = r !== ""
                     ? `${calc.expr} = ${r}`
                     : calc.expr;
-                root.run(["add", "calc", line]);
+                root.run(["add", "calc"], line);
             }
         }
     }

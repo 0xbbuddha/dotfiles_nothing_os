@@ -353,18 +353,23 @@ def ollama_mind(entry: dict, model: str) -> dict:
         + f"Text:\n{text[:4000]}\n"
     )
     try:
-        raw = subprocess.check_output(
-            ["ollama", "run", model, prompt],
-            timeout=45,
-            stderr=subprocess.DEVNULL,
-        )
-        data = parse_json_obj(raw.decode("utf-8", "replace"))
+        data = parse_json_obj(ollama_text(prompt, model, 45))
         if not data:
             return stub_mind(entry)
         paint_mind(entry, data, "ollama")
         return entry
     except (subprocess.SubprocessError, OSError):
         return stub_mind(entry)
+
+
+def ollama_text(prompt: str, model: str, timeout: int) -> str:
+    raw = subprocess.check_output(
+        ["ollama", "run", model],
+        input=prompt.encode("utf-8"),
+        timeout=timeout,
+        stderr=subprocess.DEVNULL,
+    )
+    return raw.decode("utf-8", "replace")
 
 
 def paint_mind(entry: dict, data: dict, source: str) -> None:
@@ -981,7 +986,7 @@ def main() -> None:
         cmd_wipe()
     elif cmd == "add":
         kind = args[1] if len(args) > 1 else "note"
-        text = " ".join(args[2:]) if len(args) > 2 else ""
+        text = " ".join(args[2:]) if len(args) > 2 else sys.stdin.read()
         cmd_add(kind, text, backend)
     elif cmd == "clip":
         cmd_clip(backend)

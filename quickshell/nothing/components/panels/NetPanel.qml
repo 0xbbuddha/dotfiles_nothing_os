@@ -258,9 +258,9 @@ ColumnLayout {
                             implicitHeight: Theme.px(30)
                             secret: true
                             placeholder: "Password"
-                            onCommitted: (v) => {
-                                Net.connectWifiPsk(row.modelData, v);
+                            onSubmitted: (v) => {
                                 psk.clear();
+                                Net.connectWifiPsk(row.modelData, v);
                             }
                             // The field appears because a click already
                             // happened, so it takes the keyboard rather

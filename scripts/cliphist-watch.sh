@@ -10,12 +10,12 @@ ROOT="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
 kind="${1:-text}"
 
 if [[ "$kind" == "text" ]]; then
-    python3 -c '
-import subprocess, sys
+    python3 -I -c '
+import os, subprocess, sys
 data = sys.stdin.buffer.read()
 if b"\x00" in data:
     data = data.replace(b"\x00", b"")
-if data:
+if data or os.environ.get("CLIPBOARD_STATE") == "clear":
     subprocess.run(["cliphist", "store"], input=data)
 '
 else
