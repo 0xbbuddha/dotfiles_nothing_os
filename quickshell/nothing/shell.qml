@@ -366,12 +366,12 @@ ShellRoot {
 
     IpcHandler {
         target: "lock"
-        // Answering at all is the test scripts/lock.sh performs: a shell
-        // that does not reply is a shell that cannot lock, and the script
-        // says so rather than leaving the session open in silence.
         function activate(): string {
             Lock.activate();
-            return "ok";
+            return Lock.locked && Lock.secure ? "ok" : "pending";
+        }
+        function secure(): string {
+            return Lock.locked && Lock.secure ? "true" : "false";
         }
     }
 

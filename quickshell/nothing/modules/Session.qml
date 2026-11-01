@@ -29,14 +29,29 @@ PanelWindow {
 
     property int armed: -1     // index waiting for confirmation
 
-    onVisibleChanged: if (!visible) armed = -1
+    function armPending(): void {
+        const i = win.actions.findIndex(a => a.id === Lock.pendingAction);
+        if (i >= 0)
+            win.armed = i;
+    }
+
+    onVisibleChanged: {
+        if (visible) {
+            win.armPending();
+        } else {
+            win.armed = -1;
+            Lock.pendingAction = "";
+        }
+    }
+
+    Component.onCompleted: if (visible) win.armPending()
 
     readonly property var actions: [
         { icon: "󰌾", label: "Lock",      run: () => Power.lock(),     confirm: false },
         { icon: "󰤄", label: "Sleep",     run: () => Power.suspend(),  confirm: false },
-        { icon: "󰗽", label: "Log out",   run: () => Power.logout(),   confirm: true  },
-        { icon: "󰜉", label: "Restart",   run: () => Power.reboot(),   confirm: true  },
-        { icon: "󰐥", label: "Shut down", run: () => Power.poweroff(), confirm: true  }
+        { icon: "󰗽", label: "Log out",   run: () => Power.logout(),   confirm: true, id: "logout" },
+        { icon: "󰜉", label: "Restart",   run: () => Power.reboot(),   confirm: true, id: "reboot" },
+        { icon: "󰐥", label: "Shut down", run: () => Power.poweroff(), confirm: true, id: "poweroff" }
     ]
 
     function trigger(i: int): void {

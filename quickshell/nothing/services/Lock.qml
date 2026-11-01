@@ -19,14 +19,18 @@ Singleton {
     property bool locked: false
     property bool secure: false
 
+    readonly property string flagPath: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/nothing-locked"
+    readonly property string fallbackGuard: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/nothing-fallback-lock.lock"
+
     property string secret: ""
     property bool busy: false
     property bool failed: false
     property string notice: ""
 
-    // Armed from the lock screen and only carried out after PAM says yes,
-    // so a passer-by cannot restart the machine.
+    // Armed from the lock screen, expires, and only offered for confirmation
+    // after PAM says yes, so a passer-by cannot restart the machine.
     property string action: ""      // "" | logout | reboot | poweroff
+    property string pendingAction: ""
 
     // Bumped on every failure so the surfaces can shake in unison.
     property int shake: 0
@@ -82,7 +86,15 @@ Singleton {
         root.stopFinger();
         root.busy = true;
         root.notice = "";
-        pam.start();
+        secretExpiry.restart();
+        if (!pam.start()) {
+            root.busy = false;
+            root.secret = "";
+            root.failed = true;
+            root.shake++;
+            root.notice = "Authentication unavailable";
+            root.watchFinger();
+        }
     }
 
     function reset(): void {
@@ -111,11 +123,59 @@ Singleton {
 
     onLockedChanged: {
         if (root.locked) {
+            Quickshell.execDetached(["touch", root.flagPath]);
             root.watchFinger();
         } else {
+            Quickshell.execDetached(["sh", "-c", 'flock -n "$1" rm -f "$2"', "lock-flag",
+                root.fallbackGuard, root.flagPath]);
             root.secure = false;
             root.stopFinger();
         }
+    }
+
+    onSecretChanged: {
+        if (root.secret === "")
+            secretExpiry.stop();
+        else
+            secretExpiry.restart();
+    }
+
+    onActionChanged: {
+        if (root.action === "")
+            actionExpiry.stop();
+        else
+            actionExpiry.restart();
+    }
+
+    NProcess {
+        quiet: true
+        running: true
+        command: ["test", "-e", root.flagPath]
+        onExited: (code) => {
+            if (code === 0)
+                root.activate();
+        }
+    }
+
+    NProcess {
+        id: lockedOut
+        quiet: true
+        command: ["sh", Quickshell.shellPath("../../scripts/fallback-lock/faillock-remaining.sh")]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const left = parseInt(text.trim(), 10);
+                if (!isNaN(left))
+                    root.notice = left > 0
+                        ? "Account locked, try again in " + Math.ceil(left / 60) + " min"
+                        : "Account locked";
+            }
+        }
+    }
+
+    Timer {
+        id: actionExpiry
+        interval: 30000
+        onTriggered: root.action = ""
     }
 
     NProcess {
@@ -195,9 +255,17 @@ Singleton {
     // A half-typed secret must not sit in memory while the screen is
     // untouched, and it must not surprise you on your return either.
     Timer {
+        id: secretExpiry
         interval: 30000
-        running: root.locked && root.secret !== "" && !root.busy
-        onTriggered: root.clear()
+        onTriggered: {
+            if (root.busy) {
+                pam.abort();
+                root.busy = false;
+                root.notice = "Authentication timed out";
+                root.watchFinger();
+            }
+            root.clear();
+        }
     }
 
     PamContext {
@@ -220,13 +288,16 @@ Singleton {
                 return;
             }
             root.secret = "";
+            // The reader was stopped to make way for the password; a
+            // refusal must hand it back rather than leave it deaf.
+            root.watchFinger();
+            if (result === PamResult.Error)
+                return;
             root.failed = true;
             root.shake++;
             root.notice = result === PamResult.MaxTries
                 ? "Too many attempts" : "Wrong password";
-            // The reader was stopped to make way for the password; a
-            // refusal must hand it back rather than leave it deaf.
-            root.watchFinger();
+            lockedOut.running = true;
         }
 
         onError: (error) => {

@@ -14,10 +14,8 @@ import Quickshell
 Singleton {
     id: root
 
-    // The wrapper hypridle is pointed at. It does nothing but ask the
-    // running shell to lock: there is no second locker to fall back to
-    // any more, and a session action armed on the lock screen is carried
-    // out by the shell itself, once PAM has accepted the password.
+    // The wrapper hypridle is pointed at. It asks the running shell to
+    // lock and falls back to scripts/fallback-lock when the shell cannot.
     readonly property string lockScript:
         Quickshell.shellPath("../../scripts/lock.sh")
 

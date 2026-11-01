@@ -13,6 +13,8 @@ local function pidof(name)
     return out ~= nil and out ~= ""
 end
 
+hl.config({ misc = { allow_session_lock_restore = true } })
+
 -- start-hyprland can emit hyprland.start before Lua is loaded, so we
 -- run this both on the event and immediately. The guard is process-based.
 local function startup()
@@ -24,6 +26,8 @@ local function startup()
     if not pidof("quickshell") then
         hl.exec_cmd("qs -p " .. shellDir)
     end
+
+    hl.exec_cmd(ROOT .. "/scripts/lock-watch.sh")
 
     -- BlueZ will not finish a pairing without an agent registered, and
     -- nothing else here provides one. The script holds its own lock, so
