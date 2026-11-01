@@ -48,6 +48,7 @@ ShellRoot {
         void ConfigBackup.list;
         // Starts KDE Connect's daemon if installed and wanted (Phone).
         void Phone.available;
+        void Polkit.registered;
     }
 
     // ── Per screen ────────────────────────────────────────────────────

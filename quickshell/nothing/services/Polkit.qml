@@ -30,6 +30,7 @@ Singleton {
     }
 
     readonly property bool hidden: !(root.flow?.responseVisible ?? false)
+    readonly property bool responseRequired: root.flow?.isResponseRequired ?? false
     readonly property string note: root.flow?.supplementaryMessage ?? ""
     readonly property bool noteIsError: root.flow?.supplementaryIsError ?? false
     readonly property string actionId: root.flow?.actionId ?? ""
@@ -58,7 +59,8 @@ Singleton {
     }
 
     function submit(password: string): void {
-        root.flow?.submit(password);
+        if (root.responseRequired)
+            root.flow.submit(password);
     }
 
     function cancel(): void {

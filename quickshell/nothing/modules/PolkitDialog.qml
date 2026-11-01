@@ -26,11 +26,17 @@ PanelWindow {
     anchors { top: true; bottom: true; left: true; right: true }
     exclusionMode: ExclusionMode.Ignore
 
+    function send(): void {
+        if (!Polkit.responseRequired)
+            return;
+        Polkit.submit(field.text);
+        field.text = "";
+    }
+
     onVisibleChanged: {
-        if (visible) {
-            field.text = "";
+        field.text = "";
+        if (visible)
             field.forceActiveFocus();
-        }
     }
 
     Rectangle {
@@ -107,7 +113,7 @@ PanelWindow {
             RowLayout {
                 Layout.fillWidth: true
                 spacing: Theme.px(6)
-                visible: Polkit.identities.length > 1
+                visible: Polkit.identities.length > 0
 
                 NLabel { text: "Account" }
 
@@ -128,7 +134,7 @@ PanelWindow {
                         NText {
                             id: idLabel
                             anchors.centerIn: parent
-                            text: idBtn.modelData.toString()
+                            text: idBtn.modelData.displayName
                             color: idBtn.active ? Theme.c.surface : Theme.c.onDim
                         }
 
@@ -173,13 +179,14 @@ PanelWindow {
                         selectionColor: Theme.c.red
                         focus: true
 
-                        onAccepted: { Polkit.submit(text); text = ""; }
+                        onAccepted: win.send()
                         Keys.onEscapePressed: Polkit.cancel()
 
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
                             visible: field.text === ""
                             text: Polkit.prompt !== "" ? Polkit.prompt : "Password"
+                            textFormat: Text.PlainText
                             color: Theme.c.onFaint
                             font: field.font
                         }
