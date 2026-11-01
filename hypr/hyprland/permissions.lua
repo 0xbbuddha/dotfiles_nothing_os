@@ -1,6 +1,9 @@
 local function allow(binary, kind)
     if not pcall(hl.permission, { binary = binary, type = kind, mode = "allow" }) then
-        pcall(hl.permission, binary, kind, "allow")
+        if not pcall(hl.permission, binary, kind, "allow") then
+            print("permissions.lua: could not grant " .. kind .. " to " .. binary
+                .. " - hl.permission's signature may have changed")
+        end
     end
 end
 
@@ -15,4 +18,4 @@ allow("/usr/(bin|local/bin)/(qs|quickshell)", "screencopy")
 allow("/usr/(bin|local/bin)/hyprpicker", "cursorpos")
 allow("/usr/(bin|local/bin)/(qs|quickshell)", "cursorpos")
 
-allow(".*", "keyboard")
+allow("/usr/(bin|local/bin)/(qs|quickshell)", "keyboard")

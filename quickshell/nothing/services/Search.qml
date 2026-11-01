@@ -102,25 +102,19 @@ Singleton {
         "tan", "tanh", "trunc"
     ]
 
-    readonly property var calcForbidden: [
-        "command", "kommando", "команда", "запустить",
-        "plot", "график", "диаграмма",
-        "save", "spara", "сохранить", "opslaan",
-        "load", "ladda", "загрузить", "lees",
-        "export", "exportera", "экспорт", "exporteren",
-        "function", "funktion", "функция", "functie", "función",
-        "register", "регистр", "stack", "стек", "stapelgeheugen"
-    ]
-
+    // No denylist for bare words (save, load, function, ...): qalc's
+    // interactive-mode commands only exist when qalc is run with no
+    // expression argument. Given one on argv - which compute() below
+    // always does - every one of those words is just an undefined
+    // variable name to it, verified directly: `qalc -t "save x"`
+    // prints an expression result, not a write to disk, and feeding
+    // the same word on stdin alongside an argv expression is ignored
+    // entirely. A translated word list could never cover every qalc
+    // locale anyway; this has nothing to cover.
     function calcSafe(expr: string): bool {
         const text = String(expr ?? "");
         if (text.length > 200 || /["'`;$\\:\u0000-\u001f\u007f\u200b-\u200f\u2060\ufeff]/.test(text))
             return false;
-        const names = text.match(/[A-Za-z_\u0080-\uffff][A-Za-z0-9_\u0080-\uffff]*/g) ?? [];
-        for (const name of names) {
-            if (root.calcForbidden.indexOf(name.toLowerCase()) >= 0)
-                return false;
-        }
         const calls = text.match(/[A-Za-z_\u0080-\uffff][A-Za-z0-9_\u0080-\uffff]*\s*\(/g) ?? [];
         for (const call of calls) {
             if (root.calcFunctions.indexOf(call.replace(/\s*\($/, "")) < 0)

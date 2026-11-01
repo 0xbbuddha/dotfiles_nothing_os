@@ -13,7 +13,7 @@ Singleton {
     readonly property string script: Quickshell.shellPath("../../scripts/screenshot.sh")
     readonly property string grabScript: Quickshell.shellPath("../../scripts/grab-outputs.py")
     readonly property string detectScript: Quickshell.shellPath("../../scripts/find-regions.py")
-    readonly property string snipDir: `${Quickshell.env("XDG_RUNTIME_DIR")}/nothing-snip`
+    readonly property string snipDir: `${Quickshell.env("XDG_RUNTIME_DIR") ?? "/tmp"}/nothing-snip`
     property string status: ""
     property bool busy: false
     property bool picking: false

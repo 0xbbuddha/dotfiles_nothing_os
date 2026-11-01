@@ -28,18 +28,31 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
 
     property int armed: -1     // index waiting for confirmation
+    // True once an armed action may actually fire. The lock screen's
+    // pending action arrives here already armed, with no click of its
+    // own in this menu yet - without this gap a reflexive click the
+    // instant the menu appears (aimed at dismissing it, not confirming
+    // anything) would fire a destructive action on what is, in this
+    // window's own lifecycle, a single click.
+    property bool armReady: true
 
     function armPending(): void {
         const i = win.actions.findIndex(a => a.id === Lock.pendingAction);
-        if (i >= 0)
+        if (i >= 0) {
             win.armed = i;
+            win.armReady = false;
+            armGrace.restart();
+        }
     }
+
+    Timer { id: armGrace; interval: 400; onTriggered: win.armReady = true }
 
     onVisibleChanged: {
         if (visible) {
             win.armPending();
         } else {
             win.armed = -1;
+            win.armReady = true;
             Lock.pendingAction = "";
         }
     }
@@ -56,7 +69,7 @@ PanelWindow {
 
     function trigger(i: int): void {
         const a = win.actions[i];
-        if (a.confirm && win.armed !== i) { win.armed = i; return; }
+        if (a.confirm && (win.armed !== i || !win.armReady)) { win.armed = i; return; }
         GlobalState.sessionOpen = false;
         a.run();
     }

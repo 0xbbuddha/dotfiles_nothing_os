@@ -73,7 +73,6 @@ APP_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}")
 LITERAL = re.compile(r"'[^']*'|\"[^\"]*\"")
 URL_HOST = re.compile(r"https://([^/?#\\@\s]+)(?:[/?#]\S*)?")
 HOST_NAME = re.compile(r"[a-z0-9](?:[a-z0-9.-]{0,251}[a-z0-9])?")
-PICK_BLOCKED = {"constructor", "prototype", "__proto__"}
 META_KEYS = ("prompt", "created", "version", "history", "preset", "chat")
 EXPR_ROOTS = SOURCES | {
     "state", "data", "it", "i", "fmt", "Math", "String", "Number", "Date",
@@ -371,7 +370,7 @@ def clean_fetch(raw, budget: Budget) -> dict | None:
         return None
     every = int(raw.get("every") or raw.get("interval") or 900)
     pick = str(raw.get("pick") or "")[:120]
-    if PICK_BLOCKED & set(re.split(r"[.\[\]]", pick)):
+    if BANNED.search(pick):
         budget.note("fetch.pick: forbidden name")
         pick = ""
     return {"url": url, "pick": pick, "every": max(30, min(86400, every))}
@@ -894,7 +893,7 @@ def main() -> None:
     elif cmd == "remove":
         cmd_remove(rest[0] if rest else "")
     elif cmd == "rename":
-        cmd_rename(rest[0] if rest else "", " ".join(rest[1:]))
+        cmd_rename(rest[0] if rest else "", sys.stdin.read())
     elif cmd == "state":
         cmd_state(rest[0], sys.stdin.read())
     elif cmd == "reset":

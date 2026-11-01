@@ -235,6 +235,11 @@ Singleton {
             return;
         const argv = ["nmcli", "device", "wifi", "connect", name,
                       "ifname", root.wifiDevice.name];
+        // shortcut: the PSK sits in this process's own argv (readable via
+        // /proc/<pid>/cmdline for its short lifetime) - nmcli has no
+        // non-interactive way to read it from stdin instead (--ask is
+        // documented as interactive-only, "do not use for scripts").
+        // Upgrade if nmcli ever adds one.
         if ((psk ?? "") !== "")
             argv.push("password", psk);
         if (hidden)

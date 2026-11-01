@@ -328,9 +328,16 @@ Singleton {
     property bool hostsLoaded: false
     readonly property int hostAskLimit: 4
 
+    // Same HOST_NAME charset/length bound as essential-app.py's host_of():
+    // consent is granted keyed by whatever this returns, so a host this
+    // accepted but the backend's own check rejected (or vice versa) would
+    // mean the consent shown and the host actually gated silently drift.
     function hostOf(url: string): string {
         const m = String(url ?? "").match(/^https:\/\/([^\/?#\\@\s]+)(?:[\/?#]\S*)?$/);
-        return m ? m[1].replace(/:\d+$/, "").toLowerCase() : "";
+        if (!m)
+            return "";
+        const host = m[1].replace(/:\d+$/, "").toLowerCase();
+        return /^[a-z0-9][a-z0-9.-]{0,251}[a-z0-9]$|^[a-z0-9]$/.test(host) ? host : "";
     }
 
     function hostAllowed(url: string): bool {
@@ -679,7 +686,9 @@ Singleton {
 
     function rename(id: string, name: string): void {
         simple.running = false;
-        simple.command = ["python3", root.script, "rename", id, name];
+        simple.payload = name;
+        simple.command = ["python3", root.script, "rename", id];
+        simple.stdinEnabled = true;
         simple.running = true;
     }
 
@@ -703,6 +712,20 @@ Singleton {
 
     NProcess {
         id: simple
+        // Only rename() uses stdinEnabled/payload (both set right
+        // before running, same as writer above): a typed name, like
+        // the clipboard contents and notes this PR already moved off
+        // argv, does not belong in argv either. Every other call on
+        // this shared process leaves stdinEnabled at its default
+        // false, so they are unaffected, and this handler resets it
+        // right after writing - never left true for the next call.
+        property string payload: ""
+        onRunningChanged: {
+            if (running && stdinEnabled) {
+                write(payload);
+                stdinEnabled = false;
+            }
+        }
         stdout: StdioCollector {
             onStreamFinished: root.refresh()
         }
