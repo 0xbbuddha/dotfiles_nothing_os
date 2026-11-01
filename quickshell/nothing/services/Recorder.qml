@@ -13,13 +13,26 @@ Singleton {
     readonly property string script:
         Quickshell.shellPath("../../scripts/record.sh")
 
-    readonly property string saveDir: `${Quickshell.env("HOME")}/Videos/Captures`
-
     property bool recording: false
     property bool picking: false
     property int elapsed: 0
-    property bool pendingSound: false
+
+    // What the next recording captures. Set from the options panel, read
+    // at start time. mode is "screen" or "region".
+    property string mode: "screen"
+    property bool wantSound: true
+    property bool wantMic: false
+
+    property string pendingAudio: ""
     property string pendingGeo: ""
+
+    // none / sys / mic / both, the single token record.sh reads.
+    function audioSpec(): string {
+        if (root.wantSound && root.wantMic) return "both";
+        if (root.wantSound) return "sys";
+        if (root.wantMic)   return "mic";
+        return "none";
+    }
 
     signal finished(string message)
 
@@ -73,9 +86,7 @@ Singleton {
         id: regionWait
         interval: 250
         onTriggered: {
-            root.run(["start", "region",
-                      root.pendingSound ? "sound" : "",
-                      root.pendingGeo]);
+            root.run(["start", "region", root.pendingAudio, root.pendingGeo]);
             root.recording = true;
             root.elapsed = 0;
             pollSoon.restart();
@@ -92,20 +103,34 @@ Singleton {
         runner.running = true;
     }
 
-    function start(mode: string, sound: bool): void {
+    // mode and audio are optional: omitted, they fall back to the stored
+    // options the panel sets. audio is a spec token (none/sys/mic/both);
+    // a plain bool is accepted too, for the older explicit callers.
+    function resolveAudio(audio): string {
+        if (audio === undefined || audio === null)
+            return root.audioSpec();
+        if (audio === true)  return "sys";
+        if (audio === false) return "none";
+        return audio;
+    }
+
+    function start(mode, audio): void {
         if (root.recording) {
             root.stop();
             return;
         }
-        if (mode === "region") {
-            root.pendingSound = sound;
+        const m = (mode === undefined || mode === null || mode === "")
+            ? root.mode : mode;
+        const a = root.resolveAudio(audio);
+        if (m === "region") {
+            root.pendingAudio = a;
             root.pendingGeo = "";
             GlobalState.closeAll();
             GlobalState.controlCenterOpen = false;
             root.picking = true;
             return;
         }
-        root.run(["start", mode, sound ? "sound" : ""]);
+        root.run(["start", "screen", a]);
         root.recording = true;
         root.elapsed = 0;
         pollSoon.restart();
@@ -136,7 +161,7 @@ Singleton {
         pollSoon.restart();
     }
 
-    function toggle(mode: string, sound: bool): void {
+    function toggle(mode, audio): void {
         if (root.picking) {
             root.cancelPick();
             return;
@@ -144,11 +169,12 @@ Singleton {
         if (root.recording)
             root.stop();
         else
-            root.start(mode, sound);
+            root.start(mode, audio);
     }
 
     function openFolder(): void {
-        Quickshell.execDetached(["xdg-open", root.saveDir]);
+        Quickshell.execDetached(["sh", "-c",
+            'd="$(xdg-user-dir VIDEOS 2>/dev/null)"; [ -n "$d" ] || d="$HOME/Videos"; mkdir -p "$d/Captures"; xdg-open "$d/Captures"']);
     }
 
     function timecode(): string {

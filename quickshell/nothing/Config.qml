@@ -879,7 +879,7 @@ Singleton {
         a.shelfSide = "right";
         a.mainWidth = 0.62;
 
-        a.ccTiles = ["wifi", "bluetooth", "warp", "sound", "light", "notify"];
+        a.ccTiles = ["wifi", "bluetooth", "warp", "sound", "light", "notify", "record"];
         a.ccFooter = ["night", "settings", "reload", "lock", "power"];
         a.ccColumns = 3;
         a.ccCalendar = true;
@@ -1234,10 +1234,10 @@ Singleton {
             property real   mainWidth: 0.62      // 0.25 to 0.9
 
             // The defaults are the panel exactly as it was before any of
-            // this was configurable: same six tiles, same five buttons,
+            // this was configurable: same seven tiles, same five buttons,
             // every block on. Nobody's control centre changes by updating.
             property var ccTiles: ["wifi", "bluetooth", "warp",
-                                   "sound", "light", "notify"]
+                                   "sound", "light", "notify", "record"]
             property var ccFooter: ["night", "settings", "reload",
                                     "lock", "power"]
             property int  ccColumns: 3      // 2 to 4

@@ -267,18 +267,27 @@ Loader {
     Component {
         id: recordTile
         Toggle {
+            readonly property string audioLabel: Recorder.wantSound
+                ? (Recorder.wantMic ? "sound + mic" : "sound")
+                : (Recorder.wantMic ? "mic" : "muted")
             icon: Recorder.recording ? "󰙧" : "󰑊"
             title: "Recording"
             subtitle: Recorder.recording
-                ? "stop" : (Recorder.picking ? "pick a region" : "screen")
+                ? Recorder.timecode()
+                : (Recorder.picking
+                    ? "pick a region"
+                    : (Recorder.mode === "region" ? "region" : "screen")
+                        + " · " + audioLabel)
             active: Recorder.recording
             // The panel gets out of the way first: it sits over the top of
             // the screen, and a recording that opens with the control
             // centre in frame is a recording nobody wanted.
             onToggled: {
                 slot.cc.requestClose();
-                Recorder.toggle("screen", true);
+                Recorder.toggle();
             }
+            // Right click opens the options in place instead of firing.
+            onSecondary: slot.cc.expand("record")
         }
     }
 

@@ -159,6 +159,16 @@ after a few minutes and leaving the list looking frozen. Devices are
 sorted connected, then paired, then the rest: unsorted, a passing phone
 outranked your headphones. `Net.btGlyph()` maps BlueZ's icon name to a
 glyph, so `audio-card` reads as a speaker rather than a headset.
+`scripts/bt-a2dp-fix.sh` carries a headset the rest of the way to
+audio: on every connect of an Audio Sink device it forces the A2DP
+profile (some headsets, Nothing's own included, bring up only the BLE
+link and never negotiate A2DP on their own), then waits for the
+PipeWire sink to appear, makes it the default, and moves the streams
+already playing onto it - `wpctl set-default` only steers new streams,
+so without the `pactl move-sink-input` pass whatever was already
+playing keeps going out the laptop speakers. A headset that
+auto-connected during boot emits no "Connected: yes" line to catch, so
+the script also sweeps the already-connected devices once at start.
 
 **WARP.** The control-centre tile is hidden until `warp-cli` exists.
 `./install --deps` offers AUR `cloudflare-warp-bin` and enables
