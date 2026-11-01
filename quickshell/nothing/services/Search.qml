@@ -25,6 +25,7 @@ Singleton {
 
     property string query: ""
     property string mathResult: ""
+    property bool mathRefused: false
     property var emojis: []
     property string askAnswer: ""
     property string askFor: ""
@@ -93,10 +94,52 @@ Singleton {
         }
     }
 
+    readonly property var calcFunctions: [
+        "abs", "acos", "acosh", "asin", "asinh", "atan", "atan2", "atanh", "bin",
+        "binomial", "cbrt", "ceil", "cos", "cosh", "dec", "exp", "factorial",
+        "floor", "frac", "gcd", "hex", "lcm", "ln", "log", "max", "min", "mod",
+        "oct", "pow", "rem", "root", "round", "sgn", "sin", "sinh", "sq", "sqrt",
+        "tan", "tanh", "trunc"
+    ]
+
+    readonly property var calcForbidden: [
+        "command", "kommando", "команда", "запустить",
+        "plot", "график", "диаграмма",
+        "save", "spara", "сохранить", "opslaan",
+        "load", "ladda", "загрузить", "lees",
+        "export", "exportera", "экспорт", "exporteren",
+        "function", "funktion", "функция", "functie", "función",
+        "register", "регистр", "stack", "стек", "stapelgeheugen"
+    ]
+
+    function calcSafe(expr: string): bool {
+        const text = String(expr ?? "");
+        if (text.length > 200 || /["'`;$\\:\u0000-\u001f\u007f\u200b-\u200f\u2060\ufeff]/.test(text))
+            return false;
+        const names = text.match(/[A-Za-z_\u0080-\uffff][A-Za-z0-9_\u0080-\uffff]*/g) ?? [];
+        for (const name of names) {
+            if (root.calcForbidden.indexOf(name.toLowerCase()) >= 0)
+                return false;
+        }
+        const calls = text.match(/[A-Za-z_\u0080-\uffff][A-Za-z0-9_\u0080-\uffff]*\s*\(/g) ?? [];
+        for (const call of calls) {
+            if (root.calcFunctions.indexOf(call.replace(/\s*\($/, "")) < 0)
+                return false;
+        }
+        return true;
+    }
+
     function compute(expr: string): void {
-        if (expr.trim() === "") { root.mathResult = ""; return; }
         math.running = false;
-        math.command = ["qalc", "-t", expr];
+        root.mathResult = "";
+        root.mathRefused = false;
+        if (expr.trim() === "")
+            return;
+        if (!root.calcSafe(expr)) {
+            root.mathRefused = true;
+            return;
+        }
+        math.command = ["qalc", "-t", " " + expr];
         math.running = true;
     }
 
@@ -446,7 +489,7 @@ Singleton {
                     kind: "emoji", title: e.e,
                     subtitle: e.k.split(" ").slice(0, 4).join(" "),
                     emoji: e.e,
-                    run: () => root.run(`printf '%s' ${JSON.stringify(e.e)} | wl-copy`)
+                    run: () => Clipboard.setText(e.e)
                 });
             }
             return out;
@@ -521,11 +564,15 @@ Singleton {
 
         // Calculator, prioritised if explicitly requested
         if (mode === "math" || (text !== "" && /^[\d\s().+\-*\/^%]+$/.test(text) && /[\d]/.test(text))) {
-            const shown = root.mathResult !== "" ? root.mathResult : "…";
+            const shown = root.mathRefused ? "Not allowed in the calculator"
+                : (root.mathResult !== "" ? root.mathResult : "…");
             const entry = {
                 kind: "math", title: shown, subtitle: text + " =",
                 icon: "󰪚",
-                run: () => root.run(`printf '%s' ${JSON.stringify(root.mathResult)} | wl-copy`)
+                run: () => {
+                    if (root.mathResult !== "")
+                        Clipboard.setText(root.mathResult);
+                }
             };
             if (mode === "math") out.unshift(entry); else out.push(entry);
         }
@@ -541,7 +588,7 @@ Singleton {
             out.unshift({
                 kind: "web", title: text, subtitle: "Search the web",
                 icon: "󰖟",
-                run: () => root.run(`xdg-open ${JSON.stringify(root.engine + encodeURIComponent(text))}`)
+                run: () => Quickshell.execDetached(["xdg-open", root.engine + encodeURIComponent(text)])
             });
         }
 
@@ -563,7 +610,7 @@ Singleton {
             out.push({
                 kind: "web", title: text, subtitle: "Search the web",
                 icon: "󰖟",
-                run: () => root.run(`xdg-open ${JSON.stringify(root.engine + encodeURIComponent(text))}`)
+                run: () => Quickshell.execDetached(["xdg-open", root.engine + encodeURIComponent(text)])
             });
             out.push({
                 kind: "shell", title: text, subtitle: "Run the command",
@@ -581,7 +628,7 @@ Singleton {
         if (mode === "math" || (/^[\d\s().+\-*\/^%]+$/.test(text) && /[\d]/.test(text)))
             root.compute(text);
         else
-            root.mathResult = "";
+            root.compute("");
         if (text !== root.askFor)
             root.askAnswer = "";
         if (mode === "files")

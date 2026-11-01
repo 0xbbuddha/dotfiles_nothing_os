@@ -86,10 +86,10 @@ Singleton {
         const t = text.trim();
         if (t === "")
             return;
-        if (t.startsWith("=")) {
+        if (t.startsWith("=") && Search.calcSafe(t.slice(1).trim())) {
             calc.expr = t.slice(1).trim();
             calc.running = false;
-            calc.command = ["qalc", "-t", calc.expr];
+            calc.command = ["qalc", "-t", " " + calc.expr];
             calc.running = true;
             return;
         }

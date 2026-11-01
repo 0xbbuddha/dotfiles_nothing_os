@@ -380,8 +380,7 @@ PanelWindow {
                         NPillButton {
                             text: "Copy"
                             visible: Search.askAnswer !== "" && !Search.askBusy
-                            onActivated: Search.run(
-                                `printf '%s' ${JSON.stringify(Search.askAnswer)} | wl-copy`)
+                            onActivated: Clipboard.setText(Search.askAnswer)
                         }
                     }
 
