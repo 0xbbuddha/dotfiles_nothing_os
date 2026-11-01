@@ -444,6 +444,7 @@ PanelWindow {
                                         Layout.fillWidth: true
                                         visible: win.tab === "you" && (card.it.when ?? "") !== ""
                                         text: win.whenPretty(card.it.when ?? "")
+                                        textFormat: Text.PlainText
                                         color: Theme.c.on
                                         font.family: Theme.f.display
                                         font.pixelSize: Theme.px(16)
@@ -484,6 +485,7 @@ PanelWindow {
                                     Text {
                                         Layout.fillWidth: true
                                         text: win.atLong(card.it.at ?? "")
+                                        textFormat: Text.PlainText
                                         color: Theme.c.onFaint
                                         font.family: Theme.f.mono
                                         font.pixelSize: Theme.f.micro
@@ -570,6 +572,7 @@ PanelWindow {
 
                                 Text {
                                     Layout.fillWidth: true
+                                    textFormat: Text.PlainText
                                     text: (win.detailItem?.when ?? "") !== ""
                                         ? win.whenPretty(win.detailItem.when)
                                         : (win.detailItem?.forYou
@@ -635,6 +638,7 @@ PanelWindow {
                                 Text {
                                     Layout.fillWidth: true
                                     text: win.atLong(win.detailItem?.at ?? "")
+                                    textFormat: Text.PlainText
                                     color: Theme.c.on
                                     font.family: Theme.f.mono
                                     font.pixelSize: Theme.f.small

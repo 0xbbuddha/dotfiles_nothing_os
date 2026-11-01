@@ -11,4 +11,5 @@ Text {
     font.pixelSize: Theme.f.micro
     font.letterSpacing: 0.2
     elide: Text.ElideRight
+    textFormat: Text.PlainText
 }

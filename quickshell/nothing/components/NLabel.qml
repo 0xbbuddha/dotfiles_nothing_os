@@ -10,4 +10,5 @@ Text {
     font.capitalization: Font.AllUppercase
     color: dim ? Theme.c.onDim : Theme.c.on
     renderType: Text.QtRendering
+    textFormat: Text.PlainText
 }

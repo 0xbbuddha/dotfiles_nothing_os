@@ -593,6 +593,7 @@ PanelWindow {
                             Text {
                                 anchors.centerIn: parent
                                 text: row.modelData.emoji ?? ""
+                                textFormat: Text.PlainText
                                 font.pixelSize: Theme.px(20)
                                 visible: row.modelData.kind === "emoji"
                             }

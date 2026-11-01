@@ -122,6 +122,7 @@ Rectangle {
             Text {
                 Layout.fillWidth: true
                 text: root.subtitle
+                textFormat: Text.PlainText
                 color: root.fgDim
                 font.family: Theme.f.mono
                 font.pixelSize: Theme.f.tiny
