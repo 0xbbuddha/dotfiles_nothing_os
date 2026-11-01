@@ -29,6 +29,8 @@ end
 assert(ROOT, "could not locate the rice root; set NOTHING_ROOT")
 shellDir = ROOT .. "/quickshell/nothing"
 
+pcall(require, "hyprland.permissions")
+
 require("hyprland.variables")
 -- Registers lua:essential. Before general, which is where a layout is
 -- chosen: the name has to exist by the time something asks for it.
