@@ -51,6 +51,12 @@ ShellRoot {
         void Polkit.registered;
     }
 
+    Binding {
+        target: Quickshell
+        property: "watchFiles"
+        value: !Lock.locked
+    }
+
     // ── Per screen ────────────────────────────────────────────────────
     Variants {
         model: Config.drawWallpaper ? Quickshell.screens : []
@@ -345,8 +351,7 @@ ShellRoot {
         // that does not reply is a shell that cannot lock, and the script
         // says so rather than leaving the session open in silence.
         function activate(): string {
-            Lock.reset();
-            Lock.locked = true;
+            Lock.activate();
             return "ok";
         }
     }

@@ -16,9 +16,39 @@ import "../services"
 Scope {
     id: root
 
+    function checkLock(): void {
+        Lock.secure = session.secure;
+        if (Lock.locked && !session.locked)
+            Lock.compositorReleased();
+    }
+
+    PersistentProperties {
+        id: persisted
+        reloadableId: "lockState"
+        property bool locked: false
+        onReloaded: {
+            Lock.locked = persisted.locked;
+            Qt.callLater(root.checkLock);
+        }
+    }
+
+    Connections {
+        target: Lock
+        function onLockedChanged(): void {
+            persisted.locked = Lock.locked;
+            Qt.callLater(root.checkLock);
+        }
+    }
+
     WlSessionLock {
         id: session
         locked: Lock.locked
+
+        onSecureStateChanged: {
+            Lock.secure = session.secure;
+            if (!session.secure && Lock.locked)
+                Qt.callLater(Lock.compositorReleased);
+        }
 
         surface: WlSessionLockSurface {
             id: pane

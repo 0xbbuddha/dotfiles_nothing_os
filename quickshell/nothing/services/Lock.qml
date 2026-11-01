@@ -17,6 +17,7 @@ Singleton {
 
     // Driven by modules/LockScreen.qml through WlSessionLock.
     property bool locked: false
+    property bool secure: false
 
     property string secret: ""
     property bool busy: false
@@ -35,6 +36,20 @@ Singleton {
     property string fingerNotice: ""
 
     signal granted(string action)
+
+    function activate(): void {
+        if (root.locked)
+            return;
+        root.reset();
+        root.locked = true;
+    }
+
+    function compositorReleased(): void {
+        if (!root.locked)
+            return;
+        root.locked = false;
+        root.reset();
+    }
 
     function arm(name: string): void {
         root.action = (root.action === name) ? "" : name;
@@ -95,10 +110,12 @@ Singleton {
     }
 
     onLockedChanged: {
-        if (root.locked)
+        if (root.locked) {
             root.watchFinger();
-        else
+        } else {
+            root.secure = false;
             root.stopFinger();
+        }
     }
 
     NProcess {

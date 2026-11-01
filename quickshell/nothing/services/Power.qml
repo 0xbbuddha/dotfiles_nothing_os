@@ -26,8 +26,7 @@ Singleton {
     }
 
     function lock(): void {
-        Lock.reset();
-        Lock.locked = true;
+        Lock.activate();
     }
 
     function suspend(): void {
@@ -60,12 +59,16 @@ Singleton {
     // command itself contains "qs -p <dir>". The sh would kill itself
     // before the relaunch, and the bar would never come back.
     function restartShell(): void {
+        if (Lock.locked)
+            return;
         Quickshell.reload(true);
     }
 
     // hyprctl reload re-reads hyprland.lua: binds are not duplicated
     // and "hyprland.start" programs are not relaunched.
     function reloadAll(): void {
+        if (Lock.locked)
+            return;
         root.run("hyprctl reload");
         Quickshell.reload(true);
     }
