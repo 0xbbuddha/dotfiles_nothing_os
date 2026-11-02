@@ -39,14 +39,18 @@ PanelWindow {
 
     readonly property bool autoHide: Config.dockAutoHide
 
-    // monitorFor() is a plain call: without a reactive dependency the
-    // binding runs once and keeps a pointer to the HyprlandMonitor that
-    // existed at startup. After a hotplug, a DPMS cycle or a hyprctl
-    // reload that object is gone, activeWsId freezes on whatever
-    // workspace was active then, and the dock never comes back out.
-    readonly property var monitor: {
-        Hyprland.monitors.values;
-        return Hyprland.monitorFor(modelData);
+    // monitorFor() is re-run from refreshMonitor() below, called at every
+    // point Hyprland.refreshMonitors() already is (hotplug, DPMS, reload,
+    // special-workspace toggle), so the pointer never goes stale. This
+    // used to be a reactive binding touching Hyprland.monitors.values to
+    // force a dependency, but monitorFor() can itself touch that same
+    // list while QML is still evaluating the binding - Quickshell logged
+    // that as a binding loop on every touch, i.e. on every workspace
+    // switch.
+    property var monitor: Hyprland.monitorFor(modelData)
+
+    function refreshMonitor(): void {
+        win.monitor = Hyprland.monitorFor(modelData);
     }
 
     // Active workspace of THIS screen (not global focus, which may be
@@ -123,8 +127,10 @@ PanelWindow {
             if (n === "activespecial" || n === "activespecialv2"
                 || n === "focusedmon" || n === "focusedmonv2"
                 || n === "monitoradded" || n === "monitoraddedv2"
-                || n === "monitorremoved")
+                || n === "monitorremoved") {
                 Hyprland.refreshMonitors();
+                win.refreshMonitor();
+            }
 
             if (n === "openwindow" || n === "closewindow"
                 || n === "movewindow" || n === "movewindowv2"
@@ -139,6 +145,7 @@ PanelWindow {
 
     Component.onCompleted: {
         Hyprland.refreshMonitors();
+        win.refreshMonitor();
         Hyprland.refreshToplevels();
     }
 
@@ -150,6 +157,7 @@ PanelWindow {
         repeat: true
         onTriggered: {
             Hyprland.refreshMonitors();
+            win.refreshMonitor();
             Hyprland.refreshToplevels();
         }
     }
