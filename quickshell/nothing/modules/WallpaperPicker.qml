@@ -20,7 +20,13 @@ import "../services"
 OverlayWindow {
     id: win
     open: GlobalState.wallpaperPickerOpen
-    onCloseRequested: { GlobalState.wallpaperPickerOpen = false; win.hoverChar = ""; }
+    onCloseRequested: GlobalState.wallpaperPickerOpen = false
+    // This sheet renders on Wayland's Overlay layer, above every ordinary
+    // window there is - including the picker zenity is about to open.
+    // Same reasoning as Settings > Appearance's "Browse": closing this
+    // sheet first is what actually lets the dialog be seen, instead of
+    // opening behind it where nothing can reach it.
+    onOpenChanged: if (!win.open) win.hoverChar = ""
     sheetWidth: Math.min(Theme.px(760), screen.width * 0.86)
     sheetHeight: col.implicitHeight + Theme.pad * 2
     topBias: 0.85
@@ -248,6 +254,7 @@ OverlayWindow {
                             onExited: if (win.hoverChar === tile.modelData.value) win.hoverChar = ""
                             onClicked: {
                                 if (tile.isCustom) {
+                                    GlobalState.wallpaperPickerOpen = false;
                                     filePicker.running = true;
                                 } else {
                                     Config.dotWallpaperChar = tile.modelData.value;
