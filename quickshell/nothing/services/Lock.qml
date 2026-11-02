@@ -180,6 +180,10 @@ Singleton {
 
     NProcess {
         running: true
+        // Exits non-zero with no fingerprints enrolled, or if fprintd
+        // itself is not installed - the normal state on most machines,
+        // not a failure to warn about.
+        quiet: true
         // whoami rather than $USER: the variable is set in a normal
         // session but nothing guarantees it in the shell's environment.
         command: ["sh", "-c", "fprintd-list \"$(whoami)\" 2>/dev/null"]

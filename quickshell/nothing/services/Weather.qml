@@ -59,6 +59,10 @@ Singleton {
     NProcess {
         id: fetch
         running: Config.weatherEnabled
+        // No network, DNS down, or the API unreachable all exit non-zero
+        // here, and onStreamFinished already handles that gracefully
+        // (empty text, nothing updates) - not a failure to warn about.
+        quiet: true
         command: ["curl", "-sf", "--proto", "=https", "--proto-redir", "=https", "--max-time", "8",
                   "-H", "Accept-Language: fr", root.endpoint]
 
