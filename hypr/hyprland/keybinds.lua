@@ -178,37 +178,20 @@ local function closeSpecial()
     end
 end
 
--- A workspace already shown on another monitor pulls focus over there by
--- default - correct when you are hunting for it, jarring when you only
--- meant to bring it to the screen in front of you (asking for workspace 1
--- from monitor 2 while it is sitting on monitor 1 should not whisk you
--- away to monitor 1). Bring the workspace to the monitor you are already
--- on instead, so the screen you are looking at is the one that changes.
---
--- get_workspace() resolves "r-1"/"e+1"/"-1"/"+1" to the same concrete
--- workspace Hyprland itself would switch to (confirmed live). Only an
--- explicit number (SUPER+<N>, the bar) pulls a workspace over: relative
--- steps (CTRL+SUPER+Left/Right, Page_Up/Down, scroll) never touch one
--- that lives on the other monitor, they just do nothing.
---
--- workspace.move(), not workspace.swap_monitors(): the latter accepts
--- the exact same arguments and returns a real dispatcher, but tested
--- live (both as monitor objects and as monitor names) it never actually
--- moved anything. move() does, confirmed live the same way.
+-- Workspaces stay on the monitor they live on. SUPER+<N> and the bar
+-- just focus the workspace where it is (Hyprland's default). Relative
+-- steps (CTRL+SUPER+Left/Right, Page_Up/Down, scroll) never cross to a
+-- workspace that lives on the other monitor: they do nothing instead.
+-- get_workspace() resolves "r-1"/"-1"/"+1" to the same concrete
+-- workspace Hyprland itself would switch to (confirmed live).
 local function focusWorkspace(target)
-    local cur = hl.get_active_monitor()
     local ws = hl.get_workspace(target)
-    -- Once resolved, dispatch both the move and the focus against the
-    -- same concrete id: re-resolving "r-1" a second time after the move
-    -- could in principle land on something else.
-    local goal = ws and ws.id or target
-    if ws and ws.monitor and ws.monitor.id ~= cur.id then
-        -- Relative steps (CTRL+SUPER+Left/Right, Page_Up/Down, scroll) stay
-        -- on this screen: a workspace owned by the other monitor is off limits.
-        if type(target) ~= "number" then return end
-        hl.dispatch(hl.dsp.workspace.move({ workspace = ws.id, monitor = cur }))
+    if ws and ws.monitor and ws.monitor.id ~= hl.get_active_monitor().id
+        and type(target) ~= "number" then
+        return
     end
-    hl.dispatch(hl.dsp.focus({ workspace = goal }))
+    -- Focus the resolved id, not "r-1" again: a second resolve could differ.
+    hl.dispatch(hl.dsp.focus({ workspace = ws and ws.id or target }))
 end
 
 -- Exposed as a global: the shell calls it via
