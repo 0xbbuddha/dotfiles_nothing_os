@@ -67,8 +67,12 @@ Singleton {
         }
     }
 
+    // Stays unconditional on purpose: this is the camera-spy alert, so it
+    // has to keep checking whether no privacy panel is open, not just
+    // while one is. 5s keeps fuser's system-wide fd scan off the hot
+    // path without making the alert noticeably slower to fire.
     Timer {
-        interval: 3000
+        interval: 5000
         running: true
         repeat: true
         triggeredOnStart: true

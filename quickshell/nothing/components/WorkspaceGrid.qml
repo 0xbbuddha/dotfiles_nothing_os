@@ -66,16 +66,22 @@ Item {
     implicitWidth: cols * cellW + (cols - 1) * gap
     implicitHeight: rows * cellH + (rows - 1) * gap
 
-    function windowsOf(wsId: int): var {
-        return (Hyprland.toplevels?.values ?? []).filter(t => {
-            const id = t.workspace?.id ?? t.lastIpcObject?.workspace?.id ?? -1;
-            if (id !== wsId)
-                return false;
+    // Grouped once here instead of each cell filtering the full window
+    // list on its own: with `count` cells (10 by default) that used to
+    // mean a full scan per cell, ten scans to open the grid instead of
+    // one, and all ten re-scanning together on every window change.
+    readonly property var windowsByWs: {
+        const map = {};
+        for (const t of (Hyprland.toplevels?.values ?? [])) {
             const o = t.lastIpcObject ?? {};
             if (o.hidden)
-                return false;
-            return true;
-        });
+                continue;
+            const id = t.workspace?.id ?? o.workspace?.id ?? -1;
+            if (!map[id])
+                map[id] = [];
+            map[id].push(t);
+        }
+        return map;
     }
 
     function go(wsId: int): void {
@@ -100,7 +106,7 @@ Item {
                 readonly property int wsId: index + 1
                 readonly property bool active: root.focusedId === wsId
                 readonly property bool targeted: root.dropTarget === wsId
-                readonly property var wins: root.windowsOf(wsId)
+                readonly property var wins: root.windowsByWs[wsId] ?? []
 
                 width: root.cellW
                 height: root.cellH

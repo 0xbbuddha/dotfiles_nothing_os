@@ -179,17 +179,114 @@ Singleton {
         onTriggered: diskProbe.running = true
     }
 
+    // CPU, memory and swap are plain text files read straight off disk -
+    // no reason to fork a shell and a batch of awk calls for them every
+    // 2 seconds. Only the thermal-zone glob and the GPU probe below still
+    // need a shell.
+    FileView {
+        id: statFile
+        path: "/proc/stat"
+        onLoaded: {
+            const cores = [];
+            for (const line of statFile.text().split("\n")) {
+                const p = line.trim().split(/\s+/);
+                const label = p[0] ?? "";
+                if (label !== "cpu" && !/^cpu[0-9]+$/.test(label))
+                    continue;
+                let t = 0;
+                for (let i = 1; i < p.length; i++)
+                    t += parseInt(p[i]) || 0;
+                const idle = (parseInt(p[4]) || 0) + (parseInt(p[5]) || 0);
+                if (label === "cpu") {
+                    const dt = t - root._prevTotal, di = idle - root._prevIdle;
+                    if (root._prevTotal > 0 && dt > 0)
+                        root.cpu = Math.max(0, Math.min(1, 1 - di / dt));
+                    root._prevTotal = t; root._prevIdle = idle;
+                } else {
+                    const prev = root._prevCore[label];
+                    if (prev && t - prev.t > 0)
+                        cores.push(Math.max(0, Math.min(1, 1 - (idle - prev.i) / (t - prev.t))));
+                    else
+                        cores.push(0);
+                    root._prevCore[label] = { t: t, i: idle };
+                }
+            }
+            if (cores.length > 0)
+                root.cpuCores = cores;
+        }
+    }
+
+    FileView {
+        id: memFile
+        path: "/proc/meminfo"
+        onLoaded: {
+            let t = 0, a = 0;
+            for (const line of memFile.text().split("\n")) {
+                if (line.startsWith("MemTotal:"))
+                    t = parseInt(line.split(/\s+/)[1]) || 0;
+                else if (line.startsWith("MemAvailable:"))
+                    a = parseInt(line.split(/\s+/)[1]) || 0;
+            }
+            if (t > 0) {
+                root.ramTotalKb = t;
+                root.ramFreeKb = a;
+                root.ram = 1 - a / t;
+            }
+        }
+    }
+
+    FileView {
+        id: swapsFile
+        path: "/proc/swaps"
+        onLoaded: {
+            let zt = 0, zu = 0, dt = 0, du = 0;
+            const lines = swapsFile.text().split("\n").slice(1);
+            for (const line of lines) {
+                const p = line.trim().split(/\s+/);
+                if (p.length < 4 || p[0] === "")
+                    continue;
+                const size = Number(p[2]) || 0, used = Number(p[3]) || 0;
+                if (/zram/.test(p[0])) { zt += size; zu += used; }
+                else { dt += size; du += used; }
+            }
+            root.zramTotalKb = zt;
+            root.zramUsedKb = zu;
+            root.diskSwapTotalKb = dt;
+            root.diskSwapUsedKb = du;
+        }
+    }
+
+    // Sampled once per tick, right before this tick's reads land: a
+    // one-tick lag against the just-reloaded files, invisible on a
+    // history graph, and far simpler than lining up three independent
+    // FileView loads to sample them at exactly the same instant.
+    function sample(): void {
+        root.cpuHistory  = root.pushed(root.cpuHistory,  root.cpu);
+        root.ramHistory  = root.pushed(root.ramHistory,  root.ram);
+        root.gpuHistory  = root.pushed(root.gpuHistory,  root.gpu);
+        root.zramHistory = root.pushed(root.zramHistory, root.zram);
+        root.swapHistory = root.pushed(root.swapHistory, root.diskSwap);
+    }
+
+    Timer {
+        interval: 2000
+        running: true
+        repeat: true
+        onTriggered: {
+            root.sample();
+            statFile.reload();
+            memFile.reload();
+            swapsFile.reload();
+        }
+    }
+
+    // Thermal zones and the GPU still need a shell (globbing, and
+    // nvidia-smi for NVIDIA cards). Temperature and GPU load drift more
+    // slowly than CPU/RAM, so this one can run at a quarter the rate.
     NProcess {
-        id: probe
+        id: tempProbe
         running: true
         command: ["sh", "-c", `
-            awk '/^cpu /{t=0; for(i=2;i<=NF;i++) t+=$i; print "CPU", t, $5+$6}
-                 /^cpu[0-9]/{t=0; for(i=2;i<=NF;i++) t+=$i; print "CORE", $1, t, $5+$6}' /proc/stat
-            awk '/MemTotal/{t=$2} /MemAvailable/{a=$2} END{print "MEM", t+0, a+0}' /proc/meminfo
-            awk 'NR>1 {
-                if ($1 ~ /zram/) { zt+=$3; zu+=$4 }
-                else { dt+=$3; du+=$4 }
-            } END { print "SWAPDEV", zt+0, zu+0, dt+0, du+0 }' /proc/swaps
             for f in /sys/class/thermal/thermal_zone*/temp; do [ -r "$f" ] && cat "$f"; done \
                 | sort -rn | head -1 | awk '{printf "CTEMP %d\\n", $1/1000}'
             if command -v nvidia-smi >/dev/null 2>&1; then
@@ -206,57 +303,11 @@ Singleton {
                 done
             fi
         `]
-
         stdout: StdioCollector {
             onStreamFinished: {
-                // Sampled once per poll, after every line of this batch has
-                // been read: doing it per line would record the same tick
-                // several times and squash the history.
-                const sample = () => {
-                    root.cpuHistory  = root.pushed(root.cpuHistory,  root.cpu);
-                    root.ramHistory  = root.pushed(root.ramHistory,  root.ram);
-                    root.gpuHistory  = root.pushed(root.gpuHistory,  root.gpu);
-                    root.zramHistory = root.pushed(root.zramHistory, root.zram);
-                    root.swapHistory = root.pushed(root.swapHistory, root.diskSwap);
-                };
-                const cores = [];
                 for (const line of text.trim().split("\n")) {
                     const p = line.trim().split(/\s+/);
                     switch (p[0]) {
-                    case "CPU": {
-                        const total = parseInt(p[1]), idle = parseInt(p[2]);
-                        const dt = total - root._prevTotal, di = idle - root._prevIdle;
-                        if (root._prevTotal > 0 && dt > 0)
-                            root.cpu = Math.max(0, Math.min(1, 1 - di / dt));
-                        root._prevTotal = total; root._prevIdle = idle;
-                        break;
-                    }
-                    case "CORE": {
-                        const name = p[1];
-                        const total = parseInt(p[2]), idle = parseInt(p[3]);
-                        const prev = root._prevCore[name];
-                        if (prev && total - prev.t > 0)
-                            cores.push(Math.max(0, Math.min(1, 1 - (idle - prev.i) / (total - prev.t))));
-                        else
-                            cores.push(0);
-                        root._prevCore[name] = { t: total, i: idle };
-                        break;
-                    }
-                    case "MEM": {
-                        const t = Number(p[1]), a = Number(p[2]);
-                        if (t > 0) {
-                            root.ramTotalKb = t;
-                            root.ramFreeKb = a;
-                            root.ram = 1 - a / t;
-                        }
-                        break;
-                    }
-                    case "SWAPDEV":
-                        root.zramTotalKb = Number(p[1]) || 0;
-                        root.zramUsedKb = Number(p[2]) || 0;
-                        root.diskSwapTotalKb = Number(p[3]) || 0;
-                        root.diskSwapUsedKb = Number(p[4]) || 0;
-                        break;
                     case "CTEMP": root.cpuTemp = parseInt(p[1]) || 0; break;
                     case "GPU":
                         root.gpuSeen = true;
@@ -265,17 +316,14 @@ Singleton {
                         break;
                     }
                 }
-                if (cores.length > 0)
-                    root.cpuCores = cores;
-                sample();
             }
         }
     }
 
     Timer {
-        interval: 2000
+        interval: 8000
         running: true
         repeat: true
-        onTriggered: probe.running = true
+        onTriggered: tempProbe.running = true
     }
 }

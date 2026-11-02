@@ -61,8 +61,14 @@ Singleton {
         }
     }
 
+    // Catches wf-recorder being started or stopped from outside this
+    // shell (a terminal, a keybind). Our own start()/stop()/regionWait
+    // already set root.recording directly and kick pollSoon (350ms) for
+    // a fast confirm, so this one only has to catch the rare external
+    // case - no need to spawn pgrep every 400ms forever.
+    // shortcut: up to 3s to notice an externally-started recording, upgrade if that's too slow
     Timer {
-        interval: 400
+        interval: 3000
         running: true
         repeat: true
         onTriggered: root.poll()

@@ -92,9 +92,12 @@ Singleton {
         }
     }
 
+    // 2s instead of 1s: the glyph matrix's "net" channel and the net
+    // widget both just read whatever root.rx currently holds, so halving
+    // the read rate costs them nothing worse than a slightly older number.
     Timer {
         running: true
-        interval: 1000
+        interval: 2000
         repeat: true
         triggeredOnStart: true
         onTriggered: dev.reload()
