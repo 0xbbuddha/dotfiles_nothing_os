@@ -8,6 +8,11 @@ ROOT="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
 export XDG_CURRENT_DESKTOP=Hyprland
 export XDG_SESSION_DESKTOP=Hyprland
 export XDG_SESSION_TYPE=wayland
+# Hyprland 0.57 asks rtkit for realtime, which caps its main thread at
+# 200 ms of CPU: one longer frame and the kernel SIGKILLs it (no coredump,
+# restart in safe mode). This is the switch gainRealTime() reads to skip it.
+# shortcut: remove once hyprwm/Hyprland#16737 (RT watchdog) ships.
+export HYPRLAND_NO_RT=1
 
 unset WAYLAND_DISPLAY DISPLAY HYPRLAND_INSTANCE_SIGNATURE
 
