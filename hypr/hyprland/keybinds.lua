@@ -178,19 +178,44 @@ local function closeSpecial()
     end
 end
 
+-- A workspace already shown on another monitor pulls focus over there by
+-- default - correct when you are hunting for it, jarring when you only
+-- meant to bring it to the screen in front of you (asking for workspace 1
+-- from monitor 2 while it is sitting on monitor 1 should not whisk you
+-- away to monitor 1). Bring the workspace to the monitor you are already
+-- on instead, so the screen you are looking at is the one that changes.
+-- Only for a plain workspace number: "r-1", "e+1" and the like have no
+-- single monitor to resolve ahead of time, and already stay on the
+-- current one.
+--
+-- workspace.move(), not workspace.swap_monitors(): the latter accepts
+-- the exact same arguments and returns a real dispatcher, but tested
+-- live (both as monitor objects and as monitor names) it never actually
+-- moved anything. move() does, confirmed live the same way.
+local function focusWorkspace(target)
+    if type(target) == "number" then
+        local cur = hl.get_active_monitor()
+        local ws = hl.get_workspace(target)
+        if ws and ws.monitor and ws.monitor.id ~= cur.id then
+            hl.dispatch(hl.dsp.workspace.move({ workspace = target, monitor = cur }))
+        end
+    end
+    hl.dispatch(hl.dsp.focus({ workspace = target }))
+end
+
 -- Exposed as a global: the shell calls it via
 -- Hyprland.dispatch("gotoWorkspaceSafe(3)"). A dispatch expects an
 -- expression that yields a dispatcher, hence the trailing no_op.
 function gotoWorkspaceSafe(target)
     closeSpecial()
-    hl.dispatch(hl.dsp.focus({ workspace = target }))
+    focusWorkspace(target)
     return hl.dsp.no_op()
 end
 
 local function goWorkspace(target)
     return function()
         closeSpecial()
-        hl.dispatch(hl.dsp.focus({ workspace = target }))
+        focusWorkspace(target)
     end
 end
 
