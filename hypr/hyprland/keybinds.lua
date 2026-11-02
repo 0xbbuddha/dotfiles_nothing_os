@@ -186,10 +186,10 @@ end
 -- on instead, so the screen you are looking at is the one that changes.
 --
 -- get_workspace() resolves "r-1"/"e+1"/"-1"/"+1" to the same concrete
--- workspace Hyprland itself would switch to (confirmed live), so this
--- covers CTRL+SUPER+Left/Right and the scroll-wheel bindings below, not
--- just the plain SUPER+<N> ones - the first version of this fix only
--- handled a plain number and missed exactly those.
+-- workspace Hyprland itself would switch to (confirmed live). Only an
+-- explicit number (SUPER+<N>, the bar) pulls a workspace over: relative
+-- steps (CTRL+SUPER+Left/Right, Page_Up/Down, scroll) never touch one
+-- that lives on the other monitor, they just do nothing.
 --
 -- workspace.move(), not workspace.swap_monitors(): the latter accepts
 -- the exact same arguments and returns a real dispatcher, but tested
@@ -203,6 +203,9 @@ local function focusWorkspace(target)
     -- could in principle land on something else.
     local goal = ws and ws.id or target
     if ws and ws.monitor and ws.monitor.id ~= cur.id then
+        -- Relative steps (CTRL+SUPER+Left/Right, Page_Up/Down, scroll) stay
+        -- on this screen: a workspace owned by the other monitor is off limits.
+        if type(target) ~= "number" then return end
         hl.dispatch(hl.dsp.workspace.move({ workspace = ws.id, monitor = cur }))
     end
     hl.dispatch(hl.dsp.focus({ workspace = goal }))
