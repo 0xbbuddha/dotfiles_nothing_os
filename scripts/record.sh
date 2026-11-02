@@ -50,6 +50,33 @@ unload_mix() {
     fi
 }
 
+# Builds the combined-sink mix for "both" (system + mic). Echoes the
+# --audio value to use: the mix monitor on success, a single source on
+# any missing input or partial load failure - never claims "both" while
+# actually recording less. Module ids land in MODFILE only on success.
+mix_both() {
+    local monsrc="$1" micsrc="$2"
+    if [[ -z "$monsrc" || -z "$micsrc" ]]; then
+        echo "${monsrc:-$micsrc}"
+        return
+    fi
+    local mods=() id
+    id="$(pactl load-module module-null-sink sink_name="$MIXNAME" \
+            sink_properties=device.description="$MIXNAME" rate=48000 2>/dev/null || true)"
+    [[ -n "$id" ]] && mods+=("$id")
+    id="$(pactl load-module module-loopback source="$monsrc" sink="$MIXNAME" latency_msec=60 2>/dev/null || true)"
+    [[ -n "$id" ]] && mods+=("$id")
+    id="$(pactl load-module module-loopback source="$micsrc" sink="$MIXNAME" latency_msec=60 2>/dev/null || true)"
+    [[ -n "$id" ]] && mods+=("$id")
+    if [[ "${#mods[@]}" -eq 3 ]]; then
+        printf '%s\n' "${mods[@]}" > "$MODFILE"
+        echo "${MIXNAME}.monitor"
+    else
+        for id in "${mods[@]}"; do pactl unload-module "$id" 2>/dev/null || true; done
+        echo "${monsrc:-$micsrc}"
+    fi
+}
+
 sink_monitor() {
     local s
     s="$(pactl get-default-sink 2>/dev/null || true)"
@@ -146,33 +173,8 @@ case "${1:-status}" in
       both)
         MONSRC="$(sink_monitor)"
         MICSRC="$(default_source)"
-        if [[ -z "$MONSRC" || -z "$MICSRC" ]]; then
-            # One half missing: fall back to whatever exists rather than fail.
-            SRC="${MONSRC:-$MICSRC}"
-            if [[ -n "$SRC" ]]; then ARGS+=(--audio="$SRC"); else ARGS+=(--audio); fi
-        else
-            MODS=()
-            ID="$(pactl load-module module-null-sink sink_name="$MIXNAME" \
-                    sink_properties=device.description="$MIXNAME" rate=48000 2>/dev/null || true)"
-            [[ -n "$ID" ]] && MODS+=("$ID")
-            ID="$(pactl load-module module-loopback source="$MONSRC" sink="$MIXNAME" latency_msec=60 2>/dev/null || true)"
-            [[ -n "$ID" ]] && MODS+=("$ID")
-            ID="$(pactl load-module module-loopback source="$MICSRC" sink="$MIXNAME" latency_msec=60 2>/dev/null || true)"
-            [[ -n "$ID" ]] && MODS+=("$ID")
-            if [[ "${#MODS[@]}" -eq 3 ]]; then
-                printf '%s\n' "${MODS[@]}" > "$MODFILE"
-                ARGS+=(--audio="${MIXNAME}.monitor")
-            else
-                # Partial mix: the null sink or one loopback didn't load,
-                # so the monitor would silently carry only one source (or
-                # nothing at all). Tear down whatever did load and fall
-                # back to a single source, same as the "one half missing"
-                # case above - never report "both" while recording less.
-                for id in "${MODS[@]}"; do pactl unload-module "$id" 2>/dev/null || true; done
-                SRC="${MONSRC:-$MICSRC}"
-                if [[ -n "$SRC" ]]; then ARGS+=(--audio="$SRC"); else ARGS+=(--audio); fi
-            fi
-        fi
+        SRC="$(mix_both "$MONSRC" "$MICSRC")"
+        if [[ -n "$SRC" ]]; then ARGS+=(--audio="$SRC"); else ARGS+=(--audio); fi
         ;;
     esac
 

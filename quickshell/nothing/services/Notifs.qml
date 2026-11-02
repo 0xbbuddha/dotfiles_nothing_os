@@ -51,12 +51,16 @@ Singleton {
                 seen: false
             };
 
-            root.history = [entry].concat(root.history).slice(0, 100);
+            // An app reusing the same id (a progress bar, a volume OSD, a
+            // media player) means "replace", not "add another one".
+            root.history = [entry].concat(
+                root.history.filter(x => x.id !== n.id)).slice(0, 100);
             // The Glyph Bar can stand in for the card: see
             // GlyphEvents.replaces. History is kept either way, so nothing is
             // lost, it just does not interrupt.
             if (!root.doNotDisturb && !GlyphEvents.replaces("notify"))
-                root.popups = [entry].concat(root.popups).slice(0, 5);
+                root.popups = [entry].concat(
+                    root.popups.filter(x => x.id !== n.id)).slice(0, 5);
         }
     }
 

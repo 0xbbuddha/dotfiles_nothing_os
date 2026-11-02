@@ -73,7 +73,16 @@ route_audio() {
 }
 
 fix_profile() {
-    local mac="$1" adapter dev_path uuids
+    local mac="$1" adapter dev_path uuids lockfile lockfd
+    # Same reasoning as the script-wide lock above, per device: a
+    # flapping connection can fire "Connected: yes" twice in quick
+    # succession, and two fix_profile calls for the same MAC running at
+    # once would each independently reconnect and reassign the default
+    # sink. A second call while the first is still running just skips.
+    lockfile="${XDG_RUNTIME_DIR:-/tmp}/nothing-bt-a2dp-fix-${mac//:/_}.lock"
+    exec {lockfd}>"$lockfile"
+    flock -n "$lockfd" || return 0
+
     adapter="$(busctl tree org.bluez 2>/dev/null \
         | grep -o '/org/bluez/hci[0-9]*' | head -1)"
     [[ -n "$adapter" ]] || return 0
