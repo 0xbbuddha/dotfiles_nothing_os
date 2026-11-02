@@ -14,3 +14,7 @@ node backup_test.js    "$S/ConfigBackup.qml"
 node phone_test.js     "$S/Phone.qml"
 node wallpaper_test.js "$S/Wallpapers.qml"
 node services_test.js "$S"
+node accent_test.js    "$S/HyprAccent.qml"
+python3 essential_test.py ../../scripts/essential-app.py
+bash spicetify_test.sh
+bash record_test.sh ../../scripts/record.sh

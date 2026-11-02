@@ -104,7 +104,7 @@ Singleton {
     }
 
     function appName(node): string {
-        return node?.properties["application.name"]
+        return node?.properties?.["application.name"]
             || node?.nickname || node?.description || "App";
     }
 }

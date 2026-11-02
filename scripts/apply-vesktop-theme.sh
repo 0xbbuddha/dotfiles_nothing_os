@@ -87,8 +87,26 @@ PY
 if [[ $STATUS -eq 1 ]]; then
     installed=0; enabled=0
     [[ -f "$CONF/themes/$THEME_NAME" ]] && installed=1
-    if [[ -f "$SETTINGS" ]] \
-        && python3 -c "import json,sys; sys.exit(0 if '$THEME_NAME' in json.load(open('$SETTINGS')).get('enabledThemes', []) else 1)" 2>/dev/null; then
+    # Same retry as patch_settings: a plain one-shot read here used to
+    # report "disabled" whenever it landed mid-write, on a theme that
+    # was in fact enabled.
+    if [[ -f "$SETTINGS" ]] && python3 - "$SETTINGS" "$THEME_NAME" <<'PY'
+import json, sys, time
+
+path, name = sys.argv[1], sys.argv[2]
+d = None
+for attempt in range(5):
+    try:
+        with open(path) as f:
+            d = json.load(f)
+        break
+    except json.JSONDecodeError:
+        if attempt == 4:
+            sys.exit(1)
+        time.sleep(0.2)
+sys.exit(0 if name in d.get("enabledThemes", []) else 1)
+PY
+    then
         enabled=1
     fi
     printf 'vesktop=%d\n'   "$(have_vesktop && echo 1 || echo 0)"

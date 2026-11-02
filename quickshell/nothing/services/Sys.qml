@@ -220,14 +220,19 @@ Singleton {
         id: memFile
         path: "/proc/meminfo"
         onLoaded: {
-            let t = 0, a = 0;
+            let t = 0, a = 0, sawAvail = false;
             for (const line of memFile.text().split("\n")) {
                 if (line.startsWith("MemTotal:"))
                     t = parseInt(line.split(/\s+/)[1]) || 0;
-                else if (line.startsWith("MemAvailable:"))
+                else if (line.startsWith("MemAvailable:")) {
                     a = parseInt(line.split(/\s+/)[1]) || 0;
+                    sawAvail = true;
+                }
             }
-            if (t > 0) {
+            // A kernel without MemAvailable (pre-3.14) would otherwise
+            // read as 0 available, i.e. 100% RAM used - keep the last
+            // known reading instead of reporting a false spike.
+            if (t > 0 && sawAvail) {
                 root.ramTotalKb = t;
                 root.ramFreeKb = a;
                 root.ram = 1 - a / t;
