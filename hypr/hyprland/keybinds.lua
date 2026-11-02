@@ -178,19 +178,49 @@ local function closeSpecial()
     end
 end
 
+-- A workspace already shown on another monitor pulls focus over there by
+-- default - correct when you are hunting for it, jarring when you only
+-- meant to bring it to the screen in front of you (asking for workspace 1
+-- from monitor 2 while it is sitting on monitor 1 should not whisk you
+-- away to monitor 1). Bring the workspace to the monitor you are already
+-- on instead, so the screen you are looking at is the one that changes.
+--
+-- get_workspace() resolves "r-1"/"e+1"/"-1"/"+1" to the same concrete
+-- workspace Hyprland itself would switch to (confirmed live), so this
+-- covers CTRL+SUPER+Left/Right and the scroll-wheel bindings below, not
+-- just the plain SUPER+<N> ones - the first version of this fix only
+-- handled a plain number and missed exactly those.
+--
+-- workspace.move(), not workspace.swap_monitors(): the latter accepts
+-- the exact same arguments and returns a real dispatcher, but tested
+-- live (both as monitor objects and as monitor names) it never actually
+-- moved anything. move() does, confirmed live the same way.
+local function focusWorkspace(target)
+    local cur = hl.get_active_monitor()
+    local ws = hl.get_workspace(target)
+    -- Once resolved, dispatch both the move and the focus against the
+    -- same concrete id: re-resolving "r-1" a second time after the move
+    -- could in principle land on something else.
+    local goal = ws and ws.id or target
+    if ws and ws.monitor and ws.monitor.id ~= cur.id then
+        hl.dispatch(hl.dsp.workspace.move({ workspace = ws.id, monitor = cur }))
+    end
+    hl.dispatch(hl.dsp.focus({ workspace = goal }))
+end
+
 -- Exposed as a global: the shell calls it via
 -- Hyprland.dispatch("gotoWorkspaceSafe(3)"). A dispatch expects an
 -- expression that yields a dispatcher, hence the trailing no_op.
 function gotoWorkspaceSafe(target)
     closeSpecial()
-    hl.dispatch(hl.dsp.focus({ workspace = target }))
+    focusWorkspace(target)
     return hl.dsp.no_op()
 end
 
 local function goWorkspace(target)
     return function()
         closeSpecial()
-        hl.dispatch(hl.dsp.focus({ workspace = target }))
+        focusWorkspace(target)
     end
 end
 
