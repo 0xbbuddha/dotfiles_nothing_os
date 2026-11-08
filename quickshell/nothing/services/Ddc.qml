@@ -52,10 +52,6 @@ Singleton {
     readonly property int maxWrites: 2
     readonly property int timeoutMs: 12000
 
-    function forBus(bus: int): var {
-        return root.state[bus] ?? null;
-    }
-
     function byConnector(name: string): var {
         return root.monitors.find(m => m.connector === name) ?? null;
     }
