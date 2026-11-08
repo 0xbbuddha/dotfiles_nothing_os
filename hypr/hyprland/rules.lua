@@ -4,6 +4,23 @@ hl.window_rule({
     suppress_event = "maximize",
 })
 
+-- Chromium/Electron apps paint one frame of their toolkit's white default
+-- background before their own (usually dark) CSS takes over - a flash
+-- against this rice's black theme. The gap is also the one moment the
+-- window has no title yet, so hiding on that condition clears itself the
+-- instant the app sets its real title, no timer needed. Scoped to the
+-- apps this rice already special-cases (Vesktop, Spotify) plus the
+-- common Electron/Chromium shells, not every window: an app that never
+-- sets a title would otherwise stay invisible forever.
+hl.window_rule({
+    name  = "no-flashbang",
+    match = {
+        class = "^(vesktop|discord|spotify|chromium.*|code|[Ee]lectron.*|[Ss]lack|obsidian)$",
+        title = "^$",
+    },
+    opacity = "0.0 override",
+})
+
 hl.window_rule({
     -- fix XWayland drag-and-drop
     name  = "fix-xwayland-drags",
