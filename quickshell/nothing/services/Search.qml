@@ -541,10 +541,7 @@ Singleton {
         if (mode === "action" || text !== "") {
             const needle = (mode === "action" ? text : q).toLowerCase();
             for (const a of root.actions) {
-                if (mode !== "action" && needle !== ""
-                        && !a.name.includes(needle) && !a.label.toLowerCase().includes(needle))
-                    continue;
-                if (mode === "action" && needle !== ""
+                if (needle !== ""
                         && !a.name.includes(needle) && !a.label.toLowerCase().includes(needle))
                     continue;
                 out.push({
