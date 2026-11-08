@@ -95,6 +95,7 @@ Singleton {
     property alias essentialSide: a.essentialSide
     property alias essentialSearch: a.essentialSearch
     property alias mindBackend: a.mindBackend
+    property alias translateLang: a.translateLang
 
     // ── Weather ───────────────────────────────────────────────────────
     property alias weatherEnabled: a.weatherEnabled
@@ -900,6 +901,7 @@ Singleton {
         a.essentialSide = "right";
         a.essentialSearch = true;
         a.mindBackend = "stub";
+        a.translateLang = "English";
 
         a.weatherEnabled = false;
         a.weatherCity = "";
@@ -1262,6 +1264,7 @@ Singleton {
             property string essentialSide: "right"   // right | left
             property bool   essentialSearch: true    // mix captures + Ask in SUPER
             property string mindBackend: "stub"      // stub | ollama | gemini
+            property string translateLang: "English" // target language for screen translation
 
             property bool   weatherEnabled: false
             property string weatherCity: ""

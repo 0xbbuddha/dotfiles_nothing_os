@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 # Screenshot helper for the Nothing shell.
-#   screenshot.sh <region|window|screen|geo|freeze> <copy|save|edit|ocr|lens> [geo] [output]
+#   screenshot.sh <region|window|screen|geo|freeze> <copy|save|edit|ocr|lens|translate> [geo] [output] [lang]
 #
 # WARNING: the lens action SENDS the crop to a third-party host
-# (uguu.se) to get a public URL, then opens it in Google Lens.
+# (uguu.se) to get a public URL, then opens it in Google Lens. translate
+# OCRs the crop locally (tesseract) then sends the text to whichever AI
+# backend Essential Space is already set to in Settings (Gemini or
+# Ollama) - the same backend Essential Search and Essential Apps already
+# use, nothing new to consent to.
 #
 # freeze: crop the pre-overlay grim in $XDG_RUNTIME_DIR/nothing-snip/<output>.png
 # so the picker veil is not baked into the shot.
@@ -17,6 +21,7 @@ MODE="${1:-region}"
 ACTION="${2:-copy}"
 GEO="${3:-}"
 OUTPUT="${4:-}"
+TARGET_LANG="${5:-English}"
 DIR="${XDG_PICTURES_DIR:-$HOME/Pictures}/Captures"
 FILE="$DIR/$(date +%Y-%m-%d_%H-%M-%S).png"
 SNIP_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/nothing-snip"
@@ -149,5 +154,20 @@ case "$ACTION" in
         if [[ -z "${TEXT// }" ]]; then echo "No text detected"; exit 1; fi
         printf '%s' "$TEXT" | wl-copy
         echo "Text copied ($(printf '%s' "$TEXT" | wc -c) characters)"
+        ;;
+    translate)
+        if ! have tesseract; then echo "tesseract is not installed"; exit 1; fi
+        LANGS="eng"
+        tesseract --list-langs 2>/dev/null | grep -qx fra && LANGS="fra+eng"
+        TEXT="$(tesseract "$FILE" - -l "$LANGS" 2>/dev/null)"
+        rm -f "$FILE"
+        if [[ -z "${TEXT// }" ]]; then echo "No text detected"; exit 1; fi
+        if ! TRANSLATED="$(printf '%s' "$TEXT" \
+                | python3 -I "$ROOT/scripts/essential.py" translate "$TARGET_LANG" 2>&1)"; then
+            echo "$TRANSLATED"
+            exit 1
+        fi
+        printf '%s' "$TRANSLATED" | wl-copy
+        echo "$TRANSLATED"
         ;;
 esac

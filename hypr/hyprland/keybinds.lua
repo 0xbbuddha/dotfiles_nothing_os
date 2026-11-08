@@ -240,6 +240,32 @@ hl.bind(mainMod .. " + mouse_down",         goWorkspace("+1"))
 hl.bind(mainMod .. " + SHIFT + Page_Up",    sendToWorkspace("r-1"))
 hl.bind(mainMod .. " + SHIFT + Page_Down",  sendToWorkspace("r+1"))
 
+--# Send the current workspace to another monitor
+-- Takes your workspace with you rather than sending a window off alone
+-- (that's SHIFT+Page_Up/Down above): focus follows to the destination
+-- monitor, confirmed live - there would be nothing useful left to look
+-- at on the monitor you just emptied. A no-op on a single monitor.
+local function sendWorkspaceToMonitor(step)
+    return function()
+        local mons = hl.get_monitors()
+        if #mons < 2 then return end
+        local cur = hl.get_active_monitor()
+        local idx = 1
+        for i, m in ipairs(mons) do
+            if m.id == cur.id then
+                idx = i
+                break
+            end
+        end
+        local target = mons[((idx - 1 + step) % #mons) + 1]
+        local ws = hl.get_active_workspace()
+        hl.dispatch(hl.dsp.workspace.move({ workspace = ws.id, monitor = target }))
+    end
+end
+
+hl.bind("CTRL + SHIFT + " .. mainMod .. " + Left",  sendWorkspaceToMonitor(-1))
+hl.bind("CTRL + SHIFT + " .. mainMod .. " + Right", sendWorkspaceToMonitor(1))
+
 --# Scratchpad
 hl.bind(mainMod .. " + S",       hl.dsp.workspace.toggle_special("special"))
 hl.bind(mainMod .. " + ALT + S", hl.dsp.window.move({ workspace = "special:special", follow = false }))

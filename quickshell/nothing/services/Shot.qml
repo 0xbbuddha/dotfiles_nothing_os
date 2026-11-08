@@ -44,7 +44,7 @@ Singleton {
         }
     }
 
-    // mode: region | window | screen | geo - action: copy | save | edit | ocr
+    // mode: region | window | screen | geo - action: copy | save | edit | ocr | translate
     function capture(mode: string, action: string): void {
         if (mode === "region") {
             if (root.picking || root.grabPending)
@@ -61,7 +61,7 @@ Singleton {
             return;
         }
         root.busy = true;
-        runner.command = ["sh", root.script, mode, action];
+        runner.command = ["sh", root.script, mode, action, "", "", Config.translateLang];
         runner.running = true;
     }
 
@@ -78,7 +78,8 @@ Singleton {
             return;
         }
         root.busy = true;
-        runner.command = ["sh", root.script, "freeze", root.pendingAction, localGeo, output];
+        runner.command = ["sh", root.script, "freeze", root.pendingAction, localGeo, output,
+                          Config.translateLang];
         runner.running = true;
     }
 

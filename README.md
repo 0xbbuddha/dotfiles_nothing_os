@@ -170,6 +170,20 @@ The host compositor eats `SUPER`. Optional passthrough: source
   API plus battery, volume, weather, the vault. Six presets ship with
   no API key. Yours sit on the right of the desktop; stock widgets keep
   the left column
+- **AI, two ways** - one setting (**Settings > Essential > Mind**)
+  drives Essential Apps' conversation above, Essential Search's `Ask`
+  (`SUPER`, then type a question), and the screenshot panel's
+  **Translate** action. **Gemini** (a free key from Google AI Studio)
+  or **Ollama** (`ollama run llama3.2` or any model you already have,
+  fully local, nothing leaves the machine) - pick one, paste a key only
+  for Gemini. Stub (the default) turns all three off rather than
+  silently failing
+- **Screen translation** - the screenshot panel's **Translate** action
+  (region select, then Translate) OCRs the crop and sends the text
+  through whichever backend Mind is set to. Target language in
+  **Settings > Essential**, English by default. Also reachable without
+  the panel: the `screenshot` IPC target's `translate` function, for
+  your own keybind in `hypr/custom.lua`
 - **Displays** (`SUPER+P`) - the arrangement Hyprland can do and never
   offers: extend, duplicate, or one screen only, plus resolution, refresh,
   scale and rotation per screen, and a map you drag a screen around on. It
@@ -230,7 +244,7 @@ Settings live in `~/.config/nothing/config.json`.
 | `SUPER+ALT+B` | night light on/off |
 | `SUPER+ALT+I` | caffeine: keep the screen awake |
 | `CTRL+SHIFT+Esc` | processes: what uses CPU/memory, end a frozen app |
-| `SUPER+SHIFT+T` | wallpaper picker: your pictures, per screen, crop/fit, slideshow |
+| `SUPER+SHIFT+T` | wallpaper picker: Tamaki, Frieren, Waguri or your own picture, per screen, crop/fit |
 | `SUPER+ALT+W` | next wallpaper from the folder |
 | `SUPER+SHIFT+G` | next Glyph surface |
 | `SUPER+G` | game bar |
@@ -238,6 +252,7 @@ Settings live in `~/.config/nothing/config.json`.
 | `SUPER+SHIFT+S` | region capture |
 | `SUPER+SHIFT+X` | OCR |
 | `SUPER+SHIFT+R` | record a region |
+| `CTRL+SHIFT+SUPER+Left/Right` | send the current workspace to the other monitor, and follow it there |
 | `SUPER+Esc` | session menu |
 | `SUPER+L` | lock |
 

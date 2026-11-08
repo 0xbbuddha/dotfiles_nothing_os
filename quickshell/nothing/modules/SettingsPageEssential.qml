@@ -227,5 +227,20 @@ SettingsPage {
                 }
             }
         }
+
+        SettingRow {
+            key: "translateLang"
+            label: "Translate to"
+            hint: "Used by the screenshot panel's Translate action"
+            NField {
+                implicitWidth: Theme.px(180)
+                text: Config.translateLang
+                placeholder: "English"
+                onCommitted: (v) => {
+                    Config.translateLang = v.trim() || "English";
+                    Config.save();
+                }
+            }
+        }
     }
 }

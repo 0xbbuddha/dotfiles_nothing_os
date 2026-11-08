@@ -594,6 +594,7 @@ ShellRoot {
         function screen(): void { Shot.capture("screen", "copy"); }
         function save(): void { Shot.capture("screen", "save"); }
         function ocr(): void { Shot.capture("region", "ocr"); }
+        function translate(): void { Shot.capture("region", "translate"); }
     }
 
     IpcHandler {
@@ -678,13 +679,19 @@ ShellRoot {
     Connections {
         target: Shot
         function onFinished(message: string): void {
-            // Lens goes through the same region picker as a screenshot, so
-            // it arrives here too. Only the label differs.
-            const lens = Shot.pendingAction === "lens";
-            notify.command = ["notify-send", "-a", lens ? "Lens" : "Capture",
-                              "-i", lens ? "image-x-generic"
-                                         : "camera-photo-symbolic",
-                              lens ? "Google Lens" : "Screenshot", message];
+            // Lens and translate go through the same region picker as a
+            // screenshot, so they arrive here too. Only the label differs -
+            // for translate, "message" is the translation itself, shown
+            // directly in the notification body rather than a status line.
+            const action = Shot.pendingAction;
+            const app = action === "lens" ? "Lens"
+                : action === "translate" ? "Translate" : "Capture";
+            const icon = action === "lens" ? "image-x-generic"
+                : action === "translate" ? "accessories-dictionary"
+                : "camera-photo-symbolic";
+            const title = action === "lens" ? "Google Lens"
+                : action === "translate" ? "Translated · copied" : "Screenshot";
+            notify.command = ["notify-send", "-a", app, "-i", icon, title, message];
             notify.running = true;
         }
     }

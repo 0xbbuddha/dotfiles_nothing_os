@@ -102,7 +102,8 @@ OverlayWindow {
                     { key: "copy", label: "Copy",   icon: "󰅍" },
                     { key: "save", label: "Keep",   icon: "󰆓" },
                     { key: "edit", label: "Annotate",  icon: "󰏫" },
-                    { key: "ocr",  label: "Text",    icon: "󰈚" }
+                    { key: "ocr",  label: "Text",    icon: "󰈚" },
+                    { key: "translate", label: "Translate", icon: "󰗊" }
                 ]
 
                 Rectangle {
