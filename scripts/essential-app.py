@@ -17,6 +17,7 @@ import json
 import os
 import re
 import shutil
+import subprocess
 import sys
 import time
 import urllib.error
@@ -27,7 +28,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from essential import consent_ask, consent_given, consent_store  # noqa: E402
-from essential import gemini_text, parse_json_obj, read_env  # noqa: E402
+from essential import gemini_text, ollama_text, parse_json_obj, read_env  # noqa: E402
 
 DATA = Path(os.environ.get("XDG_DATA_HOME") or (Path.home() / ".local/share"))
 DIR = DATA / "nothing" / "apps"
@@ -565,8 +566,14 @@ def probe(url: str) -> tuple[bool, str]:
 
 def generate(request: str, current: dict | None, keep_id: str) -> tuple[dict | None, str]:
     env = read_env()
-    if not (env.get("GEMINI_API_KEY") or os.environ.get("GEMINI_API_KEY")):
-        return None, "Add a Gemini key in settings"
+    # Same backend setting Essential Search already reads (mind.env's
+    # BACKEND, set once in Settings) - "ollama" needs no key, anything
+    # else keeps the existing Gemini-only behaviour everyone already has.
+    backend = (os.environ.get("NOTHING_MIND_BACKEND") or env.get("BACKEND")
+               or "gemini").strip().lower()
+    if backend != "ollama" and not (
+            env.get("GEMINI_API_KEY") or os.environ.get("GEMINI_API_KEY")):
+        return None, "Add a Gemini key in settings, or switch to Ollama"
     prompt = SCHEMA_DOC + "\n"
     if current:
         prompt += "CURRENT WIDGET:\n" + json.dumps(
@@ -574,7 +581,13 @@ def generate(request: str, current: dict | None, keep_id: str) -> tuple[dict | N
         prompt += f"CHANGE: {request}\n"
     else:
         prompt += f"REQUEST: {request}\n"
-    raw, err = gemini_text(prompt, env, 45)
+    if backend == "ollama":
+        try:
+            raw, err = ollama_text(prompt, env.get("MODEL") or "llama3.2", 45), ""
+        except (subprocess.SubprocessError, OSError):
+            raw, err = "", "Ollama did not answer"
+    else:
+        raw, err = gemini_text(prompt, env, 45)
     if err:
         return None, err
     data = parse_json_obj(raw)
