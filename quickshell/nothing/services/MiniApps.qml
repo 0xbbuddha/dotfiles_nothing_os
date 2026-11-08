@@ -56,11 +56,6 @@ Singleton {
         return root.stateBag[id] ?? ({});
     }
 
-    function dataOf(id: string): var {
-        root.pulse;
-        return root.dataBag[id] ?? null;
-    }
-
     // ── Shared halves of the expression context ──────────────────────
     // Each is a binding, so a spec reading time.epoch re-renders on the
     // second and one reading sys.cpu re-renders when the sampler fires.
