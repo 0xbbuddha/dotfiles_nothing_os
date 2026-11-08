@@ -39,25 +39,23 @@ for arg in "$@"; do
 done
 
 # ── What the shell is set to ─────────────────────────────────────────────
-# One python call for both values: config.json is JSON, and a grep for a
-# key in JSON is a bug waiting for the day someone reformats the file.
-read -r WANT_ACCENT WANT_SCHEME <<<"$(python3 - "$SHELL_CONF" <<'PY'
-import json, re, sys
-accent, theme = "", "dark"
+# Accent: shared with apply-zen-theme.sh via read-accent.py, which only
+# reads and validates - spicetify's color.ini wants bare uppercase hex,
+# so that part stays here.
+WANT_ACCENT="$(python3 "$ROOT/scripts/read-accent.py" "$SHELL_CONF" | tr '[:lower:]' '[:upper:]')"
+WANT_SCHEME="$(python3 - "$SHELL_CONF" <<'PY'
+import json, sys
+theme = "dark"
 try:
     with open(sys.argv[1]) as f:
         d = json.load(f)
-    a = d.get("accent", "") or ""
-    if re.fullmatch(r"#?[0-9a-fA-F]{6}", a):
-        accent = a.lstrip("#").upper()
     if d.get("theme") == "light":
         theme = "light"
 except Exception:
     pass
-print(accent or "-", theme)
+print(theme)
 PY
 )"
-[[ "$WANT_ACCENT" == "-" ]] && WANT_ACCENT=""
 [[ -z "$SCHEME" ]] && SCHEME="$WANT_SCHEME"
 
 # ── Where Spotify is ─────────────────────────────────────────────────────

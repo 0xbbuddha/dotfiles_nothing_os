@@ -29,21 +29,15 @@ for arg in "$@"; do
 done
 
 # ── What the shell is set to ──────────────────────────────────────────
-read -r WANT_ACCENT <<<"$(python3 - "$SHELL_CONF" <<'PY'
-import json, re, sys
-accent = ""
-try:
-    with open(sys.argv[1]) as f:
-        d = json.load(f)
-    a = d.get("accent", "") or ""
-    if re.fullmatch(r"#?[0-9a-fA-F]{6}", a):
-        accent = "#" + a.lstrip("#").lower()
-except Exception:
-    pass
-print(accent or "-")
-PY
-)"
-[[ "$WANT_ACCENT" == "-" ]] && WANT_ACCENT="#00d68f"
+# Shared with apply-spicetify.sh via read-accent.py, which only reads
+# and validates - Zen's CSS wants a lowercase '#rrggbb', so that part
+# stays here.
+HEX="$(python3 "$ROOT/scripts/read-accent.py" "$SHELL_CONF")"
+if [[ -n "$HEX" ]]; then
+    WANT_ACCENT="#$(tr '[:upper:]' '[:lower:]' <<<"$HEX")"
+else
+    WANT_ACCENT="#00d68f"
+fi
 
 # ── Where Zen keeps its profile ───────────────────────────────────────
 # The profile a plain launch actually uses is whichever one the
