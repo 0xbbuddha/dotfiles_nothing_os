@@ -27,7 +27,14 @@ Item {
         height: root.railHeight
         radius: height / 2
         color: root.accent
-        Behavior on width { NumberAnimation { duration: Theme.fast; easing.type: Easing.OutQuad } }
+        // Off while the knob is actually being dragged: a fixed-duration
+        // tween chasing the pointer every onPositionChanged reads as lag,
+        // not a slider glued to the cursor. Still smooths a value set
+        // another way (a keybind, a reset button).
+        Behavior on width {
+            enabled: !ma.pressed
+            NumberAnimation { duration: Theme.fast; easing.type: Easing.OutQuad }
+        }
     }
 
     Rectangle {
@@ -37,7 +44,10 @@ Item {
         color: root.accent
         anchors.verticalCenter: parent.verticalCenter
         x: Math.max(0, Math.min(rail.width - width, rail.width * root.value - width / 2))
-        Behavior on x { NumberAnimation { duration: Theme.fast; easing.type: Easing.OutQuad } }
+        Behavior on x {
+            enabled: !ma.pressed
+            NumberAnimation { duration: Theme.fast; easing.type: Easing.OutQuad }
+        }
         z: 2
     }
 
@@ -54,6 +64,7 @@ Item {
     }
 
     MouseArea {
+        id: ma
         anchors.fill: parent
         anchors.margins: -Theme.px(5)
         onPressed: (m) => root.moved(Math.max(0, Math.min(1, m.x / root.width)))
