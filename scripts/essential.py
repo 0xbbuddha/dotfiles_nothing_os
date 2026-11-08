@@ -20,6 +20,7 @@ Commands:
   set-key          (API key on stdin)
   set-backend NAME
   ask              (question on stdin or argv)
+  translate LANG   (text on stdin, translation on stdout)
   consent KEY      (prints yes or no, asks once)
 """
 from __future__ import annotations
@@ -740,6 +741,44 @@ def cmd_ask(question: str) -> None:
     out({"answer": answer[:800], "ids": clean})
 
 
+# Plain text in, plain text out - unlike cmd_ask this has no vault to
+# search and nothing structured to return, so the JSON envelope the other
+# commands use would only be overhead the screenshot script has to parse
+# back out again.
+def cmd_translate(text: str, lang: str) -> None:
+    text = (text or "").strip()
+    if not text:
+        print("Nothing to translate", file=sys.stderr)
+        sys.exit(1)
+    env = read_env()
+    backend = (os.environ.get("NOTHING_MIND_BACKEND") or env.get("BACKEND")
+               or "stub").strip().lower()
+    if backend not in ("gemini", "ollama"):
+        print("Translation needs a Gemini or Ollama backend in settings",
+              file=sys.stderr)
+        sys.exit(1)
+    prompt = (
+        f"Translate the following text to {lang or 'English'}. Reply with "
+        "only the translation, nothing else: no quotes, no explanation, "
+        "no markdown.\n\n" + text[:4000]
+    )
+    if backend == "ollama":
+        try:
+            raw, err = ollama_text(prompt, env.get("MODEL") or "llama3.2", 45), ""
+        except (subprocess.SubprocessError, OSError):
+            raw, err = "", "Ollama did not answer"
+    else:
+        raw, err = gemini_text(prompt, env, 30)
+    if err:
+        print(err, file=sys.stderr)
+        sys.exit(1)
+    translated = raw.strip()
+    if not translated:
+        print("Translation came back empty", file=sys.stderr)
+        sys.exit(1)
+    print(translated)
+
+
 def apply_mind(entry: dict, backend: str) -> dict:
     env = read_env()
     backend = (backend or env.get("BACKEND") or "stub").strip().lower()
@@ -1125,6 +1164,9 @@ def main() -> None:
         if not q:
             q = sys.stdin.read()
         cmd_ask(q)
+    elif cmd == "translate":
+        lang = args[1] if len(args) > 1 else "English"
+        cmd_translate(sys.stdin.read(), lang)
     elif cmd == "consent":
         cmd_consent(args[1] if len(args) > 1 else "")
     else:
