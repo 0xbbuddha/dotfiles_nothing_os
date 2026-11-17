@@ -104,6 +104,7 @@ Item {
             root.ccTab = "main";
         } else {
             Warp.refresh();
+            materialize.restart();
         }
     }
     onCalOpenChanged: if (calOpen) cal.goToday()
@@ -122,6 +123,23 @@ Item {
         height: Math.min(root.naturalHeight, root.maxHeight)
         radius: Theme.r.panel
         clip: true
+
+        // Same house texture the launcher and settings sheets
+        // materialise from - mostly behind the tiles, same as it is
+        // mostly behind Settings' own content, but it still shows in
+        // the margins and still flashes in on open.
+        DotField {
+            id: trame
+            anchors.fill: parent
+            dotColor: Theme.c.onFaint
+            baseAlpha: 0.25
+        }
+
+        SequentialAnimation {
+            id: materialize
+            NumberAnimation { target: trame; property: "baseAlpha"; to: 1; duration: 90; easing.type: Easing.OutQuad }
+            NumberAnimation { target: trame; property: "baseAlpha"; to: 0.25; duration: Theme.slow; easing.type: Theme.ease }
+        }
 
         ColumnLayout {
             anchors.fill: parent

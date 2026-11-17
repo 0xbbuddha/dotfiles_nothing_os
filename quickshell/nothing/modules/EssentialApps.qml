@@ -92,6 +92,7 @@ PanelWindow {
         if (want) {
             grabKeys = true;
             reveal = 1;
+            materialize.restart();
             win.landing = true;
             MiniApps.refresh();
             win.land();
@@ -178,6 +179,22 @@ PanelWindow {
         opacity: win.reveal > 0.04 ? 1 : 0
         Behavior on opacity {
             NumberAnimation { duration: Theme.med; easing.type: Easing.OutCubic }
+        }
+
+        // Same house texture the launcher and settings sheets
+        // materialise from, so this shelf joins the rest of what this
+        // desktop opens instead of just sliding in bare.
+        DotField {
+            id: trame
+            anchors.fill: parent
+            dotColor: Theme.c.onFaint
+            baseAlpha: 0.25
+        }
+
+        SequentialAnimation {
+            id: materialize
+            NumberAnimation { target: trame; property: "baseAlpha"; to: 1; duration: 90; easing.type: Easing.OutQuad }
+            NumberAnimation { target: trame; property: "baseAlpha"; to: 0.25; duration: Theme.slow; easing.type: Theme.ease }
         }
 
         MouseArea {

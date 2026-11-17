@@ -72,6 +72,10 @@ PanelWindow {
         if (want) {
             grabKeys = true;
             reveal = 1;
+            // The shelf's own width is a constant, not a layout result
+            // like the Launcher's or Settings' card, so this can fire
+            // right away instead of waiting out a Wayland round trip.
+            materialize.restart();
             Essentials.refresh();
             dump.clear();
             const fid = GlobalState.essentialFocus;
@@ -289,6 +293,22 @@ PanelWindow {
         opacity: win.reveal > 0.04 ? 1 : 0
         Behavior on opacity {
             NumberAnimation { duration: Theme.med; easing.type: Easing.OutCubic }
+        }
+
+        // The same house texture the launcher and settings sheets
+        // materialise from, so the shelf joins the rest of what this
+        // desktop opens instead of just sliding in bare.
+        DotField {
+            id: trame
+            anchors.fill: parent
+            dotColor: Theme.c.onFaint
+            baseAlpha: 0.25
+        }
+
+        SequentialAnimation {
+            id: materialize
+            NumberAnimation { target: trame; property: "baseAlpha"; to: 1; duration: 90; easing.type: Easing.OutQuad }
+            NumberAnimation { target: trame; property: "baseAlpha"; to: 0.25; duration: Theme.slow; easing.type: Theme.ease }
         }
 
         MouseArea {
