@@ -33,6 +33,31 @@ PanelWindow {
 
     property bool open: GlobalState.launcherNothingOpen
 
+    // Materialises from the same dot field the settings sheet ripples on
+    // a page change, instead of just scaling in like any other panel.
+    // Real delay, not Qt.callLater: a brand-new layer surface is still
+    // going through its Wayland configure/commit round trip at that
+    // point, not just a pending QML binding.
+    onOpenChanged: if (win.open) rippleOnOpen.restart();
+
+    Timer {
+        id: rippleOnOpen
+        interval: 120
+        onTriggered: {
+            trame.ripple(trame.width / 2, trame.height / 2);
+            materialize.restart();
+        }
+    }
+
+    // The ring alone is too close to the field's own resting noise to
+    // read as an entrance: a brief brighten-then-settle on every dot
+    // is what actually sells "materialising" at this size.
+    SequentialAnimation {
+        id: materialize
+        NumberAnimation { target: trame; property: "baseAlpha"; to: 1; duration: 90; easing.type: Easing.OutQuad }
+        NumberAnimation { target: trame; property: "baseAlpha"; to: 0.25; duration: Theme.slow; easing.type: Theme.ease }
+    }
+
     color: "transparent"
     visible: open && onFocusedMonitor
     WlrLayershell.layer: WlrLayer.Overlay
@@ -156,6 +181,7 @@ PanelWindow {
         // instead of a void, and it is the same field the settings sheet
         // and the lock screen use.
         DotField {
+            id: trame
             anchors.fill: parent
             dotColor: Theme.c.onFaint
             opacity: 0.25
