@@ -3,6 +3,12 @@ import QtQuick.Layouts
 import ".."
 
 // Connectivity pill: white when on, black when off.
+//
+// Square does not swap the layout, only the width the caller gives it:
+// the same icon-beside-text row, just narrower, with the title and
+// subtitle eliding the way they already do for a long name. A second
+// layout for a handful fewer pixels was a different widget pretending
+// to be a size.
 Rectangle {
     id: root
     property string icon: ""

@@ -227,6 +227,13 @@ SettingsPage {
         }
 
         SettingRow {
+            key: "ccSquareTiles"
+            label: "Tile shape"
+            hint: "Right click a tile above to flip it between rectangle "
+                + "and square - each one keeps its own choice"
+        }
+
+        SettingRow {
             key: "ccFooter"
             label: "Buttons"
             hint: "The squares along the bottom. Glyph only, so keep it short"

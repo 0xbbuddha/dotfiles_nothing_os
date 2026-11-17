@@ -247,6 +247,13 @@ Item {
                         // each measured themselves would come out ragged.
                         readonly property real cellWidth:
                             (width - spacing * (cols - 1)) / cols
+                        // Exactly half a normal tile, gap included: two
+                        // square tiles side by side end flush with one
+                        // rectangle tile above or below them, instead of
+                        // drifting out of line with everything else in
+                        // the grid.
+                        readonly property real squareWidth:
+                            (cellWidth - spacing) / 2
 
                         Repeater {
                             model: Config.ccTiles ? Config.ccZone("tiles") : []
@@ -255,7 +262,14 @@ Item {
                                 id: tile
                                 required property string modelData
                                 required property int index
-                                width: grid.cellWidth
+                                // Square is its own tile's choice, not a
+                                // setting for the whole grid: half of a
+                                // normal tile, gap included, so two of
+                                // them always end flush with one - not a
+                                // true 1:1 square, the title still has to
+                                // fit.
+                                width: Config.ccIsSquare(modelData)
+                                    ? grid.squareWidth : grid.cellWidth
                                 height: Theme.px(42)
                                 itemId: modelData
                                 cc: root

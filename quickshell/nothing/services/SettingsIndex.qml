@@ -68,6 +68,7 @@ Singleton {
         { key: "mainWidth", label: "Main pane",   page: root.pageWindows, words: "essential layout main pane width share front window", icon: "󰡎" },
         { key: "ccTiles",   label: "Control centre tiles", page: root.pageWindows, words: "control centre center cc tile toggle quick settings panel wifi bluetooth warp sound light notify game record microphone theme dock customise order drag reorder", icon: "󰘮" },
         { key: "ccColumns", label: "Tiles per row",        page: root.pageWindows, words: "control centre grid columns width tiles per row", icon: "󰕳" },
+        { key: "ccSquareTiles", label: "Tile shape",       page: root.pageWindows, words: "control centre tile shape square rectangle round icon layout", icon: "󰝰" },
         { key: "ccFooter",  label: "Control centre buttons", page: root.pageWindows, words: "control centre footer buttons square lock reload power settings shortcuts screenshot displays", icon: "󱊨" },
         { key: "ccSections", label: "Control centre blocks", page: root.pageWindows, words: "control centre calendar media updates system stats caffeine block hide show", icon: "󰕪" },
         { key: "workspaces",      label: "Workspaces in bar",  page: root.pageWindows, words: "workspace desktop bar", icon: "󰖰" },
