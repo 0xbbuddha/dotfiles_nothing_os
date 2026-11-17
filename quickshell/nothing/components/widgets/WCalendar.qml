@@ -94,7 +94,7 @@ NCard {
                     Layout.fillWidth: true
                     horizontalAlignment: Text.AlignHCenter
                     text: modelData
-                    color: Theme.c.onFaint
+                    color: Theme.c.onDim
                     font.family: Theme.f.mono
                     font.pixelSize: Theme.f.micro
                 }

@@ -95,7 +95,7 @@ NCard {
 
             NLabel { Layout.fillWidth: true; text: Weather.city }
             NLabel { text: "H " + Weather.hi + "°" }
-            NLabel { text: "L " + Weather.lo + "°"; color: Theme.c.onFaint }
+            NLabel { text: "L " + Weather.lo + "°"; color: Theme.c.onDim }
         }
     }
 }

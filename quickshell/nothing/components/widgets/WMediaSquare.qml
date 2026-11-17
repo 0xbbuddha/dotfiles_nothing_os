@@ -57,6 +57,7 @@ Item {
             color: art.status === Image.Ready ? Theme.c.onArt : Theme.c.on
             opacity: ma.containsMouse ? 1 : 0.75
             Behavior on opacity { NumberAnimation { duration: Theme.fast } }
+            Behavior on color { ColorAnimation { duration: Theme.fast } }
         }
 
         Column {
@@ -72,6 +73,7 @@ Item {
                 color: art.status === Image.Ready ? Theme.c.onArt : Theme.c.on
                 font.weight: Font.Medium
                 elide: Text.ElideRight
+                Behavior on color { ColorAnimation { duration: Theme.fast } }
             }
             NText {
                 width: parent.width
@@ -80,6 +82,7 @@ Item {
                 color: art.status === Image.Ready ? Theme.c.onArtDim : Theme.c.onDim
                 font.pixelSize: Theme.f.tiny
                 elide: Text.ElideRight
+                Behavior on color { ColorAnimation { duration: Theme.fast } }
             }
         }
 

@@ -117,6 +117,7 @@ Item {
                     color: root.hasArt ? Theme.c.onArt : Theme.c.on
                     font.pixelSize: Theme.f.body
                     elide: Text.ElideRight
+                    Behavior on color { ColorAnimation { duration: Theme.fast } }
                 }
 
                 NText {
@@ -130,6 +131,7 @@ Item {
                     }
                     color: root.hasArt ? Theme.c.onArtDim : Theme.c.onDim
                     elide: Text.ElideRight
+                    Behavior on color { ColorAnimation { duration: Theme.fast } }
                 }
 
                 SeekBand {
