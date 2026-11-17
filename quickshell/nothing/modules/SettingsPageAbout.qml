@@ -17,6 +17,71 @@ SettingsPage {
     property string restoreArmed: ""
     Timer { id: disarmRestore; interval: 4000; onTriggered: page.restoreArmed = "" }
 
+    // check-update.sh / self-update.sh live in the git checkout, not the
+    // deployed copy under ~/.config - the same reason
+    // SettingsPageLook.qml's wallpaper generator runs from there too.
+    property string updateStatus: ""   // "" | "up-to-date" | "behind N sha summary" | "error: ..."
+    property bool updateChecking: true
+    property bool updateBusy: false
+    property string updateResult: ""
+
+    function checkUpdate(): void {
+        page.updateChecking = true;
+        updateCheck.running = false;
+        updateCheck.running = true;
+    }
+
+    function applyUpdate(): void {
+        page.updateBusy = true;
+        page.updateResult = "";
+        updateApply.running = false;
+        updateApply.running = true;
+    }
+
+    NProcess {
+        id: updateCheck
+        running: true
+        command: ["sh", "-c",
+            'cd "$HOME/hypr_nothing" 2>/dev/null && ./scripts/check-update.sh'
+            + ' || echo "error: no checkout at ~/hypr_nothing"']
+        stdout: StdioCollector {
+            onStreamFinished: {
+                page.updateStatus = text.trim();
+                page.updateChecking = false;
+            }
+        }
+    }
+
+    NProcess {
+        id: updateApply
+        command: ["sh", "-c",
+            'cd "$HOME/hypr_nothing" 2>/dev/null && ./scripts/self-update.sh'
+            + ' || echo "No checkout at ~/hypr_nothing"']
+        stdout: StdioCollector {
+            onStreamFinished: {
+                page.updateResult = text.trim();
+                page.updateBusy = false;
+                // Whatever just happened, "behind" no longer applies.
+                page.updateStatus = "up-to-date";
+            }
+        }
+    }
+
+    readonly property var updateBehind: page.updateStatus.match(/^behind (\d+) (\S+) (.*)$/)
+    readonly property string updateHint: {
+        if (page.updateChecking) return "Checking…";
+        if (page.updateBusy) return "Updating…";
+        if (page.updateResult !== "") return page.updateResult;
+        if (page.updateBehind) {
+            const n = page.updateBehind[1];
+            return `${n} commit${n === "1" ? "" : "s"} behind: ${page.updateBehind[3]}`;
+        }
+        if (page.updateStatus === "up-to-date") return "Up to date";
+        if (page.updateStatus.startsWith("error:"))
+            return "Could not check: " + page.updateStatus.slice(7).trim();
+        return "Not checked yet";
+    }
+
     // config-20261023-201500.json -> "23/10/2026 20:15"
     function backupLabel(name: string): string {
         const m = name.match(/^config-(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})/);
@@ -385,6 +450,26 @@ SettingsPage {
 
     SettingsSection {
         title: "Maintenance"
+
+        SettingRow {
+            key: "selfUpdate"
+            label: "Update"
+            hint: page.updateHint
+
+            RowLayout {
+                spacing: Theme.px(6)
+                NPillButton {
+                    visible: page.updateBehind !== null && !page.updateBusy
+                    text: "Update"
+                    onActivated: page.applyUpdate()
+                }
+                CircleButton {
+                    icon: "󰑐"
+                    size: Theme.px(22)
+                    onActivated: page.checkUpdate()
+                }
+            }
+        }
 
         SettingRow {
             key: "reloadShell"

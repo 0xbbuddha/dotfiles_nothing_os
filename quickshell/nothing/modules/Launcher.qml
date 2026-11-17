@@ -619,6 +619,7 @@ PanelWindow {
                                        && row.modelData.kind !== "emoji"
                                        && (row.modelData.vector ?? "") === ""
                                        && !(row.modelData.kind === "clip" && row.modelData.isImage)
+                                       && !(row.modelData.kind === "clip" && (row.modelData.hexColor ?? "") !== "")
                             }
 
                             // A clipboard image shows its own picture, not
@@ -629,6 +630,20 @@ PanelWindow {
                                 anchors.fill: parent
                                 visible: row.modelData.kind === "clip" && row.modelData.isImage === true
                                 clipId: row.modelData.clipId ?? ""
+                            }
+
+                            // A copy that is nothing but a hex color: show
+                            // the actual color instead of the generic
+                            // clipboard glyph, the same reasoning as the
+                            // image thumbnail above.
+                            Rectangle {
+                                anchors.fill: parent
+                                anchors.margins: Theme.px(4)
+                                radius: Theme.r.tiny
+                                visible: row.modelData.kind === "clip" && (row.modelData.hexColor ?? "") !== ""
+                                color: row.modelData.hexColor ?? "transparent"
+                                border.width: 1
+                                border.color: Theme.c.outline
                             }
                         }
 

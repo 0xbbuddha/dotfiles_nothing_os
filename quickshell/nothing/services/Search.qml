@@ -257,6 +257,23 @@ Singleton {
         }
     }
 
+    // What a plain-text copy actually is, so the row can show a swatch or
+    // a link icon instead of the generic clipboard glyph - still copies
+    // on click either way, this only changes how the row reads.
+    function clipKind(preview: string, isImage: bool): var {
+        if (isImage)
+            return { hexColor: "", isUrl: false };
+        const trimmed = preview.trim();
+        const hexMatch = trimmed.match(/^#?([0-9a-fA-F]{6}|[0-9a-fA-F]{3})$/);
+        const hexColor = hexMatch
+            ? "#" + (hexMatch[1].length === 3
+                ? hexMatch[1].split("").map(c => c + c).join("")
+                : hexMatch[1])
+            : "";
+        const isUrl = !hexColor && /^https?:\/\/\S+$/i.test(trimmed);
+        return { hexColor: hexColor, isUrl: isUrl };
+    }
+
     function captureHay(it: var): string {
         const tags = it.tags ?? [];
         return [
@@ -431,13 +448,14 @@ Singleton {
                 const dims = it.isImage
                     ? it.preview.match(/binary data\s+([\d.]+\s*\w+)\s+(\w+)\s+(\d+x\d+)/i)
                     : null;
+                const { hexColor, isUrl } = root.clipKind(it.preview, it.isImage);
                 out.push({
                     kind: "clip",
                     title: dims ? dims[3].replace("x", " × ") : it.preview,
                     subtitle: dims ? `${dims[2].toUpperCase()} · ${dims[1]}`
-                        : (it.isImage ? "Image" : "Clipboard"),
-                    icon: it.isImage ? "󰋩" : "󰅍",
-                    clipId: it.id, isImage: it.isImage,
+                        : (hexColor ? "Color" : (isUrl ? "Link" : (it.isImage ? "Image" : "Clipboard"))),
+                    icon: it.isImage ? "󰋩" : (isUrl ? "󰌷" : "󰅍"),
+                    clipId: it.id, isImage: it.isImage, hexColor: hexColor,
                     run: () => Clipboard.copy(it.id, it.preview)
                 });
             }

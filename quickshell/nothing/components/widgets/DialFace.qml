@@ -27,9 +27,11 @@ Item {
 
     readonly property int hh: parseInt(Time.hhmm.slice(0, 2)) || 0
     readonly property int mm: parseInt(Time.hhmm.slice(3, 5)) || 0
+    readonly property int ss: parseInt(Time.seconds) || 0
 
     onHhChanged: canvas.requestPaint()
     onMmChanged: canvas.requestPaint()
+    onSsChanged: canvas.requestPaint()
     onFaceChanged: canvas.requestPaint()
     onHandsChanged: canvas.requestPaint()
 
@@ -102,6 +104,21 @@ Item {
             hand(root.mm * 6, r * 0.76,
                  bold ? Theme.px(4) : Theme.px(2),
                  root.face === "dots" ? Theme.c.red : Theme.c.on);
+
+            // Thin, dim, and with a short counterweight tail on the far
+            // side of the centre - a real chronograph seconds hand, not
+            // just a longer copy of the minute hand. Dim rather than red:
+            // red already means "minutes" on the dots face.
+            const sDeg = root.ss * 6;
+            const [sx, sy] = at(sDeg, r * 0.82);
+            const [tx, ty] = at(sDeg + 180, r * 0.14);
+            ctx.beginPath();
+            ctx.moveTo(tx, ty);
+            ctx.lineTo(sx, sy);
+            ctx.lineWidth = Theme.px(1);
+            ctx.lineCap = "round";
+            ctx.strokeStyle = Theme.c.onDim;
+            ctx.stroke();
 
             // The scale face has no cap: a disc at the centre would be the
             // heaviest thing on a dial made of hairlines.
