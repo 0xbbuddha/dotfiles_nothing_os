@@ -164,6 +164,24 @@ PanelWindow {
         onTriggered: GlobalState.settingsFocus = ""
     }
 
+    Timer {
+        id: rippleOnOpen
+        interval: 120
+        onTriggered: {
+            trame.ripple(trame.width / 2, trame.height / 2);
+            materialize.restart();
+        }
+    }
+
+    // The ring alone is too close to the field's own resting noise to
+    // read as an entrance: a brief brighten-then-settle on every dot
+    // is what actually sells "materialising" at this size.
+    SequentialAnimation {
+        id: materialize
+        NumberAnimation { target: trame; property: "baseAlpha"; to: 1; duration: 90; easing.type: Easing.OutQuad }
+        NumberAnimation { target: trame; property: "baseAlpha"; to: 0.4; duration: Theme.slow; easing.type: Theme.ease }
+    }
+
     // "escape" is refused as a method name: it is a JavaScript global.
     function dismiss(): void {
         if (win.searching) {
@@ -175,6 +193,11 @@ PanelWindow {
 
     onOpenChanged: {
         if (win.open) {
+            // Qt.callLater alone was not enough: a brand-new layer
+            // surface is still going through its Wayland configure/
+            // commit round trip at that point, not just a pending
+            // QML binding, so the wave needs real wall-clock time.
+            rippleOnOpen.restart();
             search.clear();
             if (GlobalState.settingsPage >= 0) {
                 stack.currentIndex = GlobalState.settingsPage;
