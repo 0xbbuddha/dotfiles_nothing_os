@@ -170,7 +170,8 @@ Singleton {
         { key: "versions",  label: "Versions",         page: root.pageAbout, words: "version hyprland quickshell about" },
         { key: "configFile", label: "Configuration file", page: root.pageAbout, words: "config json path file" },
         { key: "reloadShell", label: "Reload the shell", page: root.pageAbout, words: "reload restart quickshell" },
-        { key: "reset",     label: "Reset settings",   page: root.pageAbout, words: "reset default factory erase" }
+        { key: "reset",     label: "Reset settings",   page: root.pageAbout, words: "reset default factory erase" },
+        { key: "selfUpdate", label: "Update",          page: root.pageAbout, words: "update git pull checkout new version" }
     ]
 
     // Filter on the label and keywords; every word of the query must
