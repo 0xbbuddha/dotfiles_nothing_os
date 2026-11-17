@@ -57,6 +57,7 @@ Loader {
         case "dock":      return dockTile;
         case "powerprofile": return powerTile;
         case "caffeine":  return caffeineTile;
+        case "focus":     return focusTile;
         default:          return null;
         }
     }
@@ -261,6 +262,17 @@ Loader {
             subtitle: Idle.inhibited ? "awake" : "off"
             active: Idle.inhibited
             onToggled: Idle.toggle()
+        }
+    }
+
+    Component {
+        id: focusTile
+        Toggle {
+            icon: "󰇥"
+            title: "Focus"
+            subtitle: FocusMode.active ? "on" : "off"
+            active: FocusMode.active
+            onToggled: FocusMode.toggle()
         }
     }
 
