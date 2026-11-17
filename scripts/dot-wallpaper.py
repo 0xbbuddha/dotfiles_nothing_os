@@ -81,7 +81,7 @@ def vivid(r, g, b):
 
 def build(src_path, out, W, H, pitch, subject_h, cx, cy, label, sub,
           gain, red_at, green_at, floor, circle, halo, grid, specs, rays, jp,
-          papers=None, true_color=False, luminance=False):
+          papers=None, true_color=False, luminance=False, accent=RED):
     src = Image.open(src_path).convert("RGBA")
 
     if circle:
@@ -200,7 +200,7 @@ def build(src_path, out, W, H, pitch, subject_h, cx, cy, label, sub,
                     if lit > 0.04:
                         colour = vivid(r, g, b)
                 elif red_frac.getpixel((gx, gy)) > 32:
-                    colour = RED
+                    colour = accent
                     lit = max(lit, 0.55)
                 elif green_frac is not None and green_frac.getpixel((gx, gy)) > 32:
                     colour = GREEN
@@ -269,9 +269,12 @@ def build(src_path, out, W, H, pitch, subject_h, cx, cy, label, sub,
         d.line([x0, int(H * y), x0 + rule_w, int(H * y)], fill=rule, width=1)
 
     hair(0.705)
-    # The one red thing on the page, and it is 8 pixels wide.
+    # The one accent mark on the page, and it is 8 pixels wide. Red by
+    # default, but this is the one place the wallpaper has to agree with
+    # whatever Settings > Appearance has picked - everywhere else on the
+    # desktop already does.
     d.rectangle([x0, int(H * 0.705) - 3, x0 + int(W * 0.004), int(H * 0.705) + 3],
-                fill=RED)
+                fill=accent)
 
     if label:
         d.text((x0, int(H * 0.735)), label,
@@ -373,6 +376,10 @@ def main():
                         "than one, such as a figure on a coloured disc")
     p.add_argument("--jp", default="ナッシング",
                    help="vertical Japanese column, empty for none")
+    p.add_argument("--accent", default="#d71921", metavar="#RRGGBB",
+                   help="colour painted where the source is detected red, "
+                        "and of the one accent mark - match whatever "
+                        "Settings > Appearance has picked")
     a = p.parse_args()
 
     try:
@@ -391,7 +398,8 @@ def main():
     build(a.source, a.out, W, H, a.pitch, a.scale, a.x, a.y,
           a.label, a.sub, a.gain, a.red_at, a.green_at, a.floor, a.circle,
           a.halo, a.grid, specs, a.rays, a.jp,
-          [rgb(c) for c in a.paper] or None, a.true_color, a.luminance)
+          [rgb(c) for c in a.paper] or None, a.true_color, a.luminance,
+          rgb(a.accent))
 
 
 if __name__ == "__main__":

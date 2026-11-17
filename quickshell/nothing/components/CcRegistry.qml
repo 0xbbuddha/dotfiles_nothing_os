@@ -56,7 +56,9 @@ Singleton {
         { id: "powerprofile", label: "Power profile", icon: "󰓅",
           hint: "Saver, balanced, performance. Hidden without power-profiles-daemon" },
         { id: "caffeine",  label: "Caffeine",     icon: "󰅶",
-          hint: "Keep the screen awake. Also SUPER+ALT+I" }
+          hint: "Keep the screen awake. Also SUPER+ALT+I" },
+        { id: "focus",     label: "Focus",        icon: "󰇥",
+          hint: "Do not disturb, caffeine and the Glyph off, one button" }
     ]
 
     // ── Footer buttons ────────────────────────────────────────────────
