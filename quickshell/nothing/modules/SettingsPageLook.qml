@@ -79,7 +79,15 @@ SettingsPage {
                 spacing: Theme.px(8)
 
                 Repeater {
-                    model: ["#d71921", "#ffffff", "#ff6b00", "#00d68f", "#3b82f6", "#a855f7"]
+                    // The last three are sampled straight off Nothing's own
+                    // product photography (Phone (4a) in Blue and Pink,
+                    // Headphone (a) in Yellow - Nothing has never shipped a
+                    // yellow phone) rather than picked to taste: flat,
+                    // low-variance patches of the body panel in each shot,
+                    // averaged. Nothing publishes no hex spec for these, so
+                    // this is the closest a photo gets you to the real one.
+                    model: ["#d71921", "#ffffff", "#ff6b00", "#00d68f", "#3b82f6", "#a855f7",
+                            "#ddcdcd", "#5b93b0", "#f0d327"]
 
                     Rectangle {
                         id: sw
