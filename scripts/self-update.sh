@@ -20,8 +20,24 @@ if [[ -n "$(git status --porcelain 2>/dev/null)" ]]; then
     exit 1
 fi
 
+remote="$(git config "branch.$branch.remote" 2>/dev/null)"
+[[ -n "$remote" ]] || remote="origin"
+
 before="$(git rev-parse HEAD)"
-if ! git pull --ff-only >/dev/null 2>&1; then
+ref="$remote/$branch"
+if ! git fetch --quiet "$remote" "$branch" 2>/dev/null; then
+    # Same SSH-less fallback as check-update.sh: read access over HTTPS
+    # needs no key at all.
+    url="$(git remote get-url "$remote" 2>/dev/null)"
+    https="${url/git@github.com:/https:\/\/github.com\/}"
+    if [[ "$https" == "$url" ]] || ! git fetch --quiet "$https" "$branch" 2>/dev/null; then
+        echo "Could not reach $remote - pull by hand: cd $ROOT && git pull"
+        exit 1
+    fi
+    ref="FETCH_HEAD"
+fi
+
+if ! git merge --ff-only --quiet "$ref" >/dev/null 2>&1; then
     echo "Could not fast-forward - pull by hand: cd $ROOT && git pull"
     exit 1
 fi
