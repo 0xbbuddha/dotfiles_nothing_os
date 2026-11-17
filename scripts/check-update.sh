@@ -20,16 +20,25 @@ branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null)"
 remote="$(git config "branch.$branch.remote" 2>/dev/null)"
 [[ -n "$remote" ]] || remote="origin"
 
+ref="$remote/$branch"
 if ! git fetch --quiet "$remote" "$branch" 2>/dev/null; then
-    echo "error: could not reach $remote"
-    exit 0
+    # origin is SSH, and this machine has no key for it set up - reading
+    # (never pushing) needs none at all over HTTPS, so try that before
+    # giving up.
+    url="$(git remote get-url "$remote" 2>/dev/null)"
+    https="${url/git@github.com:/https:\/\/github.com\/}"
+    if [[ "$https" == "$url" ]] || ! git fetch --quiet "$https" "$branch" 2>/dev/null; then
+        echo "error: could not reach $remote"
+        exit 0
+    fi
+    ref="FETCH_HEAD"
 fi
 
-behind="$(git rev-list --count "HEAD..$remote/$branch" 2>/dev/null)"
+behind="$(git rev-list --count "HEAD..$ref" 2>/dev/null)"
 if [[ -z "$behind" || "$behind" -eq 0 ]]; then
     echo "up-to-date"
 else
-    sha="$(git rev-parse --short "$remote/$branch")"
-    summary="$(git log -1 --format=%s "$remote/$branch")"
+    sha="$(git rev-parse --short "$ref")"
+    summary="$(git log -1 --format=%s "$ref")"
     echo "behind $behind $sha $summary"
 fi
