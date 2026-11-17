@@ -164,13 +164,21 @@ Rectangle {
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         preventStealing: true
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
         z: chip.pressed ? 10 : 0
         opacity: (root.dragging && root.dragId === chip.itemId) ? 0.32 : 1
         scale: chip.pressed ? 0.94 : (chip.containsMouse && !root.dragging ? 1.04 : 1)
         Behavior on scale { NumberAnimation { duration: Theme.fast; easing.type: Easing.OutQuad } }
         Behavior on opacity { NumberAnimation { duration: Theme.fast } }
 
+        // Right click on a placed tile flips its own shape rather than
+        // starting a drag - a footer button has no shape to flip, so
+        // this only applies to "tiles".
         onPressed: (m) => {
+            if (chip.kind === "tiles" && m.button === Qt.RightButton) {
+                Config.ccToggleSquare(chip.itemId);
+                return;
+            }
             const p = chip.mapToItem(root, m.x, m.y);
             root.beginDrag(chip.kind, chip.itemId, p.x, p.y);
         }
@@ -195,6 +203,7 @@ Rectangle {
             anchors.bottom: parent.top
             anchors.bottomMargin: Theme.px(6)
             text: CcRegistry.label(chip.kind, chip.itemId)
+                + (chip.kind === "tiles" ? " · right click for square" : "")
             shown: chip.containsMouse && !root.dragging
         }
     }
@@ -248,6 +257,9 @@ Rectangle {
                 spacing: Theme.px(6)
                 readonly property real cell:
                     (width - spacing * (root.cols - 1)) / root.cols
+                // Half a tile, gap included - same rule the real panel
+                // uses, so the preview does not lie about the alignment.
+                readonly property real squareCell: (cell - spacing) / 2
 
                 Repeater {
                     id: tileRep
@@ -259,7 +271,11 @@ Rectangle {
                         kind: "tiles"
                         itemId: modelData
                         targeted: root.tileTargetIndex === index
-                        width: grid.cell
+                        // Half a cell, same rule the real panel uses, so
+                        // square reads here exactly as it will there -
+                        // not a marker beside a tile that never changes
+                        // shape.
+                        width: Config.ccIsSquare(modelData) ? grid.squareCell : grid.cell
                         height: Theme.px(30)
                         radius: Theme.r.tiny
 

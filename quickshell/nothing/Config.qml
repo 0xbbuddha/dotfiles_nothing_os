@@ -76,6 +76,22 @@ Singleton {
     property alias ccTiles: a.ccTiles
     property alias ccFooter: a.ccFooter
     property alias ccColumns: a.ccColumns
+    // Which tiles are square rather than the usual rectangle - a set of
+    // ids, not one setting for all of them: each tile is its own.
+    property alias ccSquareIds: a.ccSquareIds
+
+    function ccIsSquare(id: string): bool {
+        return root.ccSquareIds.indexOf(id) >= 0;
+    }
+
+    function ccToggleSquare(id: string): void {
+        const list = root.ccSquareIds.slice();
+        const i = list.indexOf(id);
+        if (i >= 0) list.splice(i, 1);
+        else list.push(id);
+        root.ccSquareIds = list;
+        root.save();
+    }
     property alias ccCalendar: a.ccCalendar
     property alias ccMedia: a.ccMedia
     property alias ccUpdates: a.ccUpdates
@@ -883,6 +899,7 @@ Singleton {
         a.ccTiles = ["wifi", "bluetooth", "warp", "sound", "light", "notify", "record"];
         a.ccFooter = ["night", "settings", "reload", "lock", "power"];
         a.ccColumns = 3;
+        a.ccSquareIds = [];
         a.ccCalendar = true;
         a.ccMedia = true;
         a.ccUpdates = true;
@@ -1243,6 +1260,7 @@ Singleton {
             property var ccFooter: ["night", "settings", "reload",
                                     "lock", "power"]
             property int  ccColumns: 3      // 2 to 4
+            property var  ccSquareIds: []
             property bool ccCalendar: true
             property bool ccMedia: true
             property bool ccUpdates: true
