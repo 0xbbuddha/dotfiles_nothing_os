@@ -67,6 +67,7 @@ RowLayout {
                 elide: Text.ElideRight
                 maximumLineCount: 2
                 wrapMode: Text.WordWrap
+                Behavior on color { ColorAnimation { duration: Theme.fast } }
             }
 
             NText {
@@ -75,6 +76,7 @@ RowLayout {
                 visible: text !== "" && text !== Player.cleanTitle
                 color: art.status === Image.Ready ? Theme.c.onArtDim : Theme.c.onDim
                 elide: Text.ElideRight
+                Behavior on color { ColorAnimation { duration: Theme.fast } }
             }
 
             // Position ruler. Over a cover the ground is an image, so the

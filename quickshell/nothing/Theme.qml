@@ -24,7 +24,11 @@ Singleton {
         readonly property color surface:  root.light ? "#ffffff" : "#0b0b0b"
         readonly property color surface2: root.light ? "#f1f1f1" : "#161616"
         readonly property color surface3: root.light ? "#e4e4e4" : "#212121"
-        readonly property color on:       root.light ? "#0b0b0b" : "#ffffff"
+        // Dark mode's main text stops short of pure white on purpose: white
+        // on near-black is the one combination that actually over-contrasts,
+        // and reads as a glow/vibration at the edges rather than as text.
+        // Still ~14.6:1 against the surface, well past what legibility needs.
+        readonly property color on:       root.light ? "#0b0b0b" : "#dedede"
         readonly property color onDim:    root.light ? "#6e6e6e" : "#8a8a8a"
         readonly property color onFaint:  root.light ? "#b4b4b4" : "#454545"
         readonly property color red:      Config.accent

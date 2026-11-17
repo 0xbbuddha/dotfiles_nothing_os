@@ -33,6 +33,13 @@ Item {
     property color inkOff: Theme.c.onFaint
     property color inkText: Theme.c.onDim
 
+    // The caller switches these the instant the art finishes loading, and
+    // on -> onArt is a real (if small) step now that on is no longer pure
+    // white: without this, the ruler and its label snap instead of fading.
+    Behavior on inkOn { ColorAnimation { duration: Theme.fast } }
+    Behavior on inkOff { ColorAnimation { duration: Theme.fast } }
+    Behavior on inkText { ColorAnimation { duration: Theme.fast } }
+
     // Tick pitch. Fine enough to read as a ruler, coarse enough that the
     // marks stay separate at every width the shell uses.
     property real pitch: Theme.px(3)
