@@ -22,14 +22,16 @@ SettingsPage {
 
         SettingRow {
             key: "theme"
-            label: "Light or dark"
-            hint: "Dark is the Nothing signature. Light keeps the same layout on white."
+            label: "Dark, light or manga"
+            hint: "Dark is the Nothing signature. Light keeps the same layout on white. "
+                + "Manga is a third one: pure ink on paper, a drawn gutter on every panel."
         }
 
         DotPicker {
             options: [
                 { label: "Dark",  value: "dark" },
-                { label: "Light", value: "light" }
+                { label: "Light", value: "light" },
+                { label: "Manga", value: "manga" }
             ]
             current: Config.theme
             onPicked: (v) => { Config.theme = v; Config.save(); }

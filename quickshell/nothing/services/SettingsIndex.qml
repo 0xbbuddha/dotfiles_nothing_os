@@ -34,7 +34,7 @@ Singleton {
 
     readonly property var entries: [
         // ── Appearance ────────────────────────────────────────────────
-        { key: "theme",      label: "Light or dark",    page: root.pageLook, words: "theme dark light appearance colour scheme", icon: "󰝨" },
+        { key: "theme",      label: "Dark, light or manga", page: root.pageLook, words: "theme dark light manga anime appearance colour scheme", icon: "󰝨" },
         { key: "scale",      label: "Interface size",   page: root.pageLook, words: "scale zoom size dpi big small", icon: "󰫰" },
         { key: "accent",     label: "Accent colour",    page: root.pageLook, words: "colour color red theme", icon: "󰝥" },
         { key: "wallpaper",  label: "Wallpaper image",  page: root.pageLook, words: "background picture desktop image slideshow rotate change per screen fit crop next", icon: "󰋊" },

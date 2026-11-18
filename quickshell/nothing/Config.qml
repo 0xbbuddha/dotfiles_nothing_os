@@ -1131,8 +1131,8 @@ Singleton {
             id: a
 
             property real   scale: 1.0
-            // "dark" or "light". Nothing OS ships both; the dark one is the
-            // signature look, so it stays the default.
+            // "dark", "light" or "manga". Nothing OS ships the first two;
+            // the dark one is the signature look, so it stays the default.
             property string theme: "dark"
             property string accent: "#d71921"
             property bool   drawWallpaper: true

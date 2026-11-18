@@ -195,15 +195,16 @@ Loader {
     Component {
         id: themeTile
         Toggle {
-            readonly property bool light: Config.theme === "light"
             icon: "󰔎"
             title: "Theme"
-            subtitle: light ? "light" : "dark"
-            // Lit on light, which is the one that is doing something to
-            // the screen. On dark the tile is dark, which is the point.
-            active: light
+            subtitle: Config.theme
+            // Lit on anything but dark, the one that is doing something
+            // to the screen. On dark the tile is dark, which is the point.
+            active: Config.theme !== "dark"
             onToggled: {
-                Config.theme = light ? "dark" : "light";
+                const order = ["dark", "light", "manga"];
+                const next = order[(order.indexOf(Config.theme) + 1) % order.length];
+                Config.theme = next;
                 Config.save();
             }
         }

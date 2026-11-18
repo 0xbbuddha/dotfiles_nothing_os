@@ -17,6 +17,15 @@ OverlayWindow {
 
     onShown: Notifs.markAllSeen()
 
+    MangaBurst {
+        visible: Theme.manga
+        anchors.fill: parent
+        origin: Qt.point(width, 0)
+        lineColor: Theme.c.onFaint
+        lineCount: 16
+        thickness: 1.5
+    }
+
     ColumnLayout {
         anchors.fill: parent
         spacing: 0

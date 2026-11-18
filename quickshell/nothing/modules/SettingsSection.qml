@@ -34,7 +34,10 @@ ColumnLayout {
 
         Rectangle {
             Layout.fillWidth: true
-            implicitHeight: 1
+            // A drawn panel gutter in manga, not the quiet 1px divider
+            // the other two themes use - Theme.c.outline is already
+            // pure black there, this is just the weight to go with it.
+            implicitHeight: Theme.manga ? Theme.px(3) : 1
             color: Theme.c.outline
         }
     }
