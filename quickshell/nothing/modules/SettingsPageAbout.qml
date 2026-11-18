@@ -187,18 +187,38 @@ SettingsPage {
     SettingsSection {
         title: "Versions"
 
+        // Three read-only lines are one read-only row, not three: nothing
+        // here is ever clicked, so nothing here needs its own full-height
+        // card.
         SettingRow {
             key: "versions"
-            label: "Hyprland"
-            hint: page.hyprVersion
-        }
-        SettingRow {
-            label: "Quickshell"
-            hint: page.qsVersion
-        }
-        SettingRow {
-            label: "Fonts"
-            hint: Theme.f.display + "  ·  " + Theme.f.sans
+            label: "Hyprland · Quickshell · Fonts"
+
+            ColumnLayout {
+                spacing: 0
+
+                NText {
+                    Layout.fillWidth: true
+                    text: page.hyprVersion
+                    horizontalAlignment: Text.AlignRight
+                    font.pixelSize: Theme.f.tiny
+                    color: Theme.c.onDim
+                }
+                NText {
+                    Layout.fillWidth: true
+                    text: page.qsVersion
+                    horizontalAlignment: Text.AlignRight
+                    font.pixelSize: Theme.f.tiny
+                    color: Theme.c.onDim
+                }
+                NText {
+                    Layout.fillWidth: true
+                    text: Theme.f.display + " · " + Theme.f.sans
+                    horizontalAlignment: Text.AlignRight
+                    font.pixelSize: Theme.f.tiny
+                    color: Theme.c.onDim
+                }
+            }
         }
     }
 
