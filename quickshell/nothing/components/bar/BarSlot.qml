@@ -155,7 +155,7 @@ Loader {
                 NIcon {
                     anchors.verticalCenter: parent.verticalCenter
                     text: Player.playing ? "󰐊" : "󰏤"
-                    size: Theme.px(10)
+                    size: Theme.z.icon
                     color: Player.playing ? Theme.c.red : Theme.c.onDim
                 }
 
@@ -616,7 +616,7 @@ Loader {
 
             NIcon {
                 anchors.centerIn: parent
-                size: Theme.px(11)
+                size: Theme.z.icon
                 text: Notifs.doNotDisturb ? "󰂛" : "󰂚"
                 color: bellMa.containsMouse ? Theme.c.on : Theme.c.onDim
             }
@@ -690,7 +690,7 @@ Loader {
                     NIcon {
                         anchors.centerIn: parent
                         text: priv.modelData.icon
-                        size: Theme.px(11)
+                        size: Theme.z.icon
                         color: Theme.c.red
 
                         SequentialAnimation on opacity {
@@ -741,7 +741,7 @@ Loader {
 
             NIcon {
                 anchors.centerIn: parent
-                size: Theme.px(11)
+                size: Theme.z.icon
                 text: "󰕓"
                 color: drvMa.containsMouse ? Theme.c.on : Theme.c.onDim
             }
@@ -773,7 +773,7 @@ Loader {
 
             NIcon {
                 anchors.centerIn: parent
-                size: Theme.px(11)
+                size: Theme.z.icon
                 text: "󰅶"
                 color: cafMa.containsMouse ? Theme.c.on : Theme.c.red
             }

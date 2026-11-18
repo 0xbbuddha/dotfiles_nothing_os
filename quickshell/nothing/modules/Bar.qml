@@ -199,8 +199,10 @@ PanelWindow {
                 // A wide element sizes to its own content plus breathing
                 // room; a square one keeps the bar's height, so it comes
                 // out an actual square rather than a stretched one.
+                // Same breathing room BarIsland gives its own pills
+                // (pad * 2), not a second number for the same idea.
                 width: BarRegistry.isWide(modelData)
-                    ? centreSlot.implicitWidth + Theme.px(28)
+                    ? centreSlot.implicitWidth + Theme.px(12) * 2
                     : Theme.z.bar
                 visible: centreSlot.applies
 
