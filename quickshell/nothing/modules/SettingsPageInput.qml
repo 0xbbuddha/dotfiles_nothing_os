@@ -157,10 +157,6 @@ SettingsPage {
             }
         }
 
-        SettingRow {
-            label: "Keyboard layout"
-            hint: "Detected at login by hypr/hyprland/variables.lua; set it in custom.lua to force one"
-        }
     }
 
     SettingsSection {

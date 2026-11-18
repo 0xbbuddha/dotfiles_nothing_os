@@ -179,23 +179,6 @@ SettingsPage {
             }
         }
 
-        SettingRow {
-            label: "Shortcuts"
-            visible: WindowLayout.essential
-            hint: "SUPER+J brings the focused window to the front. SUPER+, "
-                + "and SUPER+; make the main pane narrower and wider. The "
-                + "same keys the other layouts use."
-        }
-
-        SettingRow {
-            label: "Shortcuts"
-            hint: "SUPER+, and SUPER+; make the column narrower and wider. "
-                + "SUPER+ALT+arrows moves along the tape, SHIFT carries the "
-                + "column with you. Up and down split a column and fold it "
-                + "back. SUPER+ALT+C centres the column, SUPER+ALT+Return "
-                + "gives it the whole screen."
-            visible: WindowLayout.scrolling
-        }
     }
 
     SettingsSection {
