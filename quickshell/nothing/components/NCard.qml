@@ -9,7 +9,10 @@ Rectangle {
 
     color: Qt.lighter(Theme.c.surface, 1 + elevation * 0.45)
     radius: Theme.r.card
-    border.width: outlined ? 1 : 0
+    // Manga draws every panel's own gutter, with or without `outlined` -
+    // it is what makes a page of them read as panels at all, not an
+    // opt-in like the quiet 1px line the other two themes use.
+    border.width: Theme.manga ? Theme.px(2) : (outlined ? 1 : 0)
     border.color: Theme.c.outline
     antialiasing: true
 

@@ -18,28 +18,45 @@ Singleton {
     // from the panel it sits on. Dark goes black to grey, light goes white
     // to grey, so every call site keeps its meaning without being touched.
     readonly property bool light: Config.theme === "light"
+    // A third mode, not a variant of light: a manga page, white ground
+    // and pure black ink, no softened extremes - see `on` below for why
+    // that one rule bends here. Falls through to light/dark's own
+    // ternary unchanged wherever manga does not need its own answer, so
+    // neither of those two had to be touched to add this.
+    readonly property bool manga: Config.theme === "manga"
 
     readonly property QtObject c: QtObject {
         readonly property color bg:       "#c4c4c4"   // under the wallpaper
-        readonly property color surface:  root.light ? "#ffffff" : "#0b0b0b"
-        readonly property color surface2: root.light ? "#f1f1f1" : "#161616"
-        readonly property color surface3: root.light ? "#e4e4e4" : "#212121"
+        readonly property color surface:  (root.light || root.manga) ? "#ffffff" : "#0b0b0b"
+        readonly property color surface2: root.manga ? "#f4f4f2"
+            : (root.light ? "#f1f1f1" : "#161616")
+        readonly property color surface3: root.manga ? "#e8e8e4"
+            : (root.light ? "#e4e4e4" : "#212121")
         // Dark mode's main text stops short of pure white on purpose: white
         // on near-black is the one combination that actually over-contrasts,
         // and reads as a glow/vibration at the edges rather than as text.
         // Still ~14.6:1 against the surface, well past what legibility needs.
-        readonly property color on:       root.light ? "#0b0b0b" : "#dedede"
-        readonly property color onDim:    root.light ? "#6e6e6e" : "#8a8a8a"
-        readonly property color onFaint:  root.light ? "#b4b4b4" : "#454545"
+        // Manga breaks that rule on purpose instead of following light's
+        // own softened black: real ink does not soften, that starkness is
+        // most of what reads as "manga page" rather than "pale light mode".
+        readonly property color on:       root.manga ? "#000000"
+            : (root.light ? "#0b0b0b" : "#dedede")
+        readonly property color onDim:    root.manga ? "#4a4a4a"
+            : (root.light ? "#6e6e6e" : "#8a8a8a")
+        readonly property color onFaint:  root.manga ? "#b0b0ac"
+            : (root.light ? "#b4b4b4" : "#454545")
         readonly property color red:      Config.accent
         // Ink for whatever sits ON the accent. It cannot just follow the
         // theme: the accent is the user's choice and the presets include
         // white, where white ink scores a contrast of exactly 1.00 and the
         // content simply disappears. Picked by contrast instead.
         readonly property color onAccent: ColorUtils.readableOn(Config.accent)
-        readonly property color outline:  root.light ? "#dcdcdc" : "#2a2a2a"
-        readonly property color scrim:    root.light ? Qt.rgba(0, 0, 0, 0.35)
-                                                     : Qt.rgba(0, 0, 0, 0.6)
+        // Pure black, not a soft grey line: a manga panel's own gutter,
+        // not light mode's quiet divider.
+        readonly property color outline:  root.manga ? "#000000"
+            : (root.light ? "#dcdcdc" : "#2a2a2a")
+        readonly property color scrim:    root.manga ? Qt.rgba(0, 0, 0, 0.55)
+            : (root.light ? Qt.rgba(0, 0, 0, 0.35) : Qt.rgba(0, 0, 0, 0.6))
 
         // Text laid over album art. The art has a dark gradient under it in
         // both themes, so this stays light: following `on` would turn the
@@ -98,8 +115,13 @@ Singleton {
         // Nearly square on purpose: Nothing rounds its controls and leaves
         // its surfaces alone, so a panel and a pill never share a radius.
         readonly property int panel: root.px(4)
-        readonly property int card: root.px(20)
-        readonly property int chip: root.px(13)
+        // Manga sharpens the two roundest radii: a soft 20px corner
+        // reads as a phone screen, a drawn panel's own corner does not
+        // round off like that. Pill stays a pill - still used for a
+        // handful of specific shapes (a Toggle, a tag), not a general
+        // "card" radius this theme is trying to distinguish itself from.
+        readonly property int card: root.manga ? root.px(6) : root.px(20)
+        readonly property int chip: root.manga ? root.px(4) : root.px(13)
         readonly property int tiny: root.px(8)
     }
 
