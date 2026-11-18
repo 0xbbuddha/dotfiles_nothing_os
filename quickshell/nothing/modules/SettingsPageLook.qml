@@ -383,8 +383,10 @@ SettingsPage {
                 switch (Spicetify.state) {
                 case "unknown":     return "Looking…";
                 case "noSpotify":   return "Spotify is not installed on this machine";
-                case "noSpicetify": return "Needs spicetify, the patcher every Spotify "
-                                         + "theme goes through";
+                case "noSpicetify": return "Needs spicetify-cli, from the AUR - the patcher "
+                                         + "every Spotify theme goes through. Install opens "
+                                         + "your terminal so you can read the build and "
+                                         + "answer its prompts.";
                 case "locked":      return "Spotify is patched in place, so "
                                          + Spicetify.dir + " has to be made writable "
                                          + "once. You will be asked for your password.";
@@ -429,13 +431,6 @@ SettingsPage {
             label: "It did not go through"
             hint: Spicetify.error
             NIcon { text: "󰀦"; size: Theme.z.icon; color: Theme.c.red }
-        }
-
-        SettingRow {
-            visible: Spicetify.state === "noSpicetify"
-            label: "What gets installed"
-            hint: "spicetify-cli, from the AUR. The Install button opens your "
-                + "terminal so you can read the build and answer its prompts."
         }
     }
 

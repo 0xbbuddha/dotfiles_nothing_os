@@ -133,6 +133,7 @@ Singleton {
         { key: "essentialSearch", label: "Essential Search", page: root.pageEssential, words: "essential search launcher ask gemini captures settings super", icon: "󰍉" },
         { key: "mind",            label: "Mind",            page: root.pageEssential, words: "mind ollama gemini ai stub essential", icon: "󰍜" },
         { key: "geminiKey",       label: "Gemini API key",  page: root.pageEssential, words: "gemini api key google ai studio mind", icon: "󰌆" },
+        { key: "translateLang",  label: "Translate to",   page: root.pageEssential, words: "translate language screenshot ocr essential mind", icon: "󰗊" },
         { key: "appsKey",         label: "Essential Apps button in the bar", page: root.pageEssential, words: "essential apps bar button clock key icon", icon: "󰀻" },
         { key: "deskApps",        label: "Apps on the desktop", page: root.pageEssential, words: "essential apps widget desktop generated pin right column playground", icon: "󰀻" },
         { key: "appsLibrary",     label: "Essential Apps library", page: root.pageEssential, words: "essential apps library mini app create prompt generate widget", icon: "󰋉" },
