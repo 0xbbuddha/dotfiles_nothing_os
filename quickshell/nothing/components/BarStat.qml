@@ -38,7 +38,7 @@ Item {
         NIcon {
             anchors.verticalCenter: parent.verticalCenter
             text: root.icon
-            size: Theme.px(13)
+            size: Theme.z.iconM
             color: root.accent
             Behavior on color { ColorAnimation { duration: Theme.fast } }
         }
