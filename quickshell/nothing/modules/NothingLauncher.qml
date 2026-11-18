@@ -187,6 +187,15 @@ PanelWindow {
             opacity: 0.25
         }
 
+        MangaBurst {
+            visible: Theme.manga
+            anchors.fill: parent
+            origin: Qt.point(width, 0)
+            lineColor: Theme.c.onFaint
+            lineCount: 20
+            thickness: 1.6
+        }
+
         RowLayout {
             anchors.fill: parent
             spacing: 0

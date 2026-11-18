@@ -141,6 +141,18 @@ Item {
             NumberAnimation { target: trame; property: "baseAlpha"; to: 0.25; duration: Theme.slow; easing.type: Theme.ease }
         }
 
+        // Manga only: a burst of speed lines out of the top corner,
+        // behind the header. Static - painted once, not an animation,
+        // not a shader.
+        MangaBurst {
+            visible: Theme.manga
+            anchors.fill: parent
+            origin: Qt.point(width, 0)
+            lineColor: Theme.c.onFaint
+            lineCount: 16
+            thickness: 1.6
+        }
+
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: Theme.pad

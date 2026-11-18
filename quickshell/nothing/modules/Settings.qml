@@ -244,6 +244,17 @@ PanelWindow {
                 baseAlpha: 0.4
             }
 
+            // Manga only: same static speed-line burst the control
+            // centre gets, out of the same corner.
+            MangaBurst {
+                visible: Theme.manga
+                anchors.fill: parent
+                origin: Qt.point(width, 0)
+                lineColor: Theme.c.onFaint
+                lineCount: 20
+                thickness: 1.6
+            }
+
             ColumnLayout {
                 anchors.fill: parent
                 spacing: 0
