@@ -188,11 +188,17 @@ Singleton {
         WallpaperAnnounce.announce(label, thumb);
     }
 
+    // Config.ready guards both: without it, the popup showed on every
+    // reload and every login too, firing the instant the saved value
+    // was read off disk and assigned for the first time - a config
+    // load, not a change anyone made.
     Connections {
         target: Config
-        function onWallpaperChanged(): void { root.announce(); }
+        function onWallpaperChanged(): void {
+            if (Config.ready) root.announce();
+        }
         function onDotWallpaperCharChanged(): void {
-            if (root.dotWallpaperOn) root.announce();
+            if (Config.ready && root.dotWallpaperOn) root.announce();
         }
     }
 }
