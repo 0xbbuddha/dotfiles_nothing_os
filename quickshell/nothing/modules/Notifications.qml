@@ -90,9 +90,35 @@ PanelWindow {
 
                 opacity: 0
                 x: Theme.px(28)
-                Component.onCompleted: { opacity = 1; x = 0; }
+                Component.onCompleted: {
+                    opacity = 1;
+                    x = 0;
+                    if (Theme.manga)
+                        impact.restart();
+                }
                 Behavior on opacity { NumberAnimation { duration: Theme.med } }
                 Behavior on x { NumberAnimation { duration: Theme.med; easing.type: Theme.ease } }
+
+                // The manga impact moment: the burst flashes in with the
+                // bubble and is gone within a beat, not a static corner
+                // decoration on something this short-lived.
+                MangaBurst {
+                    id: burst
+                    visible: Theme.manga
+                    opacity: 0
+                    anchors.fill: parent
+                    origin: Qt.point(width, height / 2)
+                    lineColor: Theme.c.red
+                    lineCount: 18
+                    thickness: 2
+                    startDeg: 180
+                    spreadDeg: 150
+                }
+                SequentialAnimation {
+                    id: impact
+                    NumberAnimation { target: burst; property: "opacity"; to: 0.8; duration: 60 }
+                    NumberAnimation { target: burst; property: "opacity"; to: 0; duration: 420; easing.type: Easing.OutQuad }
+                }
 
                 Timer {
                     running: bubble.modelData.urgency !== NotificationUrgency.Critical

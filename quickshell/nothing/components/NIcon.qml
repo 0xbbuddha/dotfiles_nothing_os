@@ -12,7 +12,12 @@ Text {
     width: size
     height: size
     font.family: Theme.f.glyphs
-    font.pixelSize: size
+    font.pixelSize: Theme.manga ? size * 1.08 : size
+    // JetBrains Mono (what the Nerd Font patch is built on) keeps its
+    // own weight axis through patching, so this actually draws a
+    // heavier glyph rather than silently doing nothing - worth
+    // confirming by eye once deployed.
+    font.weight: Theme.manga ? Font.Black : Font.Normal
     color: Theme.c.on
     renderType: Text.QtRendering
     textFormat: Text.PlainText
