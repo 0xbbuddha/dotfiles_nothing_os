@@ -25,9 +25,9 @@ Item {
     // Cava is a shared daemon - see services/Cava.qml - so this only
     // asks for it while there is something to show.
     readonly property bool wantsCava: Player.playing
-    onWantsCavaChanged: Cava.widgetWantsIt = root.wantsCava
-    Component.onCompleted: Cava.widgetWantsIt = root.wantsCava
-    Component.onDestruction: Cava.widgetWantsIt = false
+    onWantsCavaChanged: root.wantsCava ? Cava.addListener() : Cava.removeListener()
+    Component.onCompleted: if (root.wantsCava) Cava.addListener()
+    Component.onDestruction: if (root.wantsCava) Cava.removeListener()
 
     Item {
         id: stage
