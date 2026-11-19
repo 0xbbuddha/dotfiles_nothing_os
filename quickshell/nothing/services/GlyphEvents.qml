@@ -152,6 +152,16 @@ Singleton {
         root.play(Config.glyphPattern(root.surface, source));
     }
 
+    // Same as pulse("notify"), but an app can have its own rhythm - the
+    // phone's own "which contact gets which light" idea, here keyed by
+    // app rather than contact since that is what a notification carries.
+    function pulseNotify(appId: string): void {
+        fall.stop();
+        root.event = "notify";
+        const mine = Config.glyphAppPattern(appId);
+        root.play(mine !== "" ? mine : Config.glyphPattern(root.surface, "notify"));
+    }
+
     // ── Composed patterns ─────────────────────────────────────────────
     //
     // Yours, from the composer, alongside the nine that ship. Kept here
@@ -269,8 +279,10 @@ Singleton {
             const n = Notifs.unread;
             // Tracked even when the source is off, or switching it back on
             // would fire once for everything that arrived meanwhile.
+            // history[0] is the one that just raised the count: Notifs
+            // prepends new entries as they arrive.
             if (root.wants("notify") && n > root.lastUnread)
-                root.pulse("notify");
+                root.pulseNotify(Notifs.appIdOf(Notifs.history[0]));
             root.lastUnread = n;
         }
     }
