@@ -284,8 +284,28 @@ Singleton {
     property alias glyphStripAbove: a.glyphStripAbove
 
     property alias glyphCustom: a.glyphCustom
+    property alias glyphAppPatterns: a.glyphAppPatterns
 
     readonly property var glyphSurfaces: ["matrix", "bar", "strip"]
+
+    // Per-app rhythm overrides: Discord does not have to flash the same
+    // as Spotify. "" means no override - fall back to the surface's
+    // plain notify pattern. One map, not one per surface: only one
+    // surface is ever live at a time (GlyphEvents.live), so a second
+    // dimension nobody can see both halves of at once is pure clutter.
+    function glyphAppPattern(appId: string): string {
+        return a.glyphAppPatterns[appId] ?? "";
+    }
+
+    function setGlyphAppPattern(appId: string, pattern: string): void {
+        const map = Object.assign({}, a.glyphAppPatterns);
+        if (pattern === "")
+            delete map[appId];
+        else
+            map[appId] = pattern;
+        a.glyphAppPatterns = map;
+        root.save();
+    }
 
     // Only these three sources have a rhythm to choose. The others are not
     // events with a shape: a level, a state that lasts, a snapshot.
@@ -1011,6 +1031,7 @@ Singleton {
             root.setGlyphPattern(surface, "media", "blink");
         }
         a.glyphCustom = [];
+        a.glyphAppPatterns = {};
         a.glyphStripEnabled = false;
         a.glyphStripX = -1;
         a.glyphStripY = -1;
@@ -1418,6 +1439,9 @@ Singleton {
 
             // Composed in the launcher. { id, label, steps }.
             property var glyphCustom: []
+
+            // { appId: patternId }. Missing an entry means "default".
+            property var glyphAppPatterns: ({})
 
 
             property bool glyphStripEnabled: false

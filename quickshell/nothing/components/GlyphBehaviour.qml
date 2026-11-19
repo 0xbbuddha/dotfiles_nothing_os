@@ -23,6 +23,22 @@ ColumnLayout {
 
     readonly property bool live: root.surface !== ""
 
+    // Apps seen in notification history, newest first, one row each -
+    // not every installed app, which would be a list of things that
+    // have never once lit the Glyph.
+    readonly property var notifyApps: {
+        const seen = {};
+        const out = [];
+        for (const e of Notifs.history) {
+            const id = Notifs.appIdOf(e);
+            if (!id || seen[id])
+                continue;
+            seen[id] = true;
+            out.push({ id: id, label: e.appName || id });
+        }
+        return out;
+    }
+
     NText {
         Layout.fillWidth: true
         visible: !root.live
@@ -125,6 +141,64 @@ ColumnLayout {
                         checked: source.on
                         onToggled: Config.toggleGlyphEvent(
                             root.surface, source.modelData.id)
+                    }
+                }
+            }
+
+            NLabel {
+                text: "Per app"
+                Layout.topMargin: Theme.px(4)
+                visible: Config.glyphEventsOf(root.surface)
+                    .indexOf("notify") >= 0 && root.notifyApps.length > 0
+            }
+            NText {
+                Layout.fillWidth: true
+                visible: Config.glyphEventsOf(root.surface)
+                    .indexOf("notify") >= 0 && root.notifyApps.length > 0
+                text: "Its own rhythm for an app that has sent one, "
+                    + "instead of the one above"
+                color: Theme.c.onFaint
+                font.pixelSize: Theme.f.tiny
+                wrapMode: Text.WordWrap
+            }
+
+            Repeater {
+                model: root.notifyApps
+
+                RowLayout {
+                    id: appRow
+                    required property var modelData
+
+                    Layout.fillWidth: true
+                    spacing: Theme.px(8)
+                    visible: Config.glyphEventsOf(root.surface)
+                        .indexOf("notify") >= 0
+
+                    NText {
+                        Layout.fillWidth: true
+                        text: appRow.modelData.label
+                        elide: Text.ElideRight
+                    }
+
+                    // Default, then every pattern: cycling rather than a
+                    // menu for the same reason as the rhythm picker above.
+                    NPillButton {
+                        maxWidth: Theme.px(132)
+                        readonly property string current:
+                            Config.glyphAppPattern(appRow.modelData.id)
+                        text: current !== ""
+                            ? GlyphEvents.patternLabel(current) : "Default"
+                        onActivated: {
+                            const list = [""].concat(
+                                GlyphEvents.patterns.map(p => p.id));
+                            let at = list.indexOf(current);
+                            if (at < 0)
+                                at = 0;
+                            const next = list[(at + 1) % list.length];
+                            Config.setGlyphAppPattern(appRow.modelData.id, next);
+                            if (next !== "")
+                                GlyphEvents.preview(next);
+                        }
                     }
                 }
             }
