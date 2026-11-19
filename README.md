@@ -64,7 +64,7 @@ from what you type.
 | **Displays** | `SUPER+P` | Arrangement, resolution, refresh, scale, rotation per screen, dragged on a map. Undoes itself after 15 seconds if a mode leaves you on a black screen |
 | **Game bar** | `SUPER+G` | Overlay widgets you pin over a game |
 | **Screenshots** | `SUPER+SHIFT+S` region · `SUPER+SHIFT+X` OCR | Click a window, drag a rect, or click empty for the output. OCR and **Translate** (local, then your AI backend) live in the same panel |
-| **Wallpaper picker** | `SUPER+SHIFT+T` | Tamaki, Frieren, Waguri, or your own picture - per screen, crop or fit |
+| **Wallpaper picker** | `SUPER+SHIFT+T` | Four shipped defaults (Nothing or manga, dark or light), or your own picture - per screen, crop or fit |
 | **Clipboard** | `SUPER+V` | History via cliphist. A copy that's a hex colour shows the real swatch; a bare URL gets a link icon - still copies on click either way |
 | **Processes** | `CTRL+SHIFT+Esc` | What's using CPU/memory, end a frozen app |
 | **Session / Lock** | `SUPER+Esc` / `SUPER+L` | Power menu / lock screen, drawn by the shell itself |
@@ -145,13 +145,13 @@ shell's own polkit prompt, and notices when you change your accent.
 
 ### Wallpapers
 
-Two dot-matrix pairs ship in `hypr/wallpapers/` - Tamaki, Frieren and
-Waguri, each cut for 16:10 and 16:9. Settings picks the right crop per
-screen.
+Four ship in `hypr/wallpapers/` - Nothing or manga, each dark or light.
 
-| Tamaki | Frieren | Waguri |
-|:---:|:---:|:---:|
-| ![Tamaki](hypr/wallpapers/nothing-dots-16-9.png) | ![Frieren](hypr/wallpapers/nothing-dots-frieren-16-9.png) | ![Waguri](hypr/wallpapers/nothing-dots-waguri-16-9.png) |
+| Nothing, dark | Nothing, light |
+|:---:|:---:|
+| ![Nothing, dark](hypr/wallpapers/nothing-dark.png) | ![Nothing, light](hypr/wallpapers/nothing-light.png) |
+| **Manga, dark** | **Manga, light** |
+| ![Manga, dark](hypr/wallpapers/manga-dark.png) | ![Manga, light](hypr/wallpapers/manga-light.png) |
 
 `scripts/dot-wallpaper.py` makes more of them from any picture: black
 ground, one red kept from the source, manga concentration lines, and a

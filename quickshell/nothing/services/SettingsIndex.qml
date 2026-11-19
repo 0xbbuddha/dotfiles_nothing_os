@@ -41,9 +41,8 @@ Singleton {
         { key: "wallpaperPicker", label: "Wallpaper picker",   page: root.pageLook, words: "wallpaper picker per screen slideshow rotate fit crop next pictures", icon: "󰋊" },
         { key: "wallpaperFolder", label: "Wallpaper folder",   page: root.pageLook, words: "wallpaper folder pictures slideshow directory background", icon: "󰉏" },
         { key: "wallpaperDraw", label: "Wallpaper drawn by the shell", page: root.pageLook, words: "background swww hyprpaper", icon: "󰋊" },
-        { key: "wallpaperSet",  label: "Nothing dot-matrix wallpaper", page: root.pageLook, words: "background dots anime manga bundled shipped", icon: "󰋊" },
-        { key: "wallpaperChar", label: "Wallpaper character", page: root.pageLook, words: "background dots tamaki frieren figure anime character", icon: "󰉦" },
-        { key: "wallpaperFormat", label: "Wallpaper format",  page: root.pageLook, words: "background aspect ratio 16 10 9 screen shape", icon: "󰕴" },
+        { key: "wallpaperSet",  label: "Nothing default wallpapers", page: root.pageLook, words: "background dots anime manga bundled shipped", icon: "󰋊" },
+        { key: "wallpaperChar", label: "Which default wallpaper", page: root.pageLook, words: "background dots nothing manga dark light default", icon: "󰉦" },
         { key: "spotifyTheme", label: "Nothing theme for Spotify", page: root.pageLook, words: "spotify spicetify music theme green player apply patch", icon: "󰓇" },
         { key: "vesktopTheme", label: "Nothing theme for Vesktop", page: root.pageLook, words: "vesktop discord vencord theme quickcss apply", icon: "󰙯" },
 
