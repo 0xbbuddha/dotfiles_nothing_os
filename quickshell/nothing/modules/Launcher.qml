@@ -102,8 +102,24 @@ PanelWindow {
         width: win.browsing
             ? Math.max(Theme.px(460), grid.implicitWidth + Theme.px(40))
             : Theme.px(460)
+        // The music recognition card appears and disappears on its own
+        // clock (Songrec.listening), independent of browsing vs typed
+        // search, so its height is counted the same way as everything
+        // else that can be on screen at once rather than assumed away.
+        readonly property real songCardH:
+            songCard.visible ? songCard.implicitHeight + Theme.px(8) : 0
+
+        // Search bar, the prefix hints below it (missing here before -
+        // they still took their own space, just uncounted, which is
+        // what was pushing the grid's bottom row behind the clip), the
+        // music card when it is up, the grid, its padding. Capped
+        // against the screen too: a clipped card should never again be
+        // how a layout gets this wrong.
         height: win.browsing
-            ? (Theme.px(74) + grid.implicitHeight + Theme.px(24))
+            ? Math.min(
+                Theme.px(74) + hints.implicitHeight + Theme.px(8)
+                    + sheet.songCardH + grid.implicitHeight + Theme.px(24),
+                parent.height - sheet.anchors.topMargin - Theme.px(20))
             : Math.min(Theme.px(480), parent.height * 0.62)
         clip: true
 
@@ -398,6 +414,7 @@ PanelWindow {
             // ── Results ───────────────────────────────────────────────
             // ── Music recognition feedback ────────────────────────────
             Rectangle {
+                id: songCard
                 Layout.fillWidth: true
                 Layout.leftMargin: Theme.pad
                 Layout.rightMargin: Theme.pad
@@ -460,6 +477,7 @@ PanelWindow {
 
             // ── Prefix reminders ──────────────────────────────────────
             Flow {
+                id: hints
                 Layout.fillWidth: true
                 Layout.leftMargin: Theme.pad
                 Layout.rightMargin: Theme.pad
