@@ -48,6 +48,40 @@ Item {
     property bool dragging: false
     property real dragFraction: 0
 
+    // Cava is a shared daemon - see services/Cava.qml - so this only
+    // asks for it while there is something playing to move with.
+    readonly property bool wantsCava: Player.playing
+    onWantsCavaChanged: {
+        root.wantsCava ? Cava.addListener() : Cava.removeListener();
+        if (!root.wantsCava)
+            root.level = 0;
+    }
+    Component.onCompleted: if (root.wantsCava) Cava.addListener()
+    Component.onDestruction: if (root.wantsCava) Cava.removeListener()
+
+    // One smoothed loudness, not Cava's 25 bars drawn raw: a bar per
+    // frequency bin read as scattered noise at this size (tried it,
+    // looked wrong - a ruler is one line, not a spectrum). Averaged and
+    // eased, it reads as the ruler itself breathing with the track
+    // rather than a graph bolted onto it.
+    property real level: 0
+    Connections {
+        target: Cava
+        function onValuesChanged(): void {
+            if (!root.wantsCava)
+                return;
+            // Peak, not average: 25 bins averaged together flatten every
+            // transient into almost nothing, which is why the first cut
+            // barely showed at all. The loudest bin of the moment is one
+            // number too, just one that actually tracks a beat.
+            const vals = Cava.values;
+            let peak = 0;
+            for (let i = 0; i < vals.length; i++)
+                peak = Math.max(peak, vals[i]);
+            root.level = root.level * 0.5 + Math.min(1, peak * 1.4) * 0.5;
+        }
+    }
+
     implicitHeight: Math.max(root.tickHeight, Theme.px(12))
 
     NText {
@@ -91,23 +125,36 @@ Item {
 
             Rectangle {
                 required property int index
+                // Only what is already played breathes - the future
+                // stays flat, so there is still one still baseline to
+                // read the moving one against.
+                readonly property bool lit: index < band.lit
                 width: Math.max(1, Theme.px(1))
-                height: band.height
+                height: band.height * (lit ? 1 + root.level * 1.1 : 1)
+                y: (band.height - height) / 2
                 radius: width / 2
                 x: index * (band.width / band.count)
                     + (band.width / band.count - width) / 2
-                color: index < band.lit ? root.inkOn : root.inkOff
-                // No colour animation: sixty marks crossfading at once on
-                // every position tick is a lot of work for something the
-                // eye reads as a single edge moving.
+                color: lit
+                    ? Qt.rgba(
+                        root.inkOn.r + (Theme.c.red.r - root.inkOn.r) * root.level,
+                        root.inkOn.g + (Theme.c.red.g - root.inkOn.g) * root.level,
+                        root.inkOn.b + (Theme.c.red.b - root.inkOn.b) * root.level,
+                        1)
+                    : root.inkOff
+                // No colour animation beyond the level itself, which is
+                // already eased: sixty marks re-blending from a second
+                // animator each on every position tick is a lot of work
+                // for something the eye reads as a single edge moving.
             }
         }
 
         // The playhead is the one red thing here, and the only part that
-        // has to be found instantly.
+        // has to be found instantly - the beat just makes it swell a
+        // little rather than adding a second moving thing beside it.
         Rectangle {
-            width: Math.max(Theme.px(2), 2)
-            height: band.height + Theme.px(4)
+            width: Math.max(Theme.px(2), 2) + root.level * Theme.px(3)
+            height: band.height + Theme.px(4) + root.level * Theme.px(7)
             radius: width / 2
             color: Theme.c.red
             visible: root.len > 0

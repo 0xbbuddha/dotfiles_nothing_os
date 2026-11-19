@@ -17,16 +17,20 @@ Singleton {
     property bool available: false
     property var values: root._zeros()
 
-    // A second reason to run it besides the Glyph toy: a widget that
-    // wants to move with the music sets this itself while it is on
+    // A second reason to run it besides the Glyph toy: any widget that
+    // wants to move with the music registers itself while it is on
     // screen, the same "nobody is looking, stop reading the mixer"
-    // reasoning extended to a second listener rather than duplicated
-    // for it.
-    property bool widgetWantsIt: false
+    // reasoning extended to however many listeners there are rather
+    // than duplicated per one. Counted, not a flag: the vinyl widget and
+    // a seek band can both be on screen at once, and one unmounting must
+    // not stop the other's music from moving.
+    property int _listeners: 0
+    function addListener(): void { root._listeners++; }
+    function removeListener(): void { root._listeners = Math.max(0, root._listeners - 1); }
 
     readonly property bool listening:
         (Config.glyphEnabled && Config.glyphToy === "visualizer")
-            || root.widgetWantsIt
+            || root._listeners > 0
 
     readonly property int bars: 25
     readonly property string confPath: `${Config.dir}/cava.conf`
