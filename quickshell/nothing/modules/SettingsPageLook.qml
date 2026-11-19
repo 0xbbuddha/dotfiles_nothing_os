@@ -236,6 +236,22 @@ SettingsPage {
         }
 
         SettingRow {
+            key: "wallpaperGlass"
+            label: "Glass effect"
+            hint: Wallpapers.glassBusy ? "Working…"
+                : "Nothing's fluted-glass style, run on a photo you pick"
+            NPillButton {
+                text: "Choose a photo"
+                enabled: !Wallpapers.glassBusy
+                opacity: enabled ? 1 : 0.5
+                onActivated: {
+                    GlobalState.settingsOpen = false;
+                    Wallpapers.glassify("");
+                }
+            }
+        }
+
+        SettingRow {
             key: "wallpaperPicker"
             label: "Pictures"
             hint: "Every screen or one, crop or fit, slideshow: SUPER+SHIFT+T. Next picture: SUPER+ALT+W"

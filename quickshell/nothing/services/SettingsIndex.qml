@@ -43,6 +43,7 @@ Singleton {
         { key: "wallpaperDraw", label: "Wallpaper drawn by the shell", page: root.pageLook, words: "background swww hyprpaper", icon: "󰋊" },
         { key: "wallpaperSet",  label: "Nothing default wallpapers", page: root.pageLook, words: "background dots anime manga bundled shipped", icon: "󰋊" },
         { key: "wallpaperChar", label: "Which default wallpaper", page: root.pageLook, words: "background dots nothing manga dark light default", icon: "󰉦" },
+        { key: "wallpaperGlass", label: "Glass effect", page: root.pageLook, words: "background wallpaper fluted glass filter photo ribs", icon: "󰋊" },
         { key: "spotifyTheme", label: "Nothing theme for Spotify", page: root.pageLook, words: "spotify spicetify music theme green player apply patch", icon: "󰓇" },
         { key: "vesktopTheme", label: "Nothing theme for Vesktop", page: root.pageLook, words: "vesktop discord vencord theme quickcss apply", icon: "󰙯" },
 

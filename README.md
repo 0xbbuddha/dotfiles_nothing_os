@@ -159,6 +159,13 @@ vertical Japanese column set in Nothing's own dot face. What it lights is
 the ink, not the luminance, which is what makes a drawing survive being
 turned into dots.
 
+`scripts/glass-wallpaper.py` runs a picture through Nothing's other
+wallpaper style instead: fluted glass, vertical ribs each shifted and
+lensed on their own, a highlight down the centre of each one and a
+groove at its seam. Works best on an actual photo - fine detail (a
+dot-matrix wallpaper, for one) turns to noise once it is sliced this
+finely.
+
 ### A few more things
 
 - **fastfetch** in the same language as the rest: tracked capitals, one
