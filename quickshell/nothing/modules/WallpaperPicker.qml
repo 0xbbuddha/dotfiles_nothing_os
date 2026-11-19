@@ -16,9 +16,11 @@ import "../services"
 // photographer circles a pick in grease pencil on a real sheet.
 //
 // Kept deliberately flat: no 3D, no shader, nothing per-frame beyond a
-// cheap scale on hover. Five frames: the four defaults this rice
-// ships, plus one that opens the file's own picker (zenity, same as
-// Settings > Appearance) for a picture of your own.
+// cheap scale on hover. Six frames: the four defaults this rice ships,
+// one that opens the file's own picker (zenity, same as Settings >
+// Appearance) for a picture of your own, and one that runs a chosen
+// picture through Nothing's glass filter first (Wallpapers.glassify,
+// scripts/glass-wallpaper.py).
 OverlayWindow {
     id: win
     open: GlobalState.wallpaperPickerOpen
@@ -43,15 +45,20 @@ OverlayWindow {
                            : Wallpapers.isCurrent(Wallpapers.dotWallpaperKey, win.target)
 
     readonly property string customValue: "__custom__"
+    readonly property string glassValue: "__glass__"
+    readonly property bool glassActive:
+        Wallpapers.isCurrent(Wallpapers.glassOut, win.target)
 
     // Hovering a frame previews its name without picking it yet;
     // "" falls back to whatever is actually set.
     property string hoverChar: ""
     readonly property string shownChar: win.hoverChar !== "" ? win.hoverChar
-        : (win.dotsActive ? Config.dotWallpaperChar : win.customValue)
+        : (win.dotsActive ? Config.dotWallpaperChar
+            : (win.glassActive ? win.glassValue : win.customValue))
 
     readonly property var tiles: Wallpapers.dotWallpaperChars
-        .concat([{ label: "Custom", value: win.customValue }])
+        .concat([{ label: "Custom", value: win.customValue },
+                 { label: "Glass", value: win.glassValue }])
 
     readonly property bool hasCustomPic:
         (Config.wallpaper ?? "") !== "" && Config.wallpaper !== Wallpapers.dotWallpaperKey
@@ -151,9 +158,12 @@ OverlayWindow {
                         required property var modelData
                         required property int index
                         readonly property bool isCustom: frame.modelData.value === win.customValue
-                        readonly property bool active: frame.isCustom
-                            ? !win.dotsActive
-                            : (win.dotsActive && Config.dotWallpaperChar === frame.modelData.value)
+                        readonly property bool isGlass: frame.modelData.value === win.glassValue
+                        readonly property bool active: frame.isGlass
+                            ? win.glassActive
+                            : (frame.isCustom
+                                ? (!win.dotsActive && !win.glassActive)
+                                : (win.dotsActive && Config.dotWallpaperChar === frame.modelData.value))
                         readonly property bool hovered: fma.containsMouse
 
                         Layout.preferredWidth: Theme.px(120)
@@ -170,8 +180,8 @@ OverlayWindow {
 
                         Image {
                             anchors.fill: parent
-                            visible: !frame.isCustom
-                            source: frame.isCustom ? ""
+                            visible: !frame.isCustom && !frame.isGlass
+                            source: (frame.isCustom || frame.isGlass) ? ""
                                 : "file://" + Wallpapers.dotWallpaperPathFor(frame.modelData.value)
                             fillMode: Image.PreserveAspectCrop
                             asynchronous: true
@@ -189,12 +199,38 @@ OverlayWindow {
                             Behavior on opacity { NumberAnimation { duration: Theme.med } }
                         }
 
+                        // The glass-filtered result, once scripts/glass-
+                        // wallpaper.py has made one. Before that, or if
+                        // it fails, the same empty-slot icon as Custom.
+                        Image {
+                            id: glassImg
+                            anchors.fill: parent
+                            visible: frame.isGlass
+                            source: frame.isGlass ? "file://" + Wallpapers.glassOut : ""
+                            fillMode: Image.PreserveAspectCrop
+                            asynchronous: true
+                            opacity: status === Image.Ready ? 1 : 0
+                            Behavior on opacity { NumberAnimation { duration: Theme.med } }
+                        }
+
                         NIcon {
                             anchors.centerIn: parent
-                            visible: frame.isCustom && !win.hasCustomPic
+                            visible: (frame.isCustom && !win.hasCustomPic)
+                                || (frame.isGlass && glassImg.status !== Image.Ready
+                                    && !Wallpapers.glassBusy)
                             text: "󰉏"
                             size: Theme.px(20)
                             color: Theme.c.onDim
+                        }
+
+                        // No icon for "working" - the same plain label
+                        // every other busy state in this shell uses.
+                        NText {
+                            anchors.centerIn: parent
+                            visible: frame.isGlass && Wallpapers.glassBusy
+                            text: "Working…"
+                            color: Theme.c.onDim
+                            font.pixelSize: Theme.f.tiny
                         }
 
                         // The frame number, printed the way a contact
@@ -218,7 +254,10 @@ OverlayWindow {
                             onEntered: win.hoverChar = frame.modelData.value
                             onExited: if (win.hoverChar === frame.modelData.value) win.hoverChar = ""
                             onClicked: {
-                                if (frame.isCustom) {
+                                if (frame.isGlass) {
+                                    GlobalState.wallpaperPickerOpen = false;
+                                    Wallpapers.glassify(win.target);
+                                } else if (frame.isCustom) {
                                     GlobalState.wallpaperPickerOpen = false;
                                     filePicker.running = true;
                                 } else {

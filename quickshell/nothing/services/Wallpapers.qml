@@ -2,6 +2,7 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import ".."
 
 // Resolves Config's wallpaper schema (wallpaper, dotWallpaperChar) into
@@ -106,6 +107,52 @@ Singleton {
 
     function isCurrent(value: string, screen: string): bool {
         return root.valueFor(screen) === value;
+    }
+
+    // ── Glass ─────────────────────────────────────────────────────────
+    // Nothing's fluted-glass wallpaper style (scripts/glass-wallpaper.py),
+    // offered from both Settings and the picker rather than built twice:
+    // pick a photo, run it through the filter, set the result. One fixed
+    // output file, not a gallery - picking a new photo replaces it, the
+    // same way the bundled picture is just one file too.
+    property bool glassBusy: false
+    property string glassTarget: ""
+    readonly property string glassScript:
+        Quickshell.shellPath("../../scripts/glass-wallpaper.py")
+    readonly property string glassOut:
+        Quickshell.env("HOME") + "/.local/share/nothing/wallpapers/glass.png"
+
+    function glassify(target: string): void {
+        if (root.glassBusy)
+            return;
+        root.glassTarget = target;
+        glassPick.running = true;
+    }
+
+    NProcess {
+        id: glassPick
+        command: ["zenity", "--file-selection", "--title=Choose a photo for the glass effect",
+                  "--file-filter=Images | *.png *.jpg *.jpeg *.webp *.bmp"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const p = text.trim();
+                if (p === "")
+                    return;
+                root.glassBusy = true;
+                glassRun.command = ["python3", root.glassScript, p, root.glassOut];
+                glassRun.running = true;
+            }
+        }
+    }
+
+    NProcess {
+        id: glassRun
+        command: []
+        onExited: (code) => {
+            root.glassBusy = false;
+            if (code === 0)
+                root.set(root.glassOut, root.glassTarget);
+        }
     }
 
     // ── Folder slideshow ──────────────────────────────────────────────
