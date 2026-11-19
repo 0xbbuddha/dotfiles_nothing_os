@@ -155,8 +155,8 @@ SettingsPage {
 
         SettingRow {
             key: "wallpaperSet"
-            label: "Nothing dots"
-            hint: "The dot-matrix pair shipped in hypr/wallpapers"
+            label: "Nothing defaults"
+            hint: "The four shipped in hypr/wallpapers"
             NPillButton {
                 text: Wallpapers.dotWallpaperOn ? "In use" : "Use"
                 opacity: Wallpapers.dotWallpaperOn ? 0.45 : 1
@@ -172,8 +172,8 @@ SettingsPage {
 
         SettingRow {
             key: "wallpaperChar"
-            label: "Character"
-            hint: "Which figure the dot-matrix pair draws"
+            label: "Which one"
+            hint: "Dark or light, Nothing or manga"
             visible: Wallpapers.dotWallpaperOn
         }
 
@@ -182,24 +182,6 @@ SettingsPage {
             options: Wallpapers.dotWallpaperChars
             current: Config.dotWallpaperChar
             onPicked: (v) => { Config.dotWallpaperChar = v; Config.save(); }
-        }
-
-        SettingRow {
-            key: "wallpaperFormat"
-            label: "Format"
-            hint: "Auto gives every screen the frame drawn for its own shape"
-            visible: Wallpapers.dotWallpaperOn
-        }
-
-        DotPicker {
-            visible: Wallpapers.dotWallpaperOn
-            options: [
-                { label: "Auto",  value: "auto" },
-                { label: "16:10", value: "16-10" },
-                { label: "16:9",  value: "16-9" }
-            ]
-            current: Config.wallpaperFormat
-            onPicked: (v) => { Config.wallpaperFormat = v; Config.save(); }
         }
 
         // The file's own picker, not a path typed by hand: zenity opens

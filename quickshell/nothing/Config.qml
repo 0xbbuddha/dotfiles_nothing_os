@@ -24,7 +24,6 @@ Singleton {
     property alias accent: a.accent
     property alias drawWallpaper: a.drawWallpaper
     property alias wallpaper: a.wallpaper
-    property alias wallpaperFormat: a.wallpaperFormat
     property alias dotWallpaperChar: a.dotWallpaperChar
     property alias wallpaperScreenNames: a.wallpaperScreenNames
     property alias wallpaperScreenValues: a.wallpaperScreenValues
@@ -685,8 +684,8 @@ Singleton {
         root.save();
     }
 
-    // Resolving wallpaper/wallpaperFormat/dotWallpaperChar into an actual
-    // file URL is derived logic, not schema: see services/Wallpapers.qml.
+    // Resolving wallpaper/dotWallpaperChar into an actual file URL is
+    // derived logic, not schema: see services/Wallpapers.qml.
 
     function save(): void {
         if (!root.ready)
@@ -859,8 +858,7 @@ Singleton {
         a.accent = "#d71921";
         a.drawWallpaper = true;
         a.wallpaper = "";
-        a.wallpaperFormat = "auto";
-        a.dotWallpaperChar = "tamaki";
+        a.dotWallpaperChar = "nothing-dark";
         a.wallpaperScreenNames = [];
         a.wallpaperScreenValues = [];
         a.wallpaperFolder = "";
@@ -1139,14 +1137,11 @@ Singleton {
             // Empty = hypr/wallpaper.png, "nothing-dots" = the pair in
             // hypr/wallpapers/, anything else is a path (see wallpaperUrl).
             property string wallpaper: ""
-            // Which of the dot-matrix pair to use: "auto", "16-10" or
-            // "16-9". Only consulted when the pair is the chosen image.
-            property string wallpaperFormat: "auto"
-            // Which dot-matrix figure: "tamaki" (the original pair, no
-            // suffix on disk) or any other name dropped into
-            // hypr/wallpapers/ as nothing-dots-<char>-16-9.png /
-            // -16-10.png. Only consulted when the pair is the chosen image.
-            property string dotWallpaperChar: "tamaki"
+            // Which shipped default: one of Wallpapers.dotWallpaperChars'
+            // own values, each a file dropped into hypr/wallpapers/ as
+            // <value>.png. Only consulted when the shipped set is the
+            // chosen image.
+            property string dotWallpaperChar: "nothing-dark"
             // One screen's own picture, by connector - two parallel lists
             // (names[i] -> values[i]), not one { "DP-1": "/path" } map:
             // same rule as the bar's islands and the glyph surfaces, a var

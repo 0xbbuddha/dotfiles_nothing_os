@@ -4,11 +4,10 @@ import QtQuick
 import Quickshell
 import ".."
 
-// Resolves Config's wallpaper schema (wallpaper, wallpaperFormat,
-// dotWallpaperChar) into an actual file URL. Config only says what was
-// picked; this says what that picks out, which is why it was three
-// functions and two computed properties living inside the persisted
-// schema they read from.
+// Resolves Config's wallpaper schema (wallpaper, dotWallpaperChar) into
+// an actual file URL. Config only says what was picked; this says what
+// that picks out, which is why it was three functions and two computed
+// properties living inside the persisted schema they read from.
 Singleton {
     id: root
 
@@ -23,46 +22,40 @@ Singleton {
     readonly property bool dotWallpaperOn:
         (Config.wallpaper ?? "").trim() === root.dotWallpaperKey
 
-    // Known characters ship as a named list rather than a free-text field:
-    // typing a name that has no file behind it would silently fall back to
-    // Tamaki with no sign anything was wrong.
+    // Shipped defaults, one file each rather than tamaki/frieren/waguri's
+    // 16:9-and-16:10 pair: these came in at a single ratio, and a second,
+    // stretched or padded crop manufactured from it would be worse than
+    // just not offering one. Named rather than free-text for the same
+    // reason the old set was: typing a name with no file behind it would
+    // silently fall back to the first one with no sign anything was wrong.
     readonly property var dotWallpaperChars: [
-        { label: "Tamaki",  value: "tamaki" },
-        { label: "Frieren", value: "frieren" },
-        { label: "Waguri",  value: "waguri" }
+        { label: "Nothing, dark",  value: "nothing-dark" },
+        { label: "Nothing, light", value: "nothing-light" },
+        { label: "Manga, dark",    value: "manga-dark" },
+        { label: "Manga, light",   value: "manga-light" }
     ]
 
-    // The character is explicit, not read off Config, so a picker can
-    // ask "what does Tamaki look like" without that answer changing to
-    // whichever character happens to be chosen at the moment.
-    function dotWallpaperPathFor(character: string, wide: bool): string {
-        const c = (character || "tamaki");
-        const suffix = c === "tamaki" ? "" : ("-" + c);
-        return Quickshell.shellPath("../../hypr/wallpapers/nothing-dots"
-            + suffix + "-" + (wide ? "16-9" : "16-10") + ".png");
+    // The name is explicit, not read off Config, so a picker can ask
+    // "what does this one look like" without that answer changing to
+    // whichever one happens to be chosen at the moment.
+    function dotWallpaperPathFor(name: string): string {
+        const n = root.dotWallpaperChars.find(c => c.value === name)
+            ? name : root.dotWallpaperChars[0].value;
+        return Quickshell.shellPath("../../hypr/wallpapers/" + n + ".png");
     }
 
-    function dotWallpaperPath(wide: bool): string {
-        return root.dotWallpaperPathFor(Config.dotWallpaperChar, wide);
+    function dotWallpaperPath(): string {
+        return root.dotWallpaperPathFor(Config.dotWallpaperChar);
     }
 
     // A stored choice (Config.wallpaper, or one screen's entry in
     // Config.wallpaperScreenMap()) to a URL. Empty and the old Documents
-    // path mean the bundled image; "nothing-dots" the pair; else a path, ~ allowed.
-    function resolve(value: string, w: real, h: real): url {
+    // path mean the bundled image; "nothing-dots" the shipped set; else a
+    // path, ~ allowed.
+    function resolve(value: string): url {
         const v = (value ?? "").trim();
-        if (v === root.dotWallpaperKey) {
-            let wide;
-            switch (Config.wallpaperFormat) {
-            case "16-9":  wide = true; break;
-            case "16-10": wide = false; break;
-            // 16:10 is 1.600 and 16:9 is 1.778. The midpoint separates them,
-            // and anything wider than that (21:9, 32:9) is better served by
-            // the wider of the two.
-            default:      wide = (w / Math.max(1, h)) > 1.69; break;
-            }
-            return "file://" + root.dotWallpaperPath(wide);
-        }
+        if (v === root.dotWallpaperKey)
+            return "file://" + root.dotWallpaperPath();
         const home = Quickshell.env("HOME");
         if (v === "" || v === "~/Documents/wallpaper-nothing.png"
                 || v === home + "/Documents/wallpaper-nothing.png")
@@ -74,7 +67,7 @@ Singleton {
         return v;
     }
 
-    readonly property url plainWallpaperUrl: root.resolve(Config.wallpaper, 1920, 1080)
+    readonly property url plainWallpaperUrl: root.resolve(Config.wallpaper)
 
     // What a screen shows: its own choice if it has one, else the shared one.
     function valueFor(name: string): string {
@@ -82,10 +75,12 @@ Singleton {
         return (name && per[name]) ? per[name] : (Config.wallpaper ?? "");
     }
 
-    // Per screen. Wallpaper.qml is instantiated once per output, so each
-    // one can ask for the frame that fits its own shape and its own image.
+    // Per screen. Wallpaper.qml is instantiated once per output. w/h are
+    // its own screen's size - no longer read here now that the shipped
+    // set is one file each instead of a 16:9-or-16:10 pick, kept in the
+    // signature anyway so neither caller has to change what it passes.
     function wallpaperUrlFor(name: string, w: real, h: real): url {
-        return root.resolve(root.valueFor(name), w, h);
+        return root.resolve(root.valueFor(name));
     }
 
     // For the callers with no screen to hand (the settings preview, the
@@ -183,7 +178,7 @@ Singleton {
             ? (root.dotWallpaperChars.find(c => c.value === Config.dotWallpaperChar)?.label ?? "Custom")
             : ((Config.wallpaper ?? "").split("/").pop() || "Custom");
         const thumb = root.dotWallpaperOn
-            ? root.dotWallpaperPath(true)
+            ? root.dotWallpaperPath()
             : String(root.plainWallpaperUrl).replace("file://", "");
         WallpaperAnnounce.announce(label, thumb);
     }

@@ -8,15 +8,17 @@ import "../services"
 
 // SUPER+SHIFT+T.
 //
-// Not a grid of equal thumbnails: one big stage shows whichever picture
-// you're pointing at, and a row of Glyph-style dot rings below it is the
-// switch - the same off-dots-stay-faint, lit-dots-go-red language the
-// Glyph Matrix itself uses (components/GlyphMatrix.qml), just small and
-// static rather than a live LED simulation, which this does not need.
+// A contact sheet, not a stage with a selector under it: Nothing's own
+// language leans on photography (the camera module, the Glyph as a
+// shutter), and a strip of numbered negatives between two rows of
+// sprocket holes says that without borrowing a single thing from
+// anyone else's picker. The active choice gets a red frame, the way a
+// photographer circles a pick in grease pencil on a real sheet.
 //
-// Four rings: the three characters this rice ships with, plus one that
-// opens the file's own picker (zenity, same as Settings > Appearance) for
-// a picture of your own - no folder to scan, no thumbnail wall.
+// Kept deliberately flat: no 3D, no shader, nothing per-frame beyond a
+// cheap scale on hover. Five frames: the four defaults this rice
+// ships, plus one that opens the file's own picker (zenity, same as
+// Settings > Appearance) for a picture of your own.
 OverlayWindow {
     id: win
     open: GlobalState.wallpaperPickerOpen
@@ -42,7 +44,7 @@ OverlayWindow {
 
     readonly property string customValue: "__custom__"
 
-    // Hovering a ring previews it on the stage without picking it yet;
+    // Hovering a frame previews its name without picking it yet;
     // "" falls back to whatever is actually set.
     property string hoverChar: ""
     readonly property string shownChar: win.hoverChar !== "" ? win.hoverChar
@@ -50,6 +52,9 @@ OverlayWindow {
 
     readonly property var tiles: Wallpapers.dotWallpaperChars
         .concat([{ label: "Custom", value: win.customValue }])
+
+    readonly property bool hasCustomPic:
+        (Config.wallpaper ?? "") !== "" && Config.wallpaper !== Wallpapers.dotWallpaperKey
 
     NProcess {
         id: filePicker
@@ -68,7 +73,7 @@ OverlayWindow {
         id: col
         anchors.fill: parent
         anchors.margins: Theme.pad
-        spacing: Theme.px(16)
+        spacing: Theme.px(18)
 
         // ── Header ────────────────────────────────────────────────────
         RowLayout {
@@ -101,177 +106,171 @@ OverlayWindow {
             }
         }
 
-        // ── Stage: whatever is hovered, or whatever is set ──────────────
-        Rectangle {
+        // ── The contact sheet ────────────────────────────────────────────
+        ColumnLayout {
             Layout.fillWidth: true
-            Layout.preferredHeight: Theme.px(300)
-            radius: Theme.r.panel
-            color: Theme.c.surface2
-            clip: true
+            Layout.topMargin: Theme.px(10)
+            Layout.bottomMargin: Theme.px(10)
+            spacing: Theme.px(10)
 
-            readonly property bool custom: win.shownChar === win.customValue
-            readonly property bool hasCustomPic:
-                (Config.wallpaper ?? "") !== "" && Config.wallpaper !== Wallpapers.dotWallpaperKey
+            // Sprocket holes: one strip of dots, printed twice (above
+            // and below the frames) rather than shared, since an inline
+            // local component this deeply nested isn't resolved by this
+            // runtime.
+            Item {
+                id: perfTop
+                Layout.fillWidth: true
+                implicitHeight: Theme.px(6)
+                readonly property real pitch: Theme.px(13)
+                readonly property int count: Math.max(2, Math.floor(width / pitch))
 
-            Image {
-                anchors.fill: parent
-                visible: !parent.custom
-                source: parent.custom ? "" : "file://" + Wallpapers.dotWallpaperPathFor(win.shownChar, true)
-                sourceSize.width: Theme.px(900)
-                fillMode: Image.PreserveAspectCrop
-                asynchronous: true
-                opacity: status === Image.Ready ? 1 : 0
-                Behavior on opacity { NumberAnimation { duration: Theme.med } }
-            }
-
-            Image {
-                anchors.fill: parent
-                visible: parent.custom && parent.hasCustomPic
-                source: parent.custom && parent.hasCustomPic ? "file://" + Config.wallpaper : ""
-                fillMode: Image.PreserveAspectCrop
-                asynchronous: true
-                opacity: status === Image.Ready ? 1 : 0
-                Behavior on opacity { NumberAnimation { duration: Theme.med } }
-            }
-
-            // Nothing to show: no custom picture set yet.
-            ColumnLayout {
-                anchors.centerIn: parent
-                visible: parent.custom && !parent.hasCustomPic
-                spacing: Theme.px(8)
-                NIcon { Layout.alignment: Qt.AlignHCenter; text: "󰉏"; size: Theme.px(34); color: Theme.c.onDim }
-                NText { Layout.alignment: Qt.AlignHCenter; text: "No picture set yet"; color: Theme.c.onDim }
-            }
-
-            DotField {
-                anchors.fill: parent
-                dotColor: Theme.c.onFaint
-                opacity: 0.12
-            }
-
-            Rectangle {
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.bottom: parent.bottom
-                height: Theme.px(110)
-                gradient: Gradient {
-                    GradientStop { position: 0.0; color: "transparent" }
-                    GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.78) }
+                Repeater {
+                    model: perfTop.count
+                    Rectangle {
+                        required property int index
+                        readonly property real offset:
+                            (perfTop.width - perfTop.count * perfTop.pitch) / 2
+                        width: Theme.px(5); height: Theme.px(5); radius: Theme.px(1)
+                        x: offset + index * perfTop.pitch
+                        color: Theme.c.onFaint
+                    }
                 }
             }
 
-            // A spec-sheet tag, the way Nothing prints a part number
-            // next to anything it shows you.
-            NText {
-                anchors.top: parent.top
-                anchors.right: parent.right
-                anchors.margins: Theme.px(14)
-                text: (win.tiles.findIndex(t => t.value === win.shownChar) + 1)
-                    + " / " + win.tiles.length
-                color: Qt.rgba(1, 1, 1, 0.5)
-                font.family: Theme.f.mono
-                font.pixelSize: Theme.f.small
-            }
+            // ── Frames ────────────────────────────────────────────────
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignHCenter
+                spacing: Theme.px(10)
 
-            DisplayText {
-                anchors.left: parent.left
-                anchors.bottom: parent.bottom
-                anchors.margins: Theme.px(18)
-                text: (win.tiles.find(t => t.value === win.shownChar)?.label ?? "").toUpperCase()
-                size: Theme.px(30)
-                color: "white"
-            }
-        }
+                Repeater {
+                    model: win.tiles
 
-        // ── Dock: one Glyph-style ring per choice ───────────────────────
-        RowLayout {
-            Layout.fillWidth: true
-            Layout.alignment: Qt.AlignHCenter
-            spacing: Theme.px(28)
+                    Rectangle {
+                        id: frame
+                        required property var modelData
+                        required property int index
+                        readonly property bool isCustom: frame.modelData.value === win.customValue
+                        readonly property bool active: frame.isCustom
+                            ? !win.dotsActive
+                            : (win.dotsActive && Config.dotWallpaperChar === frame.modelData.value)
+                        readonly property bool hovered: fma.containsMouse
 
-            Repeater {
-                model: win.tiles
+                        Layout.preferredWidth: Theme.px(120)
+                        Layout.preferredHeight: Theme.px(68)
+                        radius: Theme.px(3)
+                        color: Theme.c.surface2
+                        border.width: frame.active ? 2 : 1
+                        border.color: frame.active ? Theme.c.red : Theme.c.outline
+                        clip: true
+                        z: frame.hovered ? 2 : (frame.active ? 1 : 0)
+                        scale: fma.pressed ? 0.96 : (frame.hovered ? 1.14 : 1)
+                        Behavior on scale { NumberAnimation { duration: Theme.fast; easing.type: Theme.ease } }
+                        Behavior on border.color { ColorAnimation { duration: Theme.fast } }
 
-                ColumnLayout {
-                    id: tile
-                    required property var modelData
-                    readonly property bool isCustom: tile.modelData.value === win.customValue
-                    readonly property bool active: tile.isCustom
-                        ? !win.dotsActive
-                        : (win.dotsActive && Config.dotWallpaperChar === tile.modelData.value)
-                    readonly property real lit: tile.active ? 1 : (tma.containsMouse ? 0.55 : 0)
+                        Image {
+                            anchors.fill: parent
+                            visible: !frame.isCustom
+                            source: frame.isCustom ? ""
+                                : "file://" + Wallpapers.dotWallpaperPathFor(frame.modelData.value)
+                            fillMode: Image.PreserveAspectCrop
+                            asynchronous: true
+                            opacity: status === Image.Ready ? 1 : 0
+                            Behavior on opacity { NumberAnimation { duration: Theme.med } }
+                        }
 
-                    spacing: Theme.px(8)
-
-                    Item {
-                        id: ring
-                        Layout.alignment: Qt.AlignHCenter
-                        readonly property real size: Theme.px(62)
-                        width: size; height: size
-
-                        Repeater {
-                            model: 20
-                            Rectangle {
-                                required property int index
-                                readonly property real angle:
-                                    (index / 20) * Math.PI * 2 - Math.PI / 2
-                                readonly property real r: ring.size / 2 - Theme.px(3)
-                                width: Theme.px(3.4); height: width; radius: width / 2
-                                x: ring.size / 2 + r * Math.cos(angle) - width / 2
-                                y: ring.size / 2 + r * Math.sin(angle) - width / 2
-                                color: tile.lit > 0 ? Theme.c.red : Theme.c.onFaint
-                                opacity: tile.lit > 0 ? (0.4 + tile.lit * 0.6) : 0.4
-                                Behavior on color { ColorAnimation { duration: Theme.fast } }
-                                Behavior on opacity { NumberAnimation { duration: Theme.fast } }
-                            }
+                        Image {
+                            anchors.fill: parent
+                            visible: frame.isCustom && win.hasCustomPic
+                            source: frame.isCustom && win.hasCustomPic ? "file://" + Config.wallpaper : ""
+                            fillMode: Image.PreserveAspectCrop
+                            asynchronous: true
+                            opacity: status === Image.Ready ? 1 : 0
+                            Behavior on opacity { NumberAnimation { duration: Theme.med } }
                         }
 
                         NIcon {
                             anchors.centerIn: parent
-                            visible: tile.isCustom
+                            visible: frame.isCustom && !win.hasCustomPic
                             text: "󰉏"
                             size: Theme.px(20)
-                            color: tile.lit > 0 ? Theme.c.on : Theme.c.onDim
+                            color: Theme.c.onDim
                         }
 
-                        DisplayText {
-                            anchors.centerIn: parent
-                            visible: !tile.isCustom
-                            text: tile.modelData.label.charAt(0)
-                            size: Theme.px(22)
-                            color: tile.lit > 0 ? Theme.c.on : Theme.c.onDim
+                        // The frame number, printed the way a contact
+                        // sheet's own negatives are - small, in the
+                        // corner, out of the way of the picture itself.
+                        Text {
+                            anchors.left: parent.left
+                            anchors.bottom: parent.bottom
+                            anchors.margins: Theme.px(4)
+                            text: "0" + (frame.index + 1)
+                            color: Qt.rgba(1, 1, 1, 0.65)
+                            font.family: Theme.f.mono
+                            font.pixelSize: Theme.px(8)
                         }
-
-                        scale: tma.pressed ? 0.94 : 1
-                        Behavior on scale { NumberAnimation { duration: Theme.fast } }
 
                         MouseArea {
-                            id: tma
+                            id: fma
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onEntered: win.hoverChar = tile.modelData.value
-                            onExited: if (win.hoverChar === tile.modelData.value) win.hoverChar = ""
+                            onEntered: win.hoverChar = frame.modelData.value
+                            onExited: if (win.hoverChar === frame.modelData.value) win.hoverChar = ""
                             onClicked: {
-                                if (tile.isCustom) {
+                                if (frame.isCustom) {
                                     GlobalState.wallpaperPickerOpen = false;
                                     filePicker.running = true;
                                 } else {
-                                    Config.dotWallpaperChar = tile.modelData.value;
+                                    Config.dotWallpaperChar = frame.modelData.value;
                                     Wallpapers.set(Wallpapers.dotWallpaperKey, win.target);
                                 }
                             }
                         }
                     }
+                }
+            }
 
-                    NText {
-                        Layout.alignment: Qt.AlignHCenter
-                        text: tile.modelData.label.toUpperCase()
-                        color: tile.active ? Theme.c.on : Theme.c.onDim
-                        font.pixelSize: Theme.f.micro
-                        font.letterSpacing: Theme.f.track
+            // Sprocket holes: one strip of dots, printed twice (above
+            // and below the frames) rather than shared, since an inline
+            // local component this deeply nested isn't resolved by this
+            // runtime.
+            Item {
+                id: perfBottom
+                Layout.fillWidth: true
+                implicitHeight: Theme.px(6)
+                readonly property real pitch: Theme.px(13)
+                readonly property int count: Math.max(2, Math.floor(width / pitch))
+
+                Repeater {
+                    model: perfBottom.count
+                    Rectangle {
+                        required property int index
+                        readonly property real offset:
+                            (perfBottom.width - perfBottom.count * perfBottom.pitch) / 2
+                        width: Theme.px(5); height: Theme.px(5); radius: Theme.px(1)
+                        x: offset + index * perfBottom.pitch
+                        color: Theme.c.onFaint
                     }
                 }
+            }
+        }
+
+        // ── Which one this is ────────────────────────────────────────────
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignHCenter
+            spacing: 0
+
+            DisplayText {
+                Layout.alignment: Qt.AlignHCenter
+                text: (win.tiles.find(t => t.value === win.shownChar)?.label ?? "").toUpperCase()
+                size: Theme.px(22)
+            }
+            NLabel {
+                Layout.alignment: Qt.AlignHCenter
+                text: (win.tiles.findIndex(t => t.value === win.shownChar) + 1)
+                    + " of " + win.tiles.length
             }
         }
     }
