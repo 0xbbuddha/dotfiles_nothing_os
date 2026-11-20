@@ -34,9 +34,14 @@ RowLayout {
                 anchors.fill: parent
                 anchors.bottomMargin: Theme.px(3)
                 radius: Theme.r.chip
-                color: seg.active ? Theme.c.surface2
-                     : (sma.containsMouse ? Theme.c.surface2 : "transparent")
-                Behavior on color { ColorAnimation { duration: Theme.fast } }
+                // A fixed colour faded by opacity, not animated between
+                // itself and "transparent" - that is black at alpha 0,
+                // so a ColorAnimation between the two interpolates hue
+                // and alpha together and reads as a dark flash on the
+                // way to this grey, not a fade.
+                color: Theme.c.surface2
+                opacity: (seg.active || sma.containsMouse) ? 1 : 0
+                Behavior on opacity { NumberAnimation { duration: Theme.fast } }
             }
 
             ColumnLayout {
