@@ -107,6 +107,12 @@ Item {
                 readonly property bool active: root.focusedId === wsId
                 readonly property bool targeted: root.dropTarget === wsId
                 readonly property var wins: root.windowsByWs[wsId] ?? []
+                // Whichever cell owns the window being dragged: it has
+                // to paint above every other cell and stop clipping its
+                // own bounds, or the thumbnail following the cursor
+                // would be cut off the moment it left this box.
+                readonly property bool holdingDrag: root.dragAddress !== ""
+                    && cell.wins.some(w => String(w.lastIpcObject?.address ?? "") === root.dragAddress)
 
                 width: root.cellW
                 height: root.cellH
@@ -114,7 +120,8 @@ Item {
                 color: Theme.c.surface2
                 border.width: targeted ? 2 : (active ? 1 : 0)
                 border.color: targeted ? Theme.c.on : Theme.c.red
-                clip: true
+                clip: !cell.holdingDrag
+                z: cell.holdingDrag ? 50 : 0
 
                 Behavior on border.color { ColorAnimation { duration: Theme.fast } }
 
@@ -153,12 +160,22 @@ Item {
                         readonly property bool otherScreen:
                             (ipc.monitor ?? -1) !== (root.monitor?.id ?? -1)
 
+                        // Its real position, plus a cursor-following
+                        // offset while held - the same trick as the
+                        // desktop's own widget drag (modules/Desktop.qml):
+                        // nothing here owns this item's position the way
+                        // a Positioner does, so there is no fight over
+                        // who sets x/y, just this added on top.
                         x: ((ipc.at?.[0] ?? 0) - (wmon?.x ?? 0)) * root.fitScale / wscale
+                            + (wma.pressed ? wma.liveOffsetX : 0)
                         y: ((ipc.at?.[1] ?? 0) - (wmon?.y ?? 0)) * root.fitScale / wscale
+                            + (wma.pressed ? wma.liveOffsetY : 0)
                         width: Math.max(Theme.px(10),
                                         (ipc.size?.[0] ?? 100) * root.fitScale / wscale)
                         height: Math.max(Theme.px(8),
                                          (ipc.size?.[1] ?? 100) * root.fitScale / wscale)
+                        Behavior on x { enabled: !wma.pressed; NumberAnimation { duration: Theme.med; easing.type: Theme.ease } }
+                        Behavior on y { enabled: !wma.pressed; NumberAnimation { duration: Theme.med; easing.type: Theme.ease } }
 
                         radius: Theme.px(4)
                         color: wma.containsMouse ? Theme.c.surface3 : Theme.c.surface
@@ -196,17 +213,34 @@ Item {
                             acceptedButtons: Qt.LeftButton | Qt.MiddleButton
 
                             property bool moved: false
+                            // In root's own frame, not this area's local
+                            // one: this area is anchored to mini, which
+                            // is itself about to start moving with the
+                            // drag, so its local coordinates would be
+                            // chasing their own offset instead of
+                            // measuring it.
+                            property real pressRootX: 0
+                            property real pressRootY: 0
+                            property real liveOffsetX: 0
+                            property real liveOffsetY: 0
 
-                            onPressed: {
+                            onPressed: (m) => {
                                 moved = false;
                                 root.dragAddress = mini.address;
+                                const p = mapToItem(root, m.x, m.y);
+                                wma.pressRootX = p.x;
+                                wma.pressRootY = p.y;
+                                wma.liveOffsetX = 0;
+                                wma.liveOffsetY = 0;
                             }
 
                             onPositionChanged: (m) => {
                                 if (!pressed) return;
                                 moved = true;
-                                // Which workspace is under the cursor?
                                 const p = mapToItem(root, m.x, m.y);
+                                wma.liveOffsetX = p.x - wma.pressRootX;
+                                wma.liveOffsetY = p.y - wma.pressRootY;
+                                // Which workspace is under the cursor?
                                 const c = Math.floor(p.x / (root.cellW + root.gap));
                                 const r = Math.floor(p.y / (root.cellH + root.gap));
                                 root.dropTarget = (c >= 0 && c < root.cols && r >= 0 && r < root.rows)
@@ -217,6 +251,8 @@ Item {
                                 const target = root.dropTarget;
                                 root.dragAddress = "";
                                 root.dropTarget = -1;
+                                wma.liveOffsetX = 0;
+                                wma.liveOffsetY = 0;
 
                                 if (m.button === Qt.MiddleButton) {
                                     Hyprland.dispatch(
