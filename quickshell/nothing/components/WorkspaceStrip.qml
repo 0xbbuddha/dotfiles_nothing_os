@@ -247,8 +247,14 @@ Item {
                 Rectangle {
                     anchors.fill: parent
                     radius: Theme.px(5)
-                    color: cell.hovered ? Theme.c.surface3 : "transparent"
-                    Behavior on color { ColorAnimation { duration: Theme.fast } }
+                    // A fixed colour faded by opacity, not animated
+                    // between itself and "transparent" - that is black
+                    // at alpha 0, so a ColorAnimation between the two
+                    // interpolates hue and alpha together and reads as
+                    // a dark flash on the way to this grey, not a fade.
+                    color: Theme.c.surface3
+                    opacity: cell.hovered ? 1 : 0
+                    Behavior on opacity { NumberAnimation { duration: Theme.fast } }
                 }
 
                 Rectangle {
@@ -295,8 +301,15 @@ Item {
                     Behavior on color { ColorAnimation { duration: Theme.fast } }
 
                     scale: cell.hovered ? 1.18 : 1
+                    // OutBack both ways overshoots past 1 on the way
+                    // back down too, which read as the cell you just
+                    // left flashing again rather than settling. The
+                    // bounce belongs to arriving at hover, not leaving it.
                     Behavior on scale {
-                        NumberAnimation { duration: Theme.fast; easing.type: Easing.OutBack }
+                        NumberAnimation {
+                            duration: Theme.fast
+                            easing.type: cell.hovered ? Easing.OutBack : Easing.OutQuad
+                        }
                     }
                 }
             }
