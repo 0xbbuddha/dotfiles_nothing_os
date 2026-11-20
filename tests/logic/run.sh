@@ -19,4 +19,5 @@ python3 essential_test.py ../../scripts/essential-app.py
 bash spicetify_test.sh
 bash record_test.sh ../../scripts/record.sh
 node clipkind_test.js "$S/Search.qml"
+node dragflow_test.js  ../../quickshell/nothing/components/DragFlow.qml
 bash selfupdate_test.sh
