@@ -124,6 +124,12 @@ ShellRoot {
         AppsColumn {}
     }
 
+    // Right-click the desktop to edit it.
+    Variants {
+        model: root.shellHidden ? [] : Quickshell.screens
+        DesktopEdit {}
+    }
+
     // One Glyph Matrix per screen: otherwise it only appears on screens[0],
     // often the laptop, while we work on the external display.
     // Two models: hot-swapping the layer is unreliable, so the window is

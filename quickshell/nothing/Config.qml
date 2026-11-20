@@ -643,6 +643,20 @@ Singleton {
         root.save();
     }
 
+    // Trades two places outright rather than moveWidget's remove-and-
+    // reinsert, which shifts everything between them too - what
+    // dropping one widget directly on another on the desktop should do.
+    function swapWidget(i: int, j: int): void {
+        const list = (a.widgets ?? []).slice();
+        if (i < 0 || j < 0 || i >= list.length || j >= list.length || i === j)
+            return;
+        const tmp = list[i];
+        list[i] = list[j];
+        list[j] = tmp;
+        a.widgets = list;
+        root.save();
+    }
+
     function recenterGlyph(): void {
         a.glyphX = -1;
         a.glyphY = -1;
@@ -700,6 +714,19 @@ Singleton {
         if (to < 0 || to >= list.length) return;
         const [item] = list.splice(index, 1);
         list.splice(to, 0, item);
+        a.deskApps = list;
+        root.save();
+    }
+
+    // See swapWidget - trades two places outright instead of shifting
+    // everything in between.
+    function swapDeskApp(i: int, j: int): void {
+        const list = (a.deskApps ?? []).slice();
+        if (i < 0 || j < 0 || i >= list.length || j >= list.length || i === j)
+            return;
+        const tmp = list[i];
+        list[i] = list[j];
+        list[j] = tmp;
         a.deskApps = list;
         root.save();
     }

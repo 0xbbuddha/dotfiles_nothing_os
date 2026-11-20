@@ -65,6 +65,10 @@ Singleton {
     // through Settings: SUPER+SHIFT+T.
     property bool wallpaperPickerOpen: false
 
+    // Right-click the desktop: both widget columns show their remove
+    // buttons without a hover and let their tiles be dragged to reorder.
+    property bool desktopEditOpen: false
+
     property string netPanel: ""
     property bool audioPanel: false
     property bool lightPanel: false
@@ -124,5 +128,6 @@ Singleton {
         audioPanel = false;
         lightPanel = false;
         wallpaperPickerOpen = false;
+        desktopEditOpen = false;
     }
 }

@@ -355,7 +355,7 @@ Item {
             anchors.right: parent.right
             anchors.margins: Theme.px(6)
             spacing: Theme.px(4)
-            visible: root.tools && hover.hovered
+            visible: root.tools && (hover.hovered || GlobalState.desktopEditOpen)
             z: 4
 
             CircleButton {
